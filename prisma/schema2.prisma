@@ -1,0 +1,59 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider  = "mysql"
+    url       = env("DATABASE_URL")
+}
+
+model EntidadeEleitora {
+    id              Int         @id @default(autoincrement())
+    nome            String      @unique
+    status          Boolean     @default(true)
+
+    criadoEm        DateTime    @default(now())
+    atualizadoEm    DateTime    @updatedAt
+
+    @@map("entidades_eleitoras")
+}
+
+enum TipoCampoPersonalizado {
+    TEXTO
+    TEXTO_LONGO
+    NUMERO
+    DATA
+}
+
+model CampoPersonalizado {
+    id              Int                     @id @default(autoincrement())
+    nome            String
+    descricao       String?
+    mascara         String?
+    tipo            TipoCampoPersonalizado
+
+    criadoEm        DateTime                @default(now())
+    atualizadoEm    DateTime                @updatedAt
+
+    @@map("campos_personalizados")
+}
+
+model Pleito {
+    id                      Int         @id @default(autoincrement())
+    entidadeEleitoraId      Int
+    ano                     Int
+    descricao               String?
+    dataInicio              DateTime
+    dataFim                 DateTime
+    temCandidatos           Boolean     @default(false)
+    dataInicioCandidatos    DateTime?
+    dataFimCandidatos       DateTime?
+    temEleitores            Boolean     @default(false)
+    dataInicioEleitores     DateTime?
+    dataFimEleitores        DateTime?
+
+    criadoEm                DateTime    @default(now())
+    atualizadoEm            DateTime    @updatedAt
+
+    @@map("pleitos")
+}

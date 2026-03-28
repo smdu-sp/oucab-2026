@@ -28,11 +28,11 @@ export default function Header() {
                     />
                 </Link>
                 <Link 
-                    href="https://gestaourbana.prefeitura.sp.gov.br/estruturacao-territorial/operacoes-urbanas/oucbt/"
+                    href="https://prefeitura.sp.gov.br/web/sp_urbanismo/w/operacoes_urbanas/agua_branca/ouc_agua_branca/325192"
                     className="text-white text-lg md:text-2xl font-bold text-center md:text-right md:max-w-[50%]"
                     target="_blank"
                 >
-                    Operação Urbana Consorciada Bairros do Tamanduateí
+                    Operação Urbana Consorciada Água Branca
                 </Link>
             </div>
         </header>

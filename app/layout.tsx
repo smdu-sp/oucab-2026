@@ -14,8 +14,8 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-	title: 'OUCBT - Operação Urbana Consorciada Bairros do Tamanduateí',
-	description: 'Operação Urbana Consorciada Bairros do Tamanduateí',
+	title: 'OUCAB - Operação Urbana Consorciada Água Branca',
+	description: 'Operação Urbana Consorciada Água Branca',
 };
 
 export default function RootLayout({

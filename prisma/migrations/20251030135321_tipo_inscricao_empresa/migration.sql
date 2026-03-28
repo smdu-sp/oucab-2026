@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `votantes` ADD COLUMN `empresa` VARCHAR(191) NULL,
-    ADD COLUMN `tipoInscricao` ENUM('MORADOR', 'TRABALHADOR') NOT NULL DEFAULT 'MORADOR';

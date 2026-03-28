@@ -7,7 +7,7 @@ const MapaVisualizacao = dynamic(() => import("./_components/mapa-visualizacao")
 const MapaLocalVotacao = dynamic(() => import("./_components/mapa-local-votacao"));
 
 export default function Home() {
-  const limiteInscricao = new Date("2025-11-30T23:59:59.999Z");
+  const limiteInscricao = new Date("2026-05-31T23:59:59.999Z");
   const agora = new Date();
   const podeInscrever = agora <= limiteInscricao;
   return (
@@ -50,7 +50,7 @@ export default function Home() {
               <MapaLocalVotacao className="flex-1 h-full" />
             </CardContent>
           </Card>
-          <Card className="rounded-none col-span-2 md:rounded-md">
+          {/* <Card className="rounded-none col-span-2 md:rounded-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 DAS INSCRIÇÕES DOS ELEITORES
@@ -83,7 +83,7 @@ export default function Home() {
               </ul>
               <p className="text-justify text-sm"><strong>Parágrafo único:</strong> A critério da Comissão Eleitoral, caso haja necessidade, esta poderá publicar no Diário Oficial da Cidade de São Paulo, até 2 (dois) dias úteis antes da data da eleição, autorização para inscrições de eleitores no dia da eleição.</p>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </section>
       <section className="text-center space-y-6">

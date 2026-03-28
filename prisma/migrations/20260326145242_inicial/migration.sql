@@ -18,10 +18,16 @@ CREATE TABLE `usuarios` (
 -- CreateTable
 CREATE TABLE `votantes` (
     `id` VARCHAR(191) NOT NULL,
+    `tipoInscricao` ENUM('MORADOR', 'TRABALHADOR') NOT NULL DEFAULT 'MORADOR',
+    `empresa` VARCHAR(191) NULL,
     `nome` VARCHAR(191) NOT NULL,
+    `nomeSocial` VARCHAR(191) NULL,
+    `telefone` VARCHAR(191) NULL,
+    `genero` ENUM('MASCULINO', 'FEMININO', 'OUTRO') NOT NULL DEFAULT 'OUTRO',
     `email` VARCHAR(191) NOT NULL,
     `cpf` VARCHAR(191) NOT NULL,
-    `status` BOOLEAN NOT NULL DEFAULT false,
+    `dataNascimento` DATE NOT NULL,
+    `status` ENUM('EM_ANALISE', 'DEFERIDO', 'INDEFERIDO') NOT NULL DEFAULT 'EM_ANALISE',
     `criadoEm` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `atualizadoEm` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 

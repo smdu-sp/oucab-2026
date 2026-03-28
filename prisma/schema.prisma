@@ -93,7 +93,6 @@ model Arquivo {
     votanteId              String
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt
-
     votante                Votante                @relation(fields: [votanteId], references: [id])
 
     @@map("arquivos")
