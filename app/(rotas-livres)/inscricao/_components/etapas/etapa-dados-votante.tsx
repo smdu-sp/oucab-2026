@@ -10,6 +10,24 @@ import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FormularioInscricaoData } from "@/lib/schemas/formulario-inscricao";
 
+// Validação local do título de eleitor (espelho da lógica do schema)
+function validarTituloEleitor(titulo: string): boolean {
+  const t = titulo.replace(/\D/g, "");
+  if (t.length !== 12) return false;
+  const digits = t.split("").map(Number);
+  const state = digits[8] * 10 + digits[9];
+  if (state === 0 || state > 28) return false;
+  const weights1 = [9, 8, 7, 6, 5, 4, 3, 2];
+  const sum1 = digits.slice(0, 8).reduce((acc, d, i) => acc + d * weights1[i], 0);
+  const r1 = sum1 % 11;
+  const d1 = (state === 1 || state === 2) ? (r1 === 0 ? 0 : r1 === 1 ? 1 : 11 - r1) : (r1 < 2 ? 0 : 11 - r1);
+  if (d1 !== digits[10]) return false;
+  const sum2 = digits[8] * 7 + digits[9] * 8 + d1 * 9;
+  const r2 = sum2 % 11;
+  const d2 = r2 < 2 ? 1 : 11 - r2;
+  return d2 === digits[11];
+}
+
 // Função para validar CPF
 function validarCPF(cpf: string): boolean {
   cpf = cpf.replace(/[^\d]/g, '');
@@ -72,6 +90,7 @@ export default function EtapaDadosVotante() {
   const [validandoEmail, setValidandoEmail] = useState(false);
   const [cpfValido, setCpfValido] = useState<boolean | null>(null);
   const [emailValido, setEmailValido] = useState<boolean | null>(null);
+  const [tituloValido, setTituloValido] = useState<boolean | null>(null);
 
   const cpfValue = watch("votante.cpf");
   const emailValue = watch("votante.email");
@@ -174,6 +193,22 @@ export default function EtapaDadosVotante() {
     const valor = e.target.value;
     const telefoneFormatado = formatarTelefone(valor);
     setValue("votante.telefone", telefoneFormatado);
+  };
+
+  // Handler para validação do título de eleitor
+  const handleTituloChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value.replace(/\D/g, "").slice(0, 12);
+    setValue("votante.tituloEleitor", v);
+    setTituloValido(null);
+    if (v.length === 12) {
+      if (validarTituloEleitor(v)) {
+        clearErrors("votante.tituloEleitor" as any);
+        setTituloValido(true);
+      } else {
+        setError("votante.tituloEleitor" as any, { type: "manual", message: "Título de eleitor inválido" });
+        setTituloValido(false);
+      }
+    }
   };
 
   return (
@@ -336,8 +371,15 @@ export default function EtapaDadosVotante() {
         <Label htmlFor="dataNascimento">Data de Nascimento *</Label>
         <Input
           id="dataNascimento"
-          type="date"
+          placeholder="DD/MM/AAAA"
+          maxLength={10}
           {...register("votante.dataNascimento")}
+          onChange={(e) => {
+            let v = e.target.value.replace(/\D/g, "");
+            if (v.length > 2) v = v.slice(0, 2) + "/" + v.slice(2);
+            if (v.length > 5) v = v.slice(0, 5) + "/" + v.slice(5);
+            setValue("votante.dataNascimento", v);
+          }}
           className={cn(
             errors.votante?.dataNascimento && "border-red-500 focus-visible:ring-red-500"
           )}
@@ -346,6 +388,40 @@ export default function EtapaDadosVotante() {
           <p className="text-sm text-red-500 flex items-center gap-1">
             <AlertCircle className="w-4 h-4" />
             {errors.votante.dataNascimento.message}
+          </p>
+        )}
+      </div>
+
+      {/* Título de Eleitor */}
+      <div className="space-y-2">
+        <Label htmlFor="tituloEleitor">Título de Eleitor *</Label>
+        <div className="relative">
+          <Input
+            id="tituloEleitor"
+            {...register("votante.tituloEleitor" as any)}
+            onChange={handleTituloChange}
+            placeholder="000000000000"
+            maxLength={12}
+            className={cn(
+              (errors.votante as any)?.tituloEleitor && "border-red-500 focus-visible:ring-red-500",
+              tituloValido === true && "border-green-500 focus-visible:ring-green-500"
+            )}
+          />
+          {tituloValido === true && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+            </div>
+          )}
+          {tituloValido === false && !(errors.votante as any)?.tituloEleitor && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <AlertCircle className="w-4 h-4 text-red-500" />
+            </div>
+          )}
+        </div>
+        {(errors.votante as any)?.tituloEleitor && (
+          <p className="text-sm text-red-500 flex items-center gap-1">
+            <AlertCircle className="w-4 h-4" />
+            {(errors.votante as any).tituloEleitor.message}
           </p>
         )}
       </div>

@@ -1,5 +1,39 @@
 import { z } from "zod";
 
+// Função para validar Título de Eleitor
+function validarTituloEleitor(titulo: string): boolean {
+  const t = titulo.replace(/\D/g, "");
+  if (t.length !== 12) return false;
+
+  const digits = t.split("").map(Number);
+  const state = digits[8] * 10 + digits[9];
+
+  // Estado inválido
+  if (state === 0 || state > 28) return false;
+
+  // Primeiro dígito verificador — pesos aplicados do maior para o menor (9..2)
+  const weights1 = [9, 8, 7, 6, 5, 4, 3, 2];
+  const sum1 = digits.slice(0, 8).reduce((acc, d, i) => acc + d * weights1[i], 0);
+  const r1 = sum1 % 11;
+  let d1: number;
+  if (state === 1 || state === 2) {
+    // SP e MG: resto 0→0, resto 1→1, senão 11-r
+    d1 = r1 === 0 ? 0 : r1 === 1 ? 1 : 11 - r1;
+  } else {
+    d1 = r1 < 2 ? 0 : 11 - r1;
+  }
+  if (d1 !== digits[10]) return false;
+
+  // Segundo dígito verificador — pesos 7,8,9 sobre os dois dígitos de estado e d1
+  const sum2 = digits[8] * 7 + digits[9] * 8 + d1 * 9;
+  const r2 = sum2 % 11;
+  // Todos os estados: resto < 2 → 1, senão 11-r
+  const d2 = r2 < 2 ? 1 : 11 - r2;
+  if (d2 !== digits[11]) return false;
+
+  return true;
+}
+
 // Função para validar CPF
 function validarCPF(cpf: string): boolean {
   cpf = cpf.replace(/[^\d]/g, '');
@@ -27,9 +61,17 @@ function validarCPF(cpf: string): boolean {
   return true;
 }
 
-// Schema para Etapa 1: Tipo de Inscrição
+// Schema para Etapa 1: Tipo de Cadastro
+export const tipoCadastroSchema = z.object({
+  tipoCadastro: z.enum(["ELEITOR", "CANDIDATO"], {
+    required_error: "Selecione o tipo de cadastro",
+    invalid_type_error: "Tipo de cadastro inválido",
+  }),
+});
+
+// Schema para Etapa 2: Tipo de Inscrição
 export const tipoInscricaoSchema = z.object({
-  tipoInscricao: z.enum(["MORADOR", "TRABALHADOR"], {
+  tipoInscricao: z.enum(["MORADOR", "TRABALHADOR", "REP_MOVIMENTOS_MORADIA"], {
     required_error: "Selecione o tipo de inscrição",
     invalid_type_error: "Tipo de inscrição inválido"
   })
@@ -74,23 +116,28 @@ export const votanteSchema = z.object({
   dataNascimento: z
     .string()
     .min(1, "Data de nascimento é obrigatória")
+    .regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data deve estar no formato DD/MM/AAAA")
     .refine((data) => {
-      const parts = data.split("-").map(Number);
-      if (parts.length !== 3) return false;
-      const [ano, mes, dia] = parts;
+      const [dia, mes, ano] = data.split("/").map(Number);
+      const date = new Date(ano, mes - 1, dia);
+      if (date.getFullYear() !== ano || date.getMonth() !== mes - 1 || date.getDate() !== dia) return false;
       const hoje = new Date();
       let idade = hoje.getFullYear() - ano;
-      const mesDiff = hoje.getMonth() - (mes - 1);
-      if (mesDiff < 0 || (mesDiff === 0 && hoje.getDate() < dia)) {
-        idade--;
-      }
+      if (hoje.getMonth() < mes - 1 || (hoje.getMonth() === mes - 1 && hoje.getDate() < dia)) idade--;
       return idade >= 16 && idade <= 120;
     }, "Você deve ter pelo menos 16 anos para se inscrever"),
   
   empresa: z
     .string()
     .max(200, "Nome da empresa deve ter no máximo 200 caracteres")
-    .optional()
+    .optional(),
+
+  tituloEleitor: z
+    .string({ required_error: "Título de eleitor é obrigatório" })
+    .min(1, "Título de eleitor é obrigatório")
+    .length(12, "Título de eleitor deve conter 12 dígitos")
+    .regex(/^\d{12}$/, "Título de eleitor deve conter apenas números")
+    .refine(validarTituloEleitor, "Título de eleitor inválido"),
 });
 
 // Schema para Etapa 2: Endereço
@@ -136,13 +183,18 @@ export const enderecoSchema = z.object({
     .max(90, "Latitude inválida")
     .optional()
     .nullable(),
-  
+
   longitude: z
     .number()
     .min(-180, "Longitude inválida")
     .max(180, "Longitude inválida")
     .optional()
-    .nullable()
+    .nullable(),
+
+  areaPerimetro: z
+    .enum(["ADESAO", "EXPANDIDO"])
+    .optional()
+    .nullable(),
 });
 
 // Schema para Etapa 4: Arquivos
@@ -183,7 +235,8 @@ export const declaracoesSchema = z.object({
 
 // Schema completo do formulário
 export const formularioInscricaoSchema = z.object({
-  tipoInscricao: z.enum(["MORADOR", "TRABALHADOR"]),
+  tipoCadastro: z.enum(["ELEITOR", "CANDIDATO"]),
+  tipoInscricao: z.enum(["MORADOR", "TRABALHADOR", "REP_MOVIMENTOS_MORADIA"]),
   votante: votanteSchema,
   endereco: enderecoSchema,
   arquivos: arquivosSchema,
@@ -197,9 +250,19 @@ export const formularioInscricaoSchema = z.object({
 }, {
   message: "Nome da empresa é obrigatório para trabalhadores",
   path: ["votante", "empresa"]
+}).refine((data) => {
+  // REP_MOVIMENTOS_MORADIA só pode estar no perímetro de adesão
+  if (data.tipoInscricao === "REP_MOVIMENTOS_MORADIA") {
+    return data.endereco.areaPerimetro === "ADESAO";
+  }
+  return true;
+}, {
+  message: "Representantes de movimentos de moradia devem ter endereço dentro do perímetro de adesão",
+  path: ["endereco", "areaPerimetro"]
 });
 
 // Tipos TypeScript derivados dos schemas
+export type TipoCadastroFormData = z.infer<typeof tipoCadastroSchema>;
 export type TipoInscricaoFormData = z.infer<typeof tipoInscricaoSchema>;
 export type VotanteFormData = z.infer<typeof votanteSchema>;
 export type EnderecoFormData = z.infer<typeof enderecoSchema>;
@@ -209,10 +272,11 @@ export type FormularioInscricaoData = z.infer<typeof formularioInscricaoSchema>;
 
 // Schemas individuais para cada etapa (para validação parcial)
 export const etapaSchemas = {
-  1: tipoInscricaoSchema,
-  2: enderecoSchema,
-  3: votanteSchema,
-  4: arquivosSchema,
-  5: z.object({}), // Etapa de revisão não precisa de validação
-  6: declaracoesSchema
+  1: tipoCadastroSchema,
+  2: tipoInscricaoSchema,
+  3: enderecoSchema,
+  4: votanteSchema,
+  5: arquivosSchema,
+  6: z.object({}), // Etapa de revisão não precisa de validação
+  7: declaracoesSchema,
 } as const;

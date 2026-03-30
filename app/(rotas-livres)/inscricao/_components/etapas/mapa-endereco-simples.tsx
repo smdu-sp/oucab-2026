@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useFormContext } from "react-hook-form";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
@@ -16,7 +16,7 @@ import KML from "ol/format/KML";
 import { Loader2, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { isWithinOUCBTPerimeter } from "@/lib/utils/polygon-validation";
+import { checkOUCABPerimeter } from "@/lib/utils/polygon-validation";
 
 interface MapaEnderecoOpenLayersProps {
   className?: string;
@@ -29,23 +29,40 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
   const markerLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
-  const kmlLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const kmlAdesaoLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const kmlExpandidoLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const [isLoadingReverseGeo, setIsLoadingReverseGeo] = useState(false);
-  const [currentZoom, setCurrentZoom] = useState(10);
+  const [currentZoom, setCurrentZoom] = useState(13);
   const [isWithinPerimeter, setIsWithinPerimeter] = useState<boolean | null>(null);
 
-  // Observar mudanças nos campos de latitude e longitude
   const latitude = watch("endereco.latitude");
   const longitude = watch("endereco.longitude");
+  const tipoInscricao = watch("tipoInscricao") as string;
+  const apenasAdesao = tipoInscricao === "REP_MOVIMENTOS_MORADIA";
 
-  // Função para validar se as coordenadas estão dentro do perímetro
-  const validateCoordinates = (lat: number, lon: number): boolean => {
-    const isValid = isWithinOUCBTPerimeter(lat, lon);
-    setIsWithinPerimeter(isValid);
-    
-    if (!isValid) {
-      toast.error("Este endereço está fora do perímetro de atendimento da OUCBT. Por favor, selecione um endereço dentro da área permitida.");
-      // Limpar os campos de endereço quando fora do perímetro
+  // Ref para uso dentro do closure do map click handler
+  const apenasAdesaoRef = useRef(apenasAdesao);
+  useEffect(() => { apenasAdesaoRef.current = apenasAdesao; }, [apenasAdesao]);
+
+  const validateCoordinates = async (lat: number, lon: number): Promise<boolean> => {
+    const { isValid, area } = await checkOUCABPerimeter(lat, lon);
+
+    const bloqueado = isValid && area === "EXPANDIDO" && apenasAdesaoRef.current;
+    const aceito = isValid && !bloqueado;
+
+    setIsWithinPerimeter(aceito);
+
+    if (!aceito) {
+      setValue("endereco.areaPerimetro", null);
+      if (bloqueado) {
+        toast.error(
+          "Representantes de movimentos de moradia só podem selecionar endereços dentro do perímetro de adesão."
+        );
+      } else {
+        toast.error(
+          "Este endereço está fora das áreas de abrangência da OUCAB. Por favor, selecione um endereço dentro da área permitida."
+        );
+      }
       setValue("endereco.logradouro", "");
       setValue("endereco.numero", "");
       setValue("endereco.bairro", "");
@@ -54,56 +71,27 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
       setValue("endereco.cep", "");
       setValue("endereco.complemento", "");
     } else {
-      toast.success("Endereço dentro do perímetro de atendimento!");
+      setValue("endereco.areaPerimetro", area);
+      toast.success("Endereço dentro da área de abrangência da OUCAB!");
     }
-    
-    return isValid;
+
+    return aceito;
   };
 
-  // Função para geocodificação reversa usando Nominatim
-  // Função para converter nome do estado para sigla UF
   const getEstadoSigla = (nomeEstado: string): string => {
     const estados: { [key: string]: string } = {
-      'acre': 'AC',
-      'alagoas': 'AL',
-      'amapá': 'AP',
-      'amapa': 'AP',
-      'amazonas': 'AM',
-      'bahia': 'BA',
-      'ceará': 'CE',
-      'ceara': 'CE',
-      'distrito federal': 'DF',
-      'espírito santo': 'ES',
-      'espirito santo': 'ES',
-      'goiás': 'GO',
-      'goias': 'GO',
-      'maranhão': 'MA',
-      'maranhao': 'MA',
-      'mato grosso': 'MT',
-      'mato grosso do sul': 'MS',
-      'minas gerais': 'MG',
-      'pará': 'PA',
-      'para': 'PA',
-      'paraíba': 'PB',
-      'paraiba': 'PB',
-      'paraná': 'PR',
-      'parana': 'PR',
-      'pernambuco': 'PE',
-      'piauí': 'PI',
-      'piaui': 'PI',
-      'rio de janeiro': 'RJ',
-      'rio grande do norte': 'RN',
-      'rio grande do sul': 'RS',
-      'rondônia': 'RO',
-      'rondonia': 'RO',
-      'roraima': 'RR',
-      'santa catarina': 'SC',
-      'são paulo': 'SP',
-      'sao paulo': 'SP',
-      'sergipe': 'SE',
-      'tocantins': 'TO'
+      'acre': 'AC', 'alagoas': 'AL', 'amapá': 'AP', 'amapa': 'AP',
+      'amazonas': 'AM', 'bahia': 'BA', 'ceará': 'CE', 'ceara': 'CE',
+      'distrito federal': 'DF', 'espírito santo': 'ES', 'espirito santo': 'ES',
+      'goiás': 'GO', 'goias': 'GO', 'maranhão': 'MA', 'maranhao': 'MA',
+      'mato grosso': 'MT', 'mato grosso do sul': 'MS', 'minas gerais': 'MG',
+      'pará': 'PA', 'para': 'PA', 'paraíba': 'PB', 'paraiba': 'PB',
+      'paraná': 'PR', 'parana': 'PR', 'pernambuco': 'PE', 'piauí': 'PI',
+      'piaui': 'PI', 'rio de janeiro': 'RJ', 'rio grande do norte': 'RN',
+      'rio grande do sul': 'RS', 'rondônia': 'RO', 'rondonia': 'RO',
+      'roraima': 'RR', 'santa catarina': 'SC', 'são paulo': 'SP',
+      'sao paulo': 'SP', 'sergipe': 'SE', 'tocantins': 'TO',
     };
-
     const nomeNormalizado = nomeEstado.toLowerCase().trim();
     return estados[nomeNormalizado] || nomeEstado.toUpperCase().substring(0, 2);
   };
@@ -118,8 +106,6 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
 
       if (data && data.address) {
         const address = data.address;
-        
-        // Preencher os campos do formulário
         setValue("endereco.logradouro", address.road || address.pedestrian || "");
         setValue("endereco.numero", address.house_number || "");
         setValue("endereco.bairro", address.neighbourhood || address.suburb || "");
@@ -127,7 +113,6 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
         setValue("endereco.estado", getEstadoSigla(address.state || ""));
         setValue("endereco.cep", address.postcode || "");
         setValue("endereco.complemento", "");
-        
         toast.success("Endereço encontrado e preenchido automaticamente!");
       } else {
         toast.error("Não foi possível encontrar o endereço para esta localização.");
@@ -140,15 +125,10 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
     }
   };
 
-  // Função para adicionar marcador no mapa
   const addMarker = (lat: number, lon: number) => {
     if (!markerLayerRef.current) return;
-
     const coordinates = fromLonLat([lon, lat]);
-    const marker = new Feature({
-      geometry: new Point(coordinates),
-    });
-
+    const marker = new Feature({ geometry: new Point(coordinates) });
     marker.setStyle(
       new Style({
         image: new Circle({
@@ -158,7 +138,6 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
         }),
       })
     );
-
     const source = markerLayerRef.current.getSource();
     if (source) {
       source.clear();
@@ -166,156 +145,138 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
     }
   };
 
-  // Função para carregar KML
-  const loadKML = async () => {
-    if (!kmlLayerRef.current) return;
-
+  const loadKMZLayer = async (
+    layerRef: React.MutableRefObject<VectorLayer<VectorSource> | null>,
+    shapeName: string,
+    fillColor: string,
+    strokeColor: string
+  ) => {
+    if (!layerRef.current) return;
     try {
-      const response = await fetch("/shapes/perimetro.kml");
+      const response = await fetch(`/api/shapes/${shapeName}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const kmlText = await response.text();
-      
+
       const format = new KML();
       const features = format.readFeatures(kmlText, {
         dataProjection: "EPSG:4326",
         featureProjection: "EPSG:3857",
       });
 
-      // Aplicar estilo personalizado a cada feature
-      features.forEach(feature => {
-        feature.setStyle(new Style({
-          fill: new Fill({
-            color: 'rgba(128, 71, 155, 0.3)', // Azul claro com opacidade baixa
-          }),
-        }));
+      features.forEach((feature) => {
+        feature.setStyle(
+          new Style({
+            fill: new Fill({ color: fillColor }),
+            stroke: new Stroke({ color: strokeColor, width: 2 }),
+          })
+        );
       });
 
-      const source = kmlLayerRef.current.getSource();
+      const source = layerRef.current.getSource();
       if (source) {
-        source.clear(); // Limpar features existentes
+        source.clear();
         source.addFeatures(features);
       }
     } catch (error) {
-      console.error("Erro ao carregar KML:", error);
+      console.error(`Erro ao carregar ${shapeName}:`, error);
       toast.error("Erro ao carregar dados do mapa.");
     }
   };
 
-  // Funções de zoom
   const zoomIn = () => {
     if (mapInstanceRef.current) {
       const view = mapInstanceRef.current.getView();
-      const currentZoom = view.getZoom() || 10;
-      view.animate({
-        zoom: Math.min(currentZoom + 1, 19),
-        duration: 250,
-      });
+      view.animate({ zoom: Math.min((view.getZoom() || 13) + 1, 19), duration: 250 });
     }
   };
 
   const zoomOut = () => {
     if (mapInstanceRef.current) {
       const view = mapInstanceRef.current.getView();
-      const currentZoom = view.getZoom() || 10;
-      view.animate({
-        zoom: Math.max(currentZoom - 1, 1),
-        duration: 250,
-      });
+      view.animate({ zoom: Math.max((view.getZoom() || 13) - 1, 1), duration: 250 });
     }
   };
 
-  // Inicializar o mapa
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Criar camada para marcadores
-    markerLayerRef.current = new VectorLayer({
-      source: new VectorSource(),
-    });
+    markerLayerRef.current = new VectorLayer({ source: new VectorSource() });
+    kmlAdesaoLayerRef.current = new VectorLayer({ source: new VectorSource() });
+    kmlExpandidoLayerRef.current = new VectorLayer({ source: new VectorSource() });
 
-    // Criar camada para KML
-    kmlLayerRef.current = new VectorLayer({
-      source: new VectorSource(),
-      style: new Style({
-        fill: new Fill({
-          color: 'rgba(128, 71, 155, 0.3)', // Azul claro com baixa opacidade
-        })
-      }),
-    });
-
-    // Criar mapa
     const map = new Map({
       target: mapRef.current,
       layers: [
-        new TileLayer({
-          source: new OSM(),
-        }),
-        kmlLayerRef.current,
+        new TileLayer({ source: new OSM() }),
+        kmlExpandidoLayerRef.current,
+        kmlAdesaoLayerRef.current,
         markerLayerRef.current,
       ],
       view: new View({
-        center: fromLonLat([-46.595, -23.58]), // Centro do KML OUC Bairros do Tamanduateí
-        zoom: 12.5,
+        center: fromLonLat([-46.685, -23.525]),
+        zoom: 13,
       }),
-      controls: defaultControls({
-        zoom: false, // Remover controles padrão de zoom
-        rotate: false, // Remover controle de rotação
-        attribution: true,
-      }),
+      controls: defaultControls({ zoom: false, rotate: false, attribution: true }),
     });
 
     mapInstanceRef.current = map;
 
-    // Listener para mudanças de zoom
-    map.getView().on('change:resolution', () => {
+    map.getView().on("change:resolution", () => {
       const zoom = map.getView().getZoom();
-      if (zoom !== undefined) {
-        setCurrentZoom(Math.round(zoom));
-      }
+      if (zoom !== undefined) setCurrentZoom(Math.round(zoom));
     });
 
-    // Carregar KML
-    loadKML();
+    loadKMZLayer(
+      kmlAdesaoLayerRef,
+      "perimetro_adesao",
+      "rgba(128, 71, 155, 0.35)",
+      "rgba(128, 71, 155, 0.9)"
+    );
+    loadKMZLayer(
+      kmlExpandidoLayerRef,
+      "perimetro_expandido",
+      "rgba(59, 130, 246, 0.2)",
+      "rgba(59, 130, 246, 0.8)"
+    );
 
-    // Adicionar evento de clique no mapa
-    map.on("click", (event) => {
-      const coordinates = toLonLat(event.coordinate);
-      const [lon, lat] = coordinates;
+    map.on("click", async (event) => {
+      const [lon, lat] = toLonLat(event.coordinate);
 
-      // Validar se está dentro do perímetro
-      const isValid = validateCoordinates(lat, lon);
-
-      // Atualizar os campos do formulário
       setValue("endereco.latitude", lat);
       setValue("endereco.longitude", lon);
-
-      // Adicionar marcador
       addMarker(lat, lon);
 
-      // Fazer geocodificação reversa apenas se estiver dentro do perímetro
+      const isValid = await validateCoordinates(lat, lon);
       if (isValid) {
         reverseGeocode(lat, lon);
       }
     });
 
-    // Cleanup
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.setTarget(undefined);
-      }
+      if (mapInstanceRef.current) mapInstanceRef.current.setTarget(undefined);
       mapInstanceRef.current = null;
       markerLayerRef.current = null;
-      kmlLayerRef.current = null;
+      kmlAdesaoLayerRef.current = null;
+      kmlExpandidoLayerRef.current = null;
     };
   }, [setValue]);
 
-  // Atualizar marcador quando latitude/longitude mudarem
   useEffect(() => {
     if (latitude && longitude && typeof latitude === "number" && typeof longitude === "number") {
       addMarker(latitude, longitude);
-      // Validar se está dentro do perímetro quando as coordenadas mudarem
-      validateCoordinates(latitude, longitude);
+      checkOUCABPerimeter(latitude, longitude).then(({ isValid, area }) => {
+        const aceito = isValid && !(area === "EXPANDIDO" && apenasAdesao);
+        setIsWithinPerimeter(aceito);
+      });
     }
   }, [latitude, longitude]);
+
+  // Mostrar/ocultar perímetro expandido conforme tipo de inscrição
+  useEffect(() => {
+    if (kmlExpandidoLayerRef.current) {
+      kmlExpandidoLayerRef.current.setVisible(!apenasAdesao);
+    }
+  }, [apenasAdesao]);
 
   return (
     <div className={`w-full ${className}`}>
@@ -329,7 +290,6 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
           </div>
         )}
 
-        {/* Controles de Zoom Personalizados */}
         <div className="absolute top-4 right-4 z-10 flex flex-col gap-1">
           <Button
             type="button"
@@ -353,34 +313,46 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
           </Button>
         </div>
 
-        {/* Container do mapa OpenLayers */}
-        <div 
+        <div
           ref={mapRef}
           className="h-96 w-full rounded-lg border overflow-hidden"
           style={{ minHeight: "384px" }}
         />
 
-        {/* Coordenadas e Status do Perímetro */}
+        {/* Coordenadas e Status */}
         {latitude && longitude && (
           <div className="absolute top-4 left-4 bg-white/90 rounded-lg p-2 shadow-lg z-10">
             <p className="text-xs text-gray-600">
-              Lat: {latitude.toFixed(6)}<br />
+              Lat: {latitude.toFixed(6)}
+              <br />
               Lng: {longitude.toFixed(6)}
             </p>
             {isWithinPerimeter !== null && (
-              <div className={`mt-1 text-xs font-medium ${
-                isWithinPerimeter 
-                  ? 'text-green-600' 
-                  : 'text-red-600'
-              }`}>
-                {isWithinPerimeter 
-                  ? '✓ Dentro do perímetro' 
-                  : '✗ Fora do perímetro'
-                }
+              <div
+                className={`mt-1 text-xs font-medium ${
+                  isWithinPerimeter ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {isWithinPerimeter ? "✓ Dentro do perímetro" : "✗ Fora do perímetro"}
               </div>
             )}
           </div>
         )}
+
+        {/* Legenda */}
+        <div className="absolute bottom-4 left-4 bg-white/90 rounded-lg p-2 shadow-lg z-10 text-xs">
+          <p className="font-semibold mb-1 text-gray-700">Legenda</p>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="w-3 h-3 rounded-sm border-2 border-purple-600 bg-purple-400/40 flex-shrink-0" />
+            <span className="text-gray-600">Perímetro de Adesão</span>
+          </div>
+          {!apenasAdesao && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm border-2 border-blue-500 bg-blue-300/40 flex-shrink-0" />
+              <span className="text-gray-600">Perímetro Expandido</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

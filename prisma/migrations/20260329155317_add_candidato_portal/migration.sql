@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `votantes` ADD COLUMN `primeiroAcesso` BOOLEAN NOT NULL DEFAULT true,
+    ADD COLUMN `senha` VARCHAR(191) NULL,
+    ADD COLUMN `tipoCadastro` ENUM('ELEITOR', 'CANDIDATO') NOT NULL DEFAULT 'ELEITOR';

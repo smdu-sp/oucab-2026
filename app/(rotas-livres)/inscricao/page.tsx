@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation';
 import FormularioInscricao from './_components/formulario-inscricao';
+import { prazoEncerrado } from '@/lib/config';
 
 export default function Inscrição() {
-  const limiteInscricao = new Date("2026-11-30T23:59:59.999Z");
-  const agora = new Date();
-  if (agora > limiteInscricao) redirect("/");
+  if (prazoEncerrado()) redirect("/");
   return <FormularioInscricao />
 }

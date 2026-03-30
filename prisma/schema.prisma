@@ -12,16 +12,33 @@ enum Permissao {
     ADM
 }
 
+enum TipoUsuario {
+    INTERNO
+    EXTERNO
+}
+
+enum TipoCadastro {
+    ELEITOR
+    CANDIDATO
+}
+
 model Usuario {
     id                     String                 @id @default(uuid())
+    tipo                   TipoUsuario            @default(INTERNO)
     nome                   String
     email                  String                 @unique
-    login                  String                 @unique
-    permissao              Permissao              @default(ADM)
+    // Campos exclusivos de usuários INTERNO (administrativos)
+    login                  String?                @unique
+    permissao              Permissao?
     avatar                 String?
     status                 Boolean                @default(true)
+    // Campos de autenticação (EXTERNO usa senha, INTERNO usa LDAP)
+    senha                  String?
+    primeiroAcesso         Boolean                @default(true)
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt
+
+    votante                Votante?
 
     @@map("usuarios")
 }
@@ -35,6 +52,12 @@ enum Status {
 enum TipoInscricao {
     MORADOR
     TRABALHADOR
+    REP_MOVIMENTOS_MORADIA
+}
+
+enum AreaPerimetro {
+    ADESAO
+    EXPANDIDO
 }
 
 enum Genero {
@@ -47,17 +70,20 @@ model Votante {
     id                     String                 @id @default(uuid())
     tipoInscricao          TipoInscricao          @default(MORADOR)
     empresa                String?
-    nome                   String
+    tituloEleitor          String?
     nomeSocial             String?
     telefone               String?
     genero                 Genero                 @default(OUTRO)
-    email                  String                 @unique
     cpf                    String                 @unique
     dataNascimento         DateTime               @db.Date
+    tipoCadastro           TipoCadastro           @default(ELEITOR)
+    areaPerimetro          AreaPerimetro
+    usuarioId              String                 @unique
     status                 Status                 @default(EM_ANALISE)
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt
 
+    usuario                Usuario?               @relation(fields: [usuarioId], references: [id])
     endereco               Endereco?
     arquivos               Arquivo[]
 

@@ -1,6 +1,6 @@
 import { db } from "@/lib/prisma";
 import { verificaLimite, verificaPagina } from "@/lib/utils";
-import { Arquivo, Endereco, Status, Votante } from "@prisma/client";
+import { Arquivo, Endereco, Status, Usuario, Votante } from "@prisma/client";
 import { retornaPermissao } from "./usuario";
 
 export interface IVotantePaginado {
@@ -10,6 +10,7 @@ export interface IVotantePaginado {
     limite: number;
 }
 export interface IVotante extends Votante {
+    usuario?: Usuario;
     endereco?: Endereco;
     arquivos?: Arquivo[];
 }
@@ -24,8 +25,8 @@ export async function buscarVotantes(
     const where = {
         ...(busca && {
             OR: [
-                { nome: { contains: busca } },
-                { email: { contains: busca } },
+                { usuario: { nome: { contains: busca } } },
+                { usuario: { email: { contains: busca } } },
             ],
         }),
         ...(status && status !== 'all' && { status: status as Status }),
@@ -38,6 +39,7 @@ export async function buscarVotantes(
         take: limite,
         orderBy: { criadoEm: 'asc' },
         include: {
+            usuario: true,
             endereco: true,
             arquivos: {
                 select: { id: true }
@@ -52,6 +54,7 @@ export async function buscarVotantePorId(id: string) {
     const votante = await db.votante.findUnique({
         where: { id },
         include: {
+            usuario: true,
             endereco: true,
             arquivos: true,
         },

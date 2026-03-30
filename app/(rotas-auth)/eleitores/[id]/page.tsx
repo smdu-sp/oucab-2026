@@ -102,7 +102,7 @@ export default async function VotanteDetalhe({ params }: { params: Promise<{ id:
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Nome Completo</p>
-              <p className="text-sm">{votante.nome}</p>
+              <p className="text-sm">{(votante as any).usuario?.nome}</p>
             </div>
             {votante.nomeSocial && (
               <div>
@@ -124,7 +124,7 @@ export default async function VotanteDetalhe({ params }: { params: Promise<{ id:
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">E-mail</p>
-              <p className="text-sm">{votante.email}</p>
+              <p className="text-sm">{(votante as any).usuario?.email}</p>
             </div>
             {votante.telefone && (
               <div>

@@ -9,12 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 
-import { 
-  formularioInscricaoSchema, 
+import {
+  formularioInscricaoSchema,
   type FormularioInscricaoData,
-  etapaSchemas 
+  etapaSchemas,
 } from "@/lib/schemas/formulario-inscricao";
 
+import EtapaTipoCadastro from "./etapas/etapa-tipo-cadastro";
 import EtapaTipoInscricao from "./etapas/etapa-tipo-inscricao";
 import EtapaDadosVotante from "./etapas/etapa-dados-votante";
 import EtapaEndereco from "./etapas/etapa-endereco";
@@ -22,45 +23,51 @@ import EtapaArquivo from "./etapas/etapa-arquivo";
 import EtapaRevisaoDados from "./etapas/etapa-revisao-dados";
 import EtapaDeclaracoes from "./etapas/etapa-declaracoes";
 import { toast } from "sonner";
-import { isWithinOUCBTPerimeter } from "@/lib/utils/polygon-validation";
+import { isWithinOUCABPerimeter } from "@/lib/utils/polygon-validation";
 
 const etapas = [
   {
     id: 1,
-    titulo: "Tipo de Inscrição",
-    descricao: "Selecione como você participa",
-    component: EtapaTipoInscricao
+    titulo: "Tipo de Cadastro",
+    descricao: "Selecione como você deseja participar",
+    component: EtapaTipoCadastro,
   },
   {
     id: 2,
-    titulo: "Endereço",
-    descricao: "Informe seu endereço completo",
-    component: EtapaEndereco
+    titulo: "Tipo de Inscrição",
+    descricao: "Selecione sua relação com a área da Operação Urbana",
+    component: EtapaTipoInscricao,
   },
   {
     id: 3,
-    titulo: "Dados Pessoais",
-    descricao: "Informe seus dados pessoais",
-    component: EtapaDadosVotante
+    titulo: "Endereço",
+    descricao: "Informe seu endereço completo",
+    component: EtapaEndereco,
   },
   {
     id: 4,
-    titulo: "Documentos",
-    descricao: "Envie os documentos necessários",
-    component: EtapaArquivo
+    titulo: "Dados Pessoais",
+    descricao: "Informe seus dados pessoais",
+    component: EtapaDadosVotante,
   },
   {
     id: 5,
-    titulo: "Revisão de Dados",
-    descricao: "Confira todas as informações",
-    component: EtapaRevisaoDados
+    titulo: "Documentos",
+    descricao: "Envie os documentos necessários",
+    component: EtapaArquivo,
   },
   {
     id: 6,
+    titulo: "Revisão de Dados",
+    descricao: "Confira todas as informações",
+    component: EtapaRevisaoDados,
+  },
+  {
+    id: 7,
     titulo: "Declarações",
     descricao: "Aceite as declarações obrigatórias",
-    component: EtapaDeclaracoes
-  }
+    component: EtapaDeclaracoes,
+  },
 ];
 
 export default function FormularioInscricao() {
@@ -74,6 +81,7 @@ export default function FormularioInscricao() {
     resolver: zodResolver(formularioInscricaoSchema),
     mode: "onChange",
     defaultValues: {
+      tipoCadastro: undefined as any,
       tipoInscricao: undefined as any,
       votante: {
         nome: "",
@@ -83,7 +91,7 @@ export default function FormularioInscricao() {
         email: "",
         cpf: "",
         dataNascimento: "",
-        empresa: ""
+        empresa: "",
       },
       endereco: {
         logradouro: "",
@@ -94,7 +102,7 @@ export default function FormularioInscricao() {
         estado: "",
         cep: "",
         latitude: null,
-        longitude: null
+        longitude: null,
       },
       arquivos: { arquivos: [] },
       declaracoes: {
@@ -102,190 +110,122 @@ export default function FormularioInscricao() {
         declaracaoVotacao: false,
         declaracaoDocumento: false,
         declaracaoAutorizacao: false,
-        declaracaoVeracidade: false
-      }
-    }
+        declaracaoVeracidade: false,
+      },
+    },
   });
 
-  const { trigger, getValues, handleSubmit, formState: { errors }, watch } = methods;
+  const { trigger, getValues, handleSubmit, watch } = methods;
 
-  // Função para verificar se pode avançar para a próxima etapa
   const verificarPodeAvancar = () => {
-    const dadosEtapa = getValues();
-    
+    const dados = getValues();
     switch (etapaAtual) {
-      case 1: // Tipo de Inscrição
-        return !!dadosEtapa.tipoInscricao;
-      
-      case 2: // Endereço
-        const endereco = dadosEtapa.endereco;
-        return !!(endereco?.logradouro && endereco?.bairro && endereco?.cidade && 
-                 endereco?.estado && endereco?.cep && endereco?.latitude && endereco?.longitude);
-      
-      case 3: // Dados Pessoais
-        const votante = dadosEtapa.votante;
-        const tipoInscricao = dadosEtapa.tipoInscricao;
-        const camposBasicos = !!(votante?.nome && votante?.telefone && votante?.genero && 
-                                votante?.email && votante?.cpf && votante?.dataNascimento);
-        const empresaOk = tipoInscricao !== "TRABALHADOR" || !!votante?.empresa;
+      case 1:
+        return !!dados.tipoCadastro;
+      case 2:
+        return !!dados.tipoInscricao;
+      case 3: {
+        const e = dados.endereco;
+        return !!(e?.logradouro && e?.bairro && e?.cidade && e?.estado && e?.cep && e?.latitude && e?.longitude);
+      }
+      case 4: {
+        const v = dados.votante;
+        const camposBasicos = !!(v?.nome && v?.telefone && v?.genero && v?.email && v?.cpf && v?.dataNascimento);
+        const empresaOk = dados.tipoInscricao !== "TRABALHADOR" || !!v?.empresa;
         return camposBasicos && empresaOk;
-      
-      case 4: // Documentos
-        return !!(dadosEtapa.arquivos?.arquivos && dadosEtapa.arquivos.arquivos.length > 0);
-      
-      case 5: // Revisão de dados
-        return true; // Sempre pode avançar da revisão
-      
-      case 6: // Declarações
-        const declaracoes = dadosEtapa.declaracoes;
-        return !!(declaracoes?.declaracaoIdentidade && declaracoes?.declaracaoVotacao && 
-                 declaracoes?.declaracaoDocumento && declaracoes?.declaracaoAutorizacao && 
-                 declaracoes?.declaracaoVeracidade);
-      
+      }
+      case 5:
+        return !!(dados.arquivos?.arquivos && dados.arquivos.arquivos.length > 0);
+      case 6:
+        return true;
+      case 7: {
+        const d = dados.declaracoes;
+        return !!(d?.declaracaoIdentidade && d?.declaracaoVotacao && d?.declaracaoDocumento && d?.declaracaoAutorizacao && d?.declaracaoVeracidade);
+      }
       default:
         return false;
     }
   };
 
-  // Monitorar mudanças nos dados para atualizar o estado do botão
   useEffect(() => {
-    const subscription = watch(() => {
-      setPodeAvancar(verificarPodeAvancar());
-    });
-    
-    // Verificar inicialmente
+    const subscription = watch(() => setPodeAvancar(verificarPodeAvancar()));
     setPodeAvancar(verificarPodeAvancar());
-    
     return () => subscription.unsubscribe();
   }, [etapaAtual, watch]);
 
-  // Atualizar quando a etapa muda
   useEffect(() => {
     setPodeAvancar(verificarPodeAvancar());
   }, [etapaAtual]);
 
   const proximaEtapa = async () => {
-    
-    const etapaSchema = etapaSchemas[etapaAtual as keyof typeof etapaSchemas];
-    const dadosEtapa = getValues();
-    
     let isValid = false;
-    
-    // Validar dados específicos da etapa atual
+
     if (etapaAtual === 1) {
-      // Etapa 1: Tipo de Inscrição
-      isValid = await trigger(["tipoInscricao"]);
+      isValid = await trigger(["tipoCadastro"]);
     } else if (etapaAtual === 2) {
-      // Etapa 2: Endereço
-      isValid = await trigger([
-        "endereco.logradouro", 
-        "endereco.bairro", 
-        "endereco.cidade", 
-        "endereco.estado", 
-        "endereco.cep"
-      ]);
-      
-      // Verificar se o endereço está dentro do perímetro
+      isValid = await trigger(["tipoInscricao"]);
+    } else if (etapaAtual === 3) {
+      isValid = await trigger(["endereco.logradouro", "endereco.bairro", "endereco.cidade", "endereco.estado", "endereco.cep"]);
       if (isValid) {
         const latitude = getValues("endereco.latitude");
         const longitude = getValues("endereco.longitude");
-        
         if (!latitude || !longitude) {
           toast.error("Por favor, selecione um local no mapa.");
           isValid = false;
         } else {
-          const dentroPerimetro = await isWithinOUCBTPerimeter(latitude, longitude);
+          const dentroPerimetro = await isWithinOUCABPerimeter(latitude, longitude);
           if (!dentroPerimetro) {
-            toast.error("O endereço selecionado está fora do perímetro permitido. Por favor, selecione um endereço dentro da área de cobertura.");
+            toast.error("O endereço selecionado está fora das áreas de abrangência da OUCAB.");
             isValid = false;
           }
         }
       }
-    } else if (etapaAtual === 3) {
-      // Etapa 3: Dados do Votante
-      const tipoInscricao = getValues("tipoInscricao");
-      
-      const camposObrigatorios = [
-        "votante.nome",
-        "votante.telefone",
-        "votante.genero",
-        "votante.email",
-        "votante.cpf",
-        "votante.dataNascimento"
-      ];
-      
-      if (tipoInscricao === "TRABALHADOR") {
-        camposObrigatorios.push("votante.empresa");
-      }
-      
-      // Inicializar como true antes da validação
-      isValid = true;
-      
-      // Validar cada campo individualmente
-      for (const campo of camposObrigatorios) {
-        const resultado = await trigger(campo as any);
-        if (!resultado) {
-          isValid = false;
-          break;
-        }
-      }
-      
-      if (isValid) {
-        isValid = await trigger("votante");
-      }
     } else if (etapaAtual === 4) {
-      // Etapa 4: Documentos
-      isValid = await trigger(["arquivos"]);
-    } else if (etapaAtual === 5) {
-      // Etapa 5: Revisão de dados - não precisa validação, apenas avança
+      const tipoInscricao = getValues("tipoInscricao");
+      const campos: any[] = ["votante.nome", "votante.telefone", "votante.genero", "votante.email", "votante.cpf", "votante.dataNascimento"];
+      if (tipoInscricao === "TRABALHADOR") campos.push("votante.empresa");
       isValid = true;
+      for (const campo of campos) {
+        const ok = await trigger(campo);
+        if (!ok) { isValid = false; break; }
+      }
+      if (isValid) isValid = await trigger("votante");
+    } else if (etapaAtual === 5) {
+      isValid = await trigger(["arquivos"]);
     } else if (etapaAtual === 6) {
-      // Etapa 6: Declarações
+      isValid = true;
+    } else if (etapaAtual === 7) {
       isValid = await trigger(["declaracoes"]);
     }
 
     if (isValid) {
-      // Marcar etapa como completa
-      if (!etapasCompletas.includes(etapaAtual)) {
-        setEtapasCompletas([...etapasCompletas, etapaAtual]);
-      }
-      
-      if (etapaAtual < etapas.length) {
-        setEtapaAtual(etapaAtual + 1);
-      }
+      if (!etapasCompletas.includes(etapaAtual)) setEtapasCompletas([...etapasCompletas, etapaAtual]);
+      if (etapaAtual < etapas.length) setEtapaAtual(etapaAtual + 1);
     }
   };
 
   const etapaAnterior = () => {
-    if (etapaAtual > 1) {
-      setEtapaAtual(etapaAtual - 1);
-    }
+    if (etapaAtual > 1) setEtapaAtual(etapaAtual - 1);
   };
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // Criar FormData para envio
       const formData = new FormData();
-      
-      // Adicionar tipo de inscrição
+
+      formData.append("tipoCadastro", data.tipoCadastro);
       formData.append("tipoInscricao", data.tipoInscricao);
-      
-      // Adicionar dados do votante
+
       formData.append("votante.nome", data.votante.nome);
-      if (data.votante.nomeSocial) {
-        formData.append("votante.nomeSocial", data.votante.nomeSocial);
-      }
+      if (data.votante.nomeSocial) formData.append("votante.nomeSocial", data.votante.nomeSocial);
       formData.append("votante.telefone", data.votante.telefone);
       formData.append("votante.genero", data.votante.genero);
       formData.append("votante.email", data.votante.email);
       formData.append("votante.cpf", data.votante.cpf);
       formData.append("votante.dataNascimento", data.votante.dataNascimento);
-      if (data.votante.empresa) {
-        formData.append("votante.empresa", data.votante.empresa);
-      }
-      
-      // Adicionar dados do endereço
+      if (data.votante.empresa) formData.append("votante.empresa", data.votante.empresa);
+      if (data.votante.tituloEleitor) formData.append("votante.tituloEleitor", data.votante.tituloEleitor);
+
       formData.append("endereco.logradouro", data.endereco.logradouro);
       if (data.endereco.numero) formData.append("endereco.numero", data.endereco.numero);
       if (data.endereco.complemento) formData.append("endereco.complemento", data.endereco.complemento);
@@ -295,36 +235,26 @@ export default function FormularioInscricao() {
       formData.append("endereco.cep", data.endereco.cep);
       if (data.endereco.latitude) formData.append("endereco.latitude", data.endereco.latitude.toString());
       if (data.endereco.longitude) formData.append("endereco.longitude", data.endereco.longitude.toString());
-      
-      // Adicionar arquivos
-      if (data.arquivos && data.arquivos.arquivos && data.arquivos.arquivos.length > 0) {
+      if (data.endereco.areaPerimetro) formData.append("endereco.areaPerimetro", data.endereco.areaPerimetro);
+
+      if (data.arquivos?.arquivos?.length > 0) {
         data.arquivos.arquivos.forEach((arquivo: File, index: number) => {
           formData.append(`arquivos[${index}]`, arquivo);
         });
       }
-      
-      // Adicionar declarações
+
       formData.append("declaracoes.declaracaoIdentidade", data.declaracoes.declaracaoIdentidade.toString());
       formData.append("declaracoes.declaracaoVotacao", data.declaracoes.declaracaoVotacao.toString());
       formData.append("declaracoes.declaracaoDocumento", data.declaracoes.declaracaoDocumento.toString());
       formData.append("declaracoes.declaracaoAutorizacao", data.declaracoes.declaracaoAutorizacao.toString());
       formData.append("declaracoes.declaracaoVeracidade", data.declaracoes.declaracaoVeracidade.toString());
 
-      // Enviar para a API
-      const response = await fetch("/api/inscricao", {
-        method: "POST",
-        body: formData,
-      });
-
+      const response = await fetch("/api/inscricao", { method: "POST", body: formData });
       const resultado = await response.json();
 
-      if (!response.ok) {
-        throw new Error(resultado.error || "Erro ao enviar formulário");
-      }
+      if (!response.ok) throw new Error(resultado.error || "Erro ao enviar formulário");
 
-      // Redirecionar para página de agradecimento
       router.push("/agradecimento");
-      
     } catch (error) {
       const mensagem = error instanceof Error ? error.message : "Erro ao realizar inscrição. Tente novamente.";
       toast.error(mensagem);
@@ -341,7 +271,7 @@ export default function FormularioInscricao() {
       <Card className="border-0 shadow-none md:border-1 md:shadow">
         <CardHeader>
           <CardTitle className="text-2xl text-center">
-            Formulário para inscrição de eleitores
+            Formulário de Inscrição
           </CardTitle>
           <CardDescription className="text-center">
             Preencha todas as etapas para completar sua inscrição
@@ -357,12 +287,8 @@ export default function FormularioInscricao() {
           <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="text-center">
-                <h3 className="text-xl font-semibold">
-                  {etapas[etapaAtual - 1].titulo}
-                </h3>
-                <p className="text-muted-foreground">
-                  {etapas[etapaAtual - 1].descricao}
-                </p>
+                <h3 className="text-xl font-semibold">{etapas[etapaAtual - 1].titulo}</h3>
+                <p className="text-muted-foreground">{etapas[etapaAtual - 1].descricao}</p>
               </div>
               <EtapaComponent />
               <div className="flex justify-between pt-6">
@@ -379,9 +305,7 @@ export default function FormularioInscricao() {
                 {etapaAtual < etapas.length ? (
                   <Button
                     type="button"
-                    onClick={() => {
-                      proximaEtapa();
-                    }}
+                    onClick={proximaEtapa}
                     disabled={!podeAvancar}
                     className="flex items-center space-x-2"
                   >

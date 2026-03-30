@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import MapaEnderecoOpenLayers from "./mapa-endereco-simples";
-import { isWithinOUCBTPerimeter } from "@/lib/utils/polygon-validation";
+import { checkOUCABPerimeter } from "@/lib/utils/polygon-validation";
 
 interface EnderecoData {
   logradouro: string;
@@ -37,6 +37,7 @@ export default function EtapaEndereco() {
   const [isLoadingCep, setIsLoadingCep] = useState(false);
 
   const watchedFields = watch("endereco") as EnderecoData;
+  const tipoInscricao = watch("tipoInscricao") as string;
   const cep = watchedFields?.cep || "";
   const buscarCep = async () => {
     if (!cep || cep.length < 8) {
@@ -134,18 +135,25 @@ export default function EtapaEndereco() {
       if (bestResult) {
         const lat = parseFloat(bestResult.lat);
         const lng = parseFloat(bestResult.lon);
-        
-        // Validar se está dentro do perímetro
-        const isValid = isWithinOUCBTPerimeter(lat, lng);
-        
+
         setValue("endereco.latitude", lat);
         setValue("endereco.longitude", lng);
-        
-        if (isValid) {
-          toast.success("Endereço localizado no mapa e dentro do perímetro de atendimento");
+
+        const { isValid, area } = await checkOUCABPerimeter(lat, lng);
+
+        const isRepMovimentos = tipoInscricao === "REP_MOVIMENTOS_MORADIA";
+        const bloqueadoPorTipo = isRepMovimentos && area === "EXPANDIDO";
+
+        if (isValid && !bloqueadoPorTipo) {
+          setValue("endereco.areaPerimetro", area);
+          toast.success("Endereço localizado no mapa e dentro da área de abrangência da OUCAB");
         } else {
-          toast.error("Endereço localizado, mas está fora do perímetro de atendimento da OUCBT");
-          // Limpar campos de endereço quando fora do perímetro
+          setValue("endereco.areaPerimetro", null);
+          if (bloqueadoPorTipo) {
+            toast.error("Representantes de movimentos de moradia só podem cadastrar endereços dentro do perímetro de adesão");
+          } else {
+            toast.error("Endereço localizado, mas está fora das áreas de abrangência da OUCAB");
+          }
           setValue("endereco.logradouro", "");
           setValue("endereco.numero", "");
           setValue("endereco.bairro", "");

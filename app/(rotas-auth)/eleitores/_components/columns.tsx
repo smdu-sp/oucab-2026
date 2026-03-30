@@ -71,12 +71,14 @@ export const columns: ColumnDef<IVotante>[] = [
 		},
 	},
 	{
-		accessorKey: 'nome',
+		accessorKey: 'usuario.nome',
 		header: 'Nome',
+		cell: ({ row }) => row.original.usuario?.nome ?? '-',
 	},
 	{
-		accessorKey: 'email',
+		accessorKey: 'usuario.email',
 		header: 'Email',
+		cell: ({ row }) => row.original.usuario?.email ?? '-',
 	},
 	{
 		accessorKey: 'dataNascimento',

@@ -7,9 +7,10 @@ const MapaVisualizacao = dynamic(() => import("./_components/mapa-visualizacao")
 const MapaLocalVotacao = dynamic(() => import("./_components/mapa-local-votacao"));
 
 export default function Home() {
-  const limiteInscricao = new Date("2026-05-31T23:59:59.999Z");
-  const agora = new Date();
-  const podeInscrever = agora <= limiteInscricao;
+  const limiteExibicao = new Date(
+    process.env.NEXT_PUBLIC_PRAZO_INSCRICAO_EXIBICAO ?? "2026-05-31T23:59:59.999Z"
+  );
+  const podeInscrever = new Date() <= limiteExibicao;
   return (
     <div className="space-y-8">
       {/* Sobre a OUC */}

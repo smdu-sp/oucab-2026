@@ -10,10 +10,74 @@ import { fromLonLat } from "ol/proj";
 import { Style, Fill, Stroke } from "ol/style";
 import { defaults as defaultControls } from "ol/control";
 import KML from "ol/format/KML";
+import GeoJSON from "ol/format/GeoJSON";
+import { union } from "@turf/union";
+import { featureCollection, feature as turfFeature } from "@turf/helpers";
+import type { Polygon, MultiPolygon, Feature as GeoJSONFeature } from "geojson";
 
 interface MapaVisualizacaoProps {
   className?: string;
   height?: string;
+}
+
+const kmlFormat = new KML();
+const geoJsonFormat = new GeoJSON();
+
+function kmlToGeoJSONFeatures(kmlText: string) {
+  const features = kmlFormat.readFeatures(kmlText, {
+    dataProjection: "EPSG:4326",
+    featureProjection: "EPSG:4326",
+  });
+  return geoJsonFormat.writeFeaturesObject(features)
+    .features as GeoJSONFeature<Polygon | MultiPolygon>[];
+}
+
+function mergeFeatures(
+  features: GeoJSONFeature<Polygon | MultiPolygon>[]
+): GeoJSONFeature<Polygon | MultiPolygon> | null {
+  if (features.length === 0) return null;
+  let merged: GeoJSONFeature<Polygon | MultiPolygon> = turfFeature(
+    features[0].geometry
+  );
+  for (let i = 1; i < features.length; i++) {
+    const result = union(
+      featureCollection([merged, turfFeature(features[i].geometry)])
+    );
+    if (result) merged = result as GeoJSONFeature<Polygon | MultiPolygon>;
+  }
+  return merged;
+}
+
+async function loadLayer(
+  layer: VectorLayer<VectorSource>,
+  name: string,
+  style: Style,
+  merge: boolean
+) {
+  try {
+    const kmlText = await fetch(`/api/shapes/${name}`).then((r) => r.text());
+    const features = kmlToGeoJSONFeatures(kmlText);
+
+    if (merge) {
+      const merged = mergeFeatures(features);
+      if (!merged) return;
+      const olFeature = geoJsonFormat.readFeature(merged, {
+        dataProjection: "EPSG:4326",
+        featureProjection: "EPSG:3857",
+      });
+      olFeature.setStyle(style);
+      layer.getSource()?.addFeature(olFeature);
+    } else {
+      const olFeatures = geoJsonFormat.readFeatures(
+        { type: "FeatureCollection", features },
+        { dataProjection: "EPSG:4326", featureProjection: "EPSG:3857" }
+      );
+      olFeatures.forEach((f) => f.setStyle(style));
+      layer.getSource()?.addFeatures(olFeatures);
+    }
+  } catch (error) {
+    console.error(`Erro ao carregar ${name}:`, error);
+  }
 }
 
 const MapaVisualizacao: React.FC<MapaVisualizacaoProps> = ({
@@ -23,69 +87,45 @@ const MapaVisualizacao: React.FC<MapaVisualizacaoProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
 
-  // Função para carregar o KML
-  const loadKML = async (kmlLayer: VectorLayer<VectorSource>) => {
-    try {
-      const response = await fetch("/shapes/perimetro.kml");
-      const kmlText = await response.text();
-      
-      const format = new KML();
-      const features = format.readFeatures(kmlText, {
-        dataProjection: "EPSG:4326",
-        featureProjection: "EPSG:3857",
-      });
-
-      // Aplicar estilo personalizado
-      features.forEach((feature) => {
-        feature.setStyle(
-          new Style({
-            fill: new Fill({
-              color: 'rgba(128, 71, 155, 0.3)', // Azul claro com opacidade baixa
-            }),
-          })
-        );
-      });
-
-      kmlLayer.getSource()?.addFeatures(features);
-    } catch (error) {
-      console.error("Erro ao carregar KML:", error);
-    }
-  };
-
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Criar camada KML
-    const kmlLayer = new VectorLayer({
-      source: new VectorSource(),
-    });
+    const expandidoLayer = new VectorLayer({ source: new VectorSource() });
+    const adesaoLayer = new VectorLayer({ source: new VectorSource() });
 
-    // Configuração inicial do mapa (sem interação)
     const map = new Map({
       target: mapRef.current,
-      layers: [
-        new TileLayer({
-          source: new OSM(),
-        }),
-        kmlLayer,
-      ],
+      layers: [new TileLayer({ source: new OSM() }), expandidoLayer, adesaoLayer],
       view: new View({
-        center: fromLonLat([-46.595, -23.58]), // Centro do KML OUC Bairros do Tamanduateí
-        zoom: 12.5,
+        center: fromLonLat([-46.685, -23.525]),
+        zoom: 13,
       }),
-      controls: defaultControls({
-        attribution: false,
-        zoom: true,
-        rotate: false,
-      }),
-      // Manter interações de zoom e pan, mas sem seleção
+      controls: defaultControls({ attribution: false, zoom: true, rotate: false }),
     });
 
-    // Adicionar controles de zoom personalizados
     map.getControls().clear();
-    
-    // Carregar KML
-    loadKML(kmlLayer);
+
+    // Perímetro expandido — exibido separadamente, sem união
+    loadLayer(
+      expandidoLayer,
+      "perimetro_expandido",
+      new Style({
+        fill: new Fill({ color: "rgba(59, 130, 246, 0.2)" }),
+        stroke: new Stroke({ color: "rgba(59, 130, 246, 0.8)", width: 2 }),
+      }),
+      false
+    );
+
+    // Perímetro de adesão — shapes fundidos em área única (sem linhas internas)
+    loadLayer(
+      adesaoLayer,
+      "perimetro_adesao",
+      new Style({
+        fill: new Fill({ color: "rgba(128, 71, 155, 0.35)" }),
+        stroke: new Stroke({ color: "rgba(128, 71, 155, 0.9)", width: 2 }),
+      }),
+      true
+    );
 
     mapInstanceRef.current = map;
 
@@ -98,11 +138,19 @@ const MapaVisualizacao: React.FC<MapaVisualizacaoProps> = ({
   }, []);
 
   return (
-    <div 
-      ref={mapRef} 
-      className={`w-full border border-border rounded-lg ${className}`}
-      style={{ height }}
-    />
+    <div className={`relative w-full border border-border rounded-lg ${className}`} style={{ height }}>
+      <div ref={mapRef} className="w-full h-full rounded-lg" />
+      <div className="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-md shadow px-3 py-2 flex flex-col gap-1.5 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-4 h-4 rounded-sm flex-shrink-0" style={{ background: "rgba(128, 71, 155, 0.35)", border: "2px solid rgba(128, 71, 155, 0.9)" }} />
+          <span className="text-gray-700 font-medium">Perímetro de Adesão</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-4 h-4 rounded-sm flex-shrink-0" style={{ background: "rgba(59, 130, 246, 0.2)", border: "2px solid rgba(59, 130, 246, 0.8)" }} />
+          <span className="text-gray-700 font-medium">Perímetro Expandido</span>
+        </div>
+      </div>
+    </div>
   );
 };
 
