@@ -74,7 +74,8 @@ export const tipoInscricaoSchema = z.object({
   tipoInscricao: z.enum(["MORADOR", "TRABALHADOR", "REP_MOVIMENTOS_MORADIA"], {
     required_error: "Selecione o tipo de inscrição",
     invalid_type_error: "Tipo de inscrição inválido"
-  })
+  }),
+  vaga: z.enum(["TITULAR", "SUPLENTE"]).optional(),
 });
 
 // Schema para Etapa 2: Dados do Votante
@@ -202,18 +203,20 @@ export const arquivosSchema = z.object({
   arquivos: z
     .array(z.instanceof(File))
     .min(1, "Selecione pelo menos um arquivo")
-    .max(5, "Máximo de 5 arquivos permitidos")
+    .max(10, "Máximo de 10 arquivos permitidos")
     .refine((files) => {
       const tamanhoTotal = files.reduce((total, file) => total + file.size, 0);
-      return tamanhoTotal <= 30 * 1024 * 1024; // 30MB
-    }, "O tamanho total dos arquivos não pode exceder 30MB")
+      return tamanhoTotal <= 250 * 1024 * 1024; // 250MB
+    }, "O tamanho total dos arquivos não pode exceder 250MB")
     .refine((files) => {
       const tiposPermitidos = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'application/pdf',
         'application/zip', 'application/x-zip-compressed'
       ];
-      return files.every(file => 
-        tiposPermitidos.includes(file.type) || 
+      return files.every(file =>
+        tiposPermitidos.includes(file.type) ||
+        file.name.toLowerCase().endsWith('.pdf') ||
         file.name.toLowerCase().endsWith('.zip') ||
         file.name.toLowerCase().endsWith('.jpg') ||
         file.name.toLowerCase().endsWith('.jpeg') ||
@@ -221,7 +224,7 @@ export const arquivosSchema = z.object({
         file.name.toLowerCase().endsWith('.gif') ||
         file.name.toLowerCase().endsWith('.webp')
       );
-    }, "Apenas arquivos de imagem (JPG, PNG, GIF, WebP) e ZIP são permitidos")
+    }, "Apenas arquivos de imagem (JPG, PNG, GIF, WebP), PDF e ZIP são permitidos")
 });
 
 // Schema para Etapa 6: Declarações
@@ -230,13 +233,15 @@ export const declaracoesSchema = z.object({
   declaracaoVotacao: z.boolean().refine(val => val === true, "Você deve aceitar esta declaração"),
   declaracaoDocumento: z.boolean().refine(val => val === true, "Você deve aceitar esta declaração"),
   declaracaoAutorizacao: z.boolean().refine(val => val === true, "Você deve aceitar esta declaração"),
-  declaracaoVeracidade: z.boolean().refine(val => val === true, "Você deve aceitar esta declaração")
+  declaracaoVeracidade: z.boolean().refine(val => val === true, "Você deve aceitar esta declaração"),
+  declaracaoNaoCargoPublico: z.boolean().optional(),
 });
 
 // Schema completo do formulário
 export const formularioInscricaoSchema = z.object({
   tipoCadastro: z.enum(["ELEITOR", "CANDIDATO"]),
   tipoInscricao: z.enum(["MORADOR", "TRABALHADOR", "REP_MOVIMENTOS_MORADIA"]),
+  vaga: z.enum(["TITULAR", "SUPLENTE"]).optional(),
   votante: votanteSchema,
   endereco: enderecoSchema,
   arquivos: arquivosSchema,
@@ -259,6 +264,40 @@ export const formularioInscricaoSchema = z.object({
 }, {
   message: "Representantes de movimentos de moradia devem ter endereço dentro do perímetro de adesão",
   path: ["endereco", "areaPerimetro"]
+}).refine((data) => {
+  // CANDIDATO deve ter pelo menos 18 anos
+  if (data.tipoCadastro === "CANDIDATO" && data.votante?.dataNascimento) {
+    const parts = data.votante.dataNascimento.split("/");
+    if (parts.length === 3) {
+      const [dia, mes, ano] = parts.map(Number);
+      const hoje = new Date();
+      let idade = hoje.getFullYear() - ano;
+      if (hoje.getMonth() < mes - 1 || (hoje.getMonth() === mes - 1 && hoje.getDate() < dia)) idade--;
+      return idade >= 18;
+    }
+  }
+  return true;
+}, {
+  message: "Candidatos devem ter pelo menos 18 anos",
+  path: ["votante", "dataNascimento"]
+}).refine((data) => {
+  // CANDIDATO deve selecionar vaga (titular ou suplente)
+  if (data.tipoCadastro === "CANDIDATO") {
+    return !!data.vaga;
+  }
+  return true;
+}, {
+  message: "Selecione a vaga pretendida (titular ou suplente)",
+  path: ["vaga"]
+}).refine((data) => {
+  // CANDIDATO deve aceitar declaração de não cargo público
+  if (data.tipoCadastro === "CANDIDATO") {
+    return data.declaracoes?.declaracaoNaoCargoPublico === true;
+  }
+  return true;
+}, {
+  message: "Você deve aceitar esta declaração",
+  path: ["declaracoes", "declaracaoNaoCargoPublico"]
 });
 
 // Tipos TypeScript derivados dos schemas

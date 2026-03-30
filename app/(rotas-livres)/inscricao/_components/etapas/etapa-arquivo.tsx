@@ -8,13 +8,69 @@ import { AlertCircle, Info } from "lucide-react";
 import DragDropInput from "@/components/drag-drop-input";
 import type { FormularioInscricaoData } from "@/lib/schemas/formulario-inscricao";
 
+const MAX_SIZE = 250 * 1024 * 1024; // 250MB
+
+function DocumentosNecessarios({ tipoCadastro, tipoInscricao }: { tipoCadastro: string; tipoInscricao: string }) {
+  if (tipoCadastro === "ELEITOR") {
+    return (
+      <ul className="mt-2 space-y-1 text-sm">
+        <li>• Documento oficial com foto</li>
+        <li>• CPF (caso não conste no documento de identificação)</li>
+        {tipoInscricao === "TRABALHADOR" ? (
+          <li>• Comprovante de vínculo empregatício em empresa no perímetro da OUCAB</li>
+        ) : (
+          <li>• Comprovante de residência no perímetro da OUCAB</li>
+        )}
+      </ul>
+    );
+  }
+
+  if (tipoInscricao === "REP_MOVIMENTOS_MORADIA") {
+    return (
+      <ul className="mt-2 space-y-1 text-sm">
+        <strong className="block mb-1">Documentos da entidade (pessoa jurídica):</strong>
+        <li>• Requerimento de inscrição assinado pelo representante legal (Anexo II)</li>
+        <li>• Declaração de atuação de ao menos 2 anos na região (conforme Anexo II)</li>
+        <li>• Estatuto Social registrado, comprovando ao menos 2 anos de existência</li>
+        <li>• Ata da última eleição dos representantes legais com mandato em vigor (registrada)</li>
+        <li>• Certidão de regularidade do CNPJ (emitida nos últimos 30 dias), com sede em São Paulo/SP</li>
+        <strong className="block mt-2 mb-1">Documentos dos candidatos (titular e suplente):</strong>
+        <li>• Documento oficial com foto de cada candidato</li>
+        <li>• CPF de cada candidato (caso não conste no documento de identificação)</li>
+        <li>• Título de Eleitor regular com domicílio eleitoral em São Paulo/SP de cada candidato</li>
+        <li>• Comprovante de residência ou trabalho no perímetro (máximo 60 dias de emissão)</li>
+        <li>• Foto 3x4 recente de cada candidato</li>
+        <li>• Declaração de não exercício de cargo público/mandato eletivo (Anexo IV) de cada candidato</li>
+      </ul>
+    );
+  }
+
+  // CANDIDATO MORADOR ou TRABALHADOR
+  return (
+    <ul className="mt-2 space-y-1 text-sm">
+      <li>• Requerimento de inscrição (Anexo I)</li>
+      <li>• Documento oficial com foto</li>
+      <li>• CPF (caso não conste no documento de identificação)</li>
+      <li>• Título de Eleitor regular com domicílio eleitoral em São Paulo/SP</li>
+      {tipoInscricao === "TRABALHADOR" ? (
+        <li>• Comprovante de vínculo empregatício em empresa no perímetro da OUCAB (máximo 60 dias de emissão)</li>
+      ) : (
+        <li>• Comprovante de residência no perímetro da OUCAB (máximo 60 dias de emissão)</li>
+      )}
+      <li>• <strong>Foto 3x4 recente</strong> (para identificação na urna)</li>
+      <li>• Declaração de não exercício de cargo público/mandato eletivo (Anexo IV)</li>
+    </ul>
+  );
+}
+
 export default function EtapaArquivo() {
-  const { 
-    control, 
-    formState: { errors }, 
-    watch 
+  const {
+    control,
+    formState: { errors },
+    watch
   } = useFormContext<FormularioInscricaoData>();
 
+  const tipoCadastro = watch("tipoCadastro");
   const tipoInscricao = watch("tipoInscricao");
 
   const [arquivosInfo, setArquivosInfo] = useState<Array<{
@@ -25,7 +81,6 @@ export default function EtapaArquivo() {
 
   const arquivosValue = watch("arquivos.arquivos");
 
-  // Função para formatar tamanho do arquivo
   const formatarTamanho = useCallback((bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -34,7 +89,6 @@ export default function EtapaArquivo() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }, []);
 
-  // Sincronizar informações dos arquivos com o valor do formulário
   useEffect(() => {
     if (arquivosValue && Array.isArray(arquivosValue) && arquivosValue.length > 0) {
       const infos = arquivosValue.map(arquivo => ({
@@ -48,20 +102,23 @@ export default function EtapaArquivo() {
     }
   }, [arquivosValue, formatarTamanho]);
 
-  // Handler para quando arquivos são selecionados
   const handleFileChange = (files: File[]) => {
     if (files.length > 0) {
-      // Atualizar informações dos arquivos
-      const infos = files.map(arquivo => ({
+      setArquivosInfo(files.map(arquivo => ({
         nome: arquivo.name,
         tamanho: formatarTamanho(arquivo.size),
         tipo: arquivo.type || "Arquivo"
-      }));
-      setArquivosInfo(infos);
+      })));
     } else {
       setArquivosInfo([]);
     }
   };
+
+  const tipoLabel = tipoInscricao === "TRABALHADOR"
+    ? "Trabalhador(a)"
+    : tipoInscricao === "REP_MOVIMENTOS_MORADIA"
+    ? "Representante de Movimento de Moradia"
+    : "Morador(a)";
 
   return (
     <div className="space-y-6">
@@ -69,17 +126,8 @@ export default function EtapaArquivo() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>Documentos necessários para {tipoInscricao === "TRABALHADOR" ? "Trabalhador na" : "Morador da"} região, segundo <a className="text-blue-600 hover:underline" href="https://gestaourbana.prefeitura.sp.gov.br/wp-content/uploads/2025/09/Edital_002_2025_SPURB_OUCBT_Trabalhadores_e_251017_092250-1.pdf" target="_blank">Edital Nº 002/2025/SPURB/OUCBT:</a></strong>
-          <ul className="mt-2 space-y-1 text-sm">
-            <li>• Documento oficial com foto</li>
-            <li>• CPF (caso não conste no documento de identificação)</li>
-            {tipoInscricao === "TRABALHADOR" ? (
-              <li>• CTPS ou contrato de trabalho de empresa no perímetro de adesão da OUCBT</li>
-            ) : (
-              <li>• Comprovante de residência no perímetro de adesão da OUCBT</li>
-            )}
-            <li>• <a href="/anexoIII.pdf" download className="text-blue-600 hover:underline">Anexo III (paginas 13 e 14 do Edital)</a></li>
-          </ul>
+          <strong>Documentos necessários — {tipoCadastro === "CANDIDATO" ? "Candidato(a)" : "Eleitor(a)"} / {tipoLabel}:</strong>
+          <DocumentosNecessarios tipoCadastro={tipoCadastro} tipoInscricao={tipoInscricao} />
         </AlertDescription>
       </Alert>
 
@@ -89,9 +137,9 @@ export default function EtapaArquivo() {
         <AlertDescription>
           <strong>Requisitos dos arquivos:</strong>
           <ul className="mt-2 space-y-1 text-sm">
-            <li>• Tipos aceitos: Imagens (JPG, PNG, GIF, WebP) e arquivos ZIP</li>
-            <li>• Máximo 5 arquivos</li>
-            <li>• Tamanho total: Máximo 30MB (todos os arquivos)</li>
+            <li>• Tipos aceitos: Imagens (JPG, PNG, GIF, WebP), PDF e arquivos ZIP</li>
+            <li>• Máximo 10 arquivos</li>
+            <li>• Tamanho total: Máximo 250MB</li>
           </ul>
         </AlertDescription>
       </Alert>
@@ -110,46 +158,18 @@ export default function EtapaArquivo() {
               }}
               value={field.value || []}
               multiple={true}
-              maxFiles={5}
-              maxSize={30 * 1024 * 1024} // 30MB total
-              accept="image/*,.zip"
+              maxFiles={10}
+              maxSize={MAX_SIZE}
+              accept="image/*,.pdf,.zip"
               buttonText="Selecionar arquivos"
               dropzoneText="Arraste e solte seus arquivos aqui"
-              helperText="Imagens (JPG, PNG, GIF, WebP) e arquivos ZIP aceitos. Máximo 5 arquivos e 30MB total"
+              helperText="Imagens (JPG, PNG, GIF, WebP), PDF e ZIP aceitos. Máximo 10 arquivos e 250MB total"
               error={errors.arquivos?.message}
             />
           )}
         />
       </div>
 
-      {/* Exibir informações dos arquivos selecionados */}
-      {/* {arquivosInfo.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            Arquivos selecionados ({arquivosInfo.length})
-          </h4>
-          <div className="space-y-2">
-            {arquivosInfo.map((arquivo, index) => (
-              <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <FileArchive className="h-6 w-6 text-blue-500" />
-                  <div className="flex-1">
-                    <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {arquivo.nome}
-                    </h5>
-                    <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      <span>Tamanho: {arquivo.tamanho}</span>
-                      <span>Tipo: {arquivo.tipo}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )} */}
-
-      {/* Mostrar erro se houver */}
       {errors.arquivos && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -159,12 +179,10 @@ export default function EtapaArquivo() {
         </Alert>
       )}
 
-      {/* Instruções adicionais */}
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          <strong>Importante:</strong> Certifique-se de que o arquivo .zip contém todos os documentos 
-          necessários para sua inscrição. Após o envio, não será possível alterar o arquivo.
+          <strong>Importante:</strong> Certifique-se de que todos os documentos estão legíveis e dentro do prazo de validade exigido. Inscrições com documentação incompleta serão indeferidas.
         </AlertDescription>
       </Alert>
     </div>

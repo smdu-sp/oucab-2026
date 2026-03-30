@@ -1,11 +1,12 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import { Home, Building2, Users } from "lucide-react";
+import { Home, Building2, Users, Trophy, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FormularioInscricaoData } from "@/lib/schemas/formulario-inscricao";
 
 type TipoInscricao = "MORADOR" | "TRABALHADOR" | "REP_MOVIMENTOS_MORADIA";
+type Vaga = "TITULAR" | "SUPLENTE";
 
 const opcoes: {
   valor: TipoInscricao;
@@ -37,6 +38,29 @@ const opcoes: {
   },
 ];
 
+const opcoesVaga: {
+  valor: Vaga;
+  label: string;
+  descricao: string;
+  icone: React.ElementType;
+  cor: "indigo" | "cyan";
+}[] = [
+  {
+    valor: "TITULAR",
+    label: "Titular",
+    descricao: "Candidatura para a vaga de representante titular.",
+    icone: Trophy,
+    cor: "indigo",
+  },
+  {
+    valor: "SUPLENTE",
+    label: "Suplente",
+    descricao: "Candidatura para a vaga de representante suplente.",
+    icone: Award,
+    cor: "cyan",
+  },
+];
+
 const cores = {
   blue: {
     card: "border-blue-500 bg-blue-50 dark:bg-blue-950",
@@ -62,12 +86,29 @@ const cores = {
     iconBgIdle: "bg-muted",
     iconIdle: "text-muted-foreground",
   },
+  indigo: {
+    card: "border-indigo-500 bg-indigo-50 dark:bg-indigo-950",
+    cardIdle: "border-border hover:border-indigo-300 dark:hover:border-indigo-700",
+    iconBg: "bg-indigo-100 dark:bg-indigo-900",
+    icon: "text-indigo-600 dark:text-indigo-400",
+    iconBgIdle: "bg-muted",
+    iconIdle: "text-muted-foreground",
+  },
+  cyan: {
+    card: "border-cyan-500 bg-cyan-50 dark:bg-cyan-950",
+    cardIdle: "border-border hover:border-cyan-300 dark:hover:border-cyan-700",
+    iconBg: "bg-cyan-100 dark:bg-cyan-900",
+    icon: "text-cyan-600 dark:text-cyan-400",
+    iconBgIdle: "bg-muted",
+    iconIdle: "text-muted-foreground",
+  },
 };
 
 export default function EtapaTipoInscricao() {
   const { setValue, watch, formState: { errors } } = useFormContext<FormularioInscricaoData>();
   const tipoInscricao = watch("tipoInscricao");
   const tipoCadastro = watch("tipoCadastro");
+  const vaga = watch("vaga");
 
   const opcoesFiltradas = opcoes.filter(
     (o) => o.valor !== "REP_MOVIMENTOS_MORADIA" || tipoCadastro === "CANDIDATO"
@@ -76,8 +117,11 @@ export default function EtapaTipoInscricao() {
   const handleTipoChange = (valor: TipoInscricao) => {
     setValue("tipoInscricao", valor, { shouldValidate: true });
     if (valor !== "TRABALHADOR") setValue("votante.empresa", "");
-    // Limpar área do perímetro ao trocar tipo, pois a restrição pode mudar
     setValue("endereco.areaPerimetro", null);
+  };
+
+  const handleVagaChange = (valor: Vaga) => {
+    setValue("vaga", valor, { shouldValidate: true });
   };
 
   return (
@@ -114,6 +158,47 @@ export default function EtapaTipoInscricao() {
         <p className="text-center text-sm text-destructive">
           {errors.tipoInscricao.message}
         </p>
+      )}
+
+      {/* Seleção de vaga — apenas para candidatos */}
+      {tipoCadastro === "CANDIDATO" && (
+        <div className="space-y-3">
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-semibold mb-3">Vaga pretendida</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {opcoesVaga.map(({ valor, label, descricao, icone: Icone, cor }) => {
+                const selecionado = vaga === valor;
+                const c = cores[cor];
+
+                return (
+                  <button
+                    key={valor}
+                    type="button"
+                    onClick={() => handleVagaChange(valor)}
+                    className={cn(
+                      "w-full rounded-xl border-2 p-6 text-center transition-all duration-200 hover:shadow-md",
+                      selecionado ? c.card : c.cardIdle
+                    )}
+                  >
+                    <div className={cn(
+                      "mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full",
+                      selecionado ? c.iconBg : c.iconBgIdle
+                    )}>
+                      <Icone className={cn("h-6 w-6", selecionado ? c.icon : c.iconIdle)} />
+                    </div>
+                    <p className="text-base font-semibold">{label}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{descricao}</p>
+                  </button>
+                );
+              })}
+            </div>
+            {(errors as any).vaga && (
+              <p className="text-center text-sm text-destructive mt-2">
+                {(errors as any).vaga.message}
+              </p>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="rounded-lg bg-muted/50 p-4">

@@ -83,6 +83,7 @@ export default function FormularioInscricao() {
     defaultValues: {
       tipoCadastro: undefined as any,
       tipoInscricao: undefined as any,
+      vaga: undefined as any,
       votante: {
         nome: "",
         nomeSocial: "",
@@ -123,7 +124,7 @@ export default function FormularioInscricao() {
       case 1:
         return !!dados.tipoCadastro;
       case 2:
-        return !!dados.tipoInscricao;
+        return !!dados.tipoInscricao && (dados.tipoCadastro !== "CANDIDATO" || !!dados.vaga);
       case 3: {
         const e = dados.endereco;
         return !!(e?.logradouro && e?.bairro && e?.cidade && e?.estado && e?.cep && e?.latitude && e?.longitude);
@@ -140,7 +141,9 @@ export default function FormularioInscricao() {
         return true;
       case 7: {
         const d = dados.declaracoes;
-        return !!(d?.declaracaoIdentidade && d?.declaracaoVotacao && d?.declaracaoDocumento && d?.declaracaoAutorizacao && d?.declaracaoVeracidade);
+        const baseOk = !!(d?.declaracaoIdentidade && d?.declaracaoVotacao && d?.declaracaoDocumento && d?.declaracaoAutorizacao && d?.declaracaoVeracidade);
+        const candidatoOk = dados.tipoCadastro !== "CANDIDATO" || !!d?.declaracaoNaoCargoPublico;
+        return baseOk && candidatoOk;
       }
       default:
         return false;
@@ -163,7 +166,9 @@ export default function FormularioInscricao() {
     if (etapaAtual === 1) {
       isValid = await trigger(["tipoCadastro"]);
     } else if (etapaAtual === 2) {
-      isValid = await trigger(["tipoInscricao"]);
+      const fields: any[] = ["tipoInscricao"];
+      if (getValues("tipoCadastro") === "CANDIDATO") fields.push("vaga");
+      isValid = await trigger(fields);
     } else if (etapaAtual === 3) {
       isValid = await trigger(["endereco.logradouro", "endereco.bairro", "endereco.cidade", "endereco.estado", "endereco.cep"]);
       if (isValid) {
@@ -215,6 +220,7 @@ export default function FormularioInscricao() {
 
       formData.append("tipoCadastro", data.tipoCadastro);
       formData.append("tipoInscricao", data.tipoInscricao);
+      if (data.vaga) formData.append("vaga", data.vaga);
 
       formData.append("votante.nome", data.votante.nome);
       if (data.votante.nomeSocial) formData.append("votante.nomeSocial", data.votante.nomeSocial);

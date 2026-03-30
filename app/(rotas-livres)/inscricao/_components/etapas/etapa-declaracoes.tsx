@@ -10,8 +10,9 @@ import type { FormularioInscricaoData } from "@/lib/schemas/formulario-inscricao
 
 export default function EtapaDeclaracoes() {
   const { watch, setValue, formState: { errors } } = useFormContext<FormularioInscricaoData>();
-  
+
   const tipoInscricao = watch("tipoInscricao");
+  const tipoCadastro = watch("tipoCadastro");
   const votante = watch("votante");
   const endereco = watch("endereco");
   const declaracoes = watch("declaracoes");
@@ -56,7 +57,13 @@ export default function EtapaDeclaracoes() {
     setValue(`declaracoes.${key}`, value);
   };
 
-  const todasDeclaracoesAceitas = declaracoes && Object.values(declaracoes).every(Boolean);
+  const todasDeclaracoesAceitas = declaracoes &&
+    declaracoes.declaracaoIdentidade &&
+    declaracoes.declaracaoVotacao &&
+    declaracoes.declaracaoDocumento &&
+    declaracoes.declaracaoAutorizacao &&
+    declaracoes.declaracaoVeracidade &&
+    (tipoCadastro !== "CANDIDATO" || declaracoes.declaracaoNaoCargoPublico);
 
   // Construir a declaração de identidade dinamicamente como JSX
   const construirDeclaracaoIdentidade = () => {
@@ -244,6 +251,40 @@ export default function EtapaDeclaracoes() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Declaração de Não Exercício de Cargo Público — apenas candidatos */}
+        {tipoCadastro === "CANDIDATO" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Declaração de Não Exercício de Cargo Público</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-sm text-muted-foreground leading-relaxed bg-muted p-4 rounded-md">
+                DECLARO, sob as penas da lei, que não incorro nas vedações constantes do artigo 1º do{" "}
+                <a
+                  href="https://legislacao.prefeitura.sp.gov.br/leis/decreto-53177-de-4-de-junho-de-2012"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"
+                >
+                  Decreto municipal nº 53.177/2012
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                , não sendo ocupante de cargo efetivo ou em comissão no Poder Público (Municipal, Estadual ou Federal, Administração direta ou indireta dos poderes executivo, legislativo e judiciário), nem detentor de mandato eletivo. DECLARO ainda não ser membro da Comissão Eleitoral do Grupo de Gestão da OUCAB, não ser candidato(a) a outra vaga no mesmo Grupo de Gestão e não estar exercendo nem ter concluído o segundo mandato consecutivo em 2026 no Grupo de Gestão da Operação Água Branca.
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="declaracao-nao-cargo-publico"
+                  checked={declaracoes?.declaracaoNaoCargoPublico || false}
+                  onCheckedChange={(checked) => handleDeclaracaoChange('declaracaoNaoCargoPublico', checked)}
+                />
+                <Label htmlFor="declaracao-nao-cargo-publico" className="text-sm font-medium">
+                  Li e concordo com esta declaração
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {!todasDeclaracoesAceitas && (

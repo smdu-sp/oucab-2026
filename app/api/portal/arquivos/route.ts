@@ -50,9 +50,9 @@ export async function PUT(request: NextRequest) {
   }
 
   if (arquivos.length === 0) return NextResponse.json({ error: "Nenhum arquivo enviado." }, { status: 400 });
-  if (arquivos.length > 5) return NextResponse.json({ error: "Máximo de 5 arquivos permitidos." }, { status: 400 });
+  if (arquivos.length > 10) return NextResponse.json({ error: "Máximo de 10 arquivos permitidos." }, { status: 400 });
   const totalSize = arquivos.reduce((s, f) => s + f.size, 0);
-  if (totalSize > 30 * 1024 * 1024) return NextResponse.json({ error: "Tamanho total excede 30 MB." }, { status: 400 });
+  if (totalSize > 250 * 1024 * 1024) return NextResponse.json({ error: "Tamanho total excede 250 MB." }, { status: 400 });
 
   // Remover arquivos antigos
   const votanteDir = join(process.cwd(), "uploads", votanteId);

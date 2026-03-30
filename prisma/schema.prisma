@@ -60,6 +60,11 @@ enum AreaPerimetro {
     EXPANDIDO
 }
 
+enum Vaga {
+    TITULAR
+    SUPLENTE
+}
+
 enum Genero {
     MASCULINO
     FEMININO
@@ -78,6 +83,7 @@ model Votante {
     dataNascimento         DateTime               @db.Date
     tipoCadastro           TipoCadastro           @default(ELEITOR)
     areaPerimetro          AreaPerimetro
+    vaga                   Vaga?
     usuarioId              String                 @unique
     status                 Status                 @default(EM_ANALISE)
     criadoEm               DateTime               @default(now())

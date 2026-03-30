@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const dadosFormulario = {
       tipoCadastro: formData.get("tipoCadastro") as "ELEITOR" | "CANDIDATO",
       tipoInscricao: formData.get("tipoInscricao") as "MORADOR" | "TRABALHADOR" | "REP_MOVIMENTOS_MORADIA",
+      vaga: (formData.get("vaga") as "TITULAR" | "SUPLENTE") || undefined,
       votante: {
         nome: formData.get("votante.nome") as string,
         nomeSocial: formData.get("votante.nomeSocial") as string || undefined,
@@ -132,7 +133,8 @@ export async function POST(request: NextRequest) {
           data: {
             tipoCadastro: dadosValidados.tipoCadastro,
             tipoInscricao: dadosValidados.tipoInscricao,
-            areaPerimetro: dadosValidados.endereco.areaPerimetro,
+            areaPerimetro: dadosValidados.endereco.areaPerimetro ?? undefined,
+            vaga: dadosValidados.vaga ?? null,
             nomeSocial: dadosValidados.votante.nomeSocial || null,
             telefone: dadosValidados.votante.telefone,
             genero: dadosValidados.votante.genero,
@@ -262,7 +264,8 @@ export async function POST(request: NextRequest) {
         data: {
           tipoCadastro: dadosValidados.tipoCadastro,
           tipoInscricao: dadosValidados.tipoInscricao,
-          areaPerimetro: dadosValidados.endereco.areaPerimetro,
+          areaPerimetro: dadosValidados.endereco.areaPerimetro ?? "ADESAO",
+          vaga: dadosValidados.vaga ?? null,
           nomeSocial: dadosValidados.votante.nomeSocial || null,
           telefone: dadosValidados.votante.telefone,
           genero: dadosValidados.votante.genero,
