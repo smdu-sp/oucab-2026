@@ -15,14 +15,14 @@ export default function Header() {
             <div className="relative z-10 flex justify-between items-center p-8 gap-4">
                 <Link href="https://www.prefeitura.sp.gov.br/" target="_blank">
                     <Image
-                        src="/prefeitura/logo-dark.png"
+                        src="/oucab/prefeitura/logo-dark.png"
                         alt="Prefeitura de São Paulo"
                         className="hidden md:block md:w-64 h-auto"
                         width={900}
                         height={290}
                     />
                     <Image
-                        src="/prefeitura/brasao.png"
+                        src="/oucab/prefeitura/brasao.png"
                         alt="Prefeitura de São Paulo"
                         className="md:hidden w-36 h-auto"
                         width={900}

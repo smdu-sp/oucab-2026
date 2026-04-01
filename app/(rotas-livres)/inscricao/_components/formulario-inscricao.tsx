@@ -857,7 +857,8 @@ export default function FormularioInscricao() {
   const EtapaComponent = stepAtual?.component;
   const isUltimaEtapa = etapaAtual === etapas.length &&
     stepAtual?.type !== "tipoCadastro" &&
-    stepAtual?.type !== "tipoInscricao";
+    stepAtual?.type !== "tipoInscricao" &&
+    stepAtual?.type !== "revisao";
   const isDocOpcional = stepAtual?.type === "doc" && !stepAtual.docObrigatorio;
 
   if (!EtapaComponent) return null;
@@ -914,7 +915,26 @@ export default function FormularioInscricao() {
                     </Button>
                   )}
 
-                  {!isUltimaEtapa ? (
+                  {stepAtual?.type === "revisao" ? (
+                    <Button
+                      type="button"
+                      onClick={() => onSubmit(getValues())}
+                      disabled={isSubmitting}
+                      className="flex items-center space-x-2"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          <span>Enviando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Finalizar Inscrição</span>
+                        </>
+                      )}
+                    </Button>
+                  ) : !isUltimaEtapa ? (
                     <Button
                       type="button"
                       onClick={proximaEtapa}
