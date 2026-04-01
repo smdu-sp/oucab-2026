@@ -1,3 +1,5 @@
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
 export type AreaPerimetro = "ADESAO" | "EXPANDIDO";
 
 export interface PerimeterResult {
@@ -14,7 +16,7 @@ export async function checkOUCABPerimeter(
 ): Promise<PerimeterResult> {
   try {
     const response = await fetch(
-      `/api/validacao/perimetro?lat=${latitude}&lng=${longitude}`
+      `${BASE_PATH}/api/validacao/perimetro?lat=${latitude}&lng=${longitude}`
     );
     if (!response.ok) return { isValid: false, area: null };
     const data = await response.json();
