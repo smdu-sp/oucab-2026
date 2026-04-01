@@ -1,11 +1,11 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import { Home, Building2, Users, Trophy, Award } from "lucide-react";
+import { Home, Building2, Users, Trophy, Award, Briefcase, Building, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FormularioInscricaoData } from "@/lib/schemas/formulario-inscricao";
 
-type TipoInscricao = "MORADOR" | "TRABALHADOR" | "REP_MOVIMENTOS_MORADIA";
+type TipoInscricao = "MORADOR" | "TRABALHADOR" | "REP_MORADIA" | "REP_ONGS" | "REP_PROFISSIONAIS" | "REP_EMPRESARIAIS";
 type Vaga = "TITULAR" | "SUPLENTE";
 
 const opcoes: {
@@ -13,28 +13,54 @@ const opcoes: {
   label: string;
   descricao: string;
   icone: React.ElementType;
-  cor: "blue" | "green" | "orange";
+  cor: "blue" | "green" | "orange" | "purple" | "teal" | "rose";
+  soCandidato?: boolean;
 }[] = [
   {
     valor: "MORADOR",
     label: "Morador(a) da Região",
-    descricao: "Moro na região do perímetro de adesão da OUCAB.",
+    descricao: "Resido no perímetro de adesão ou expandido da OUCAB.",
     icone: Home,
     cor: "blue",
   },
   {
     valor: "TRABALHADOR",
     label: "Trabalhador(a) na Região",
-    descricao: "Trabalho na região do perímetro de adesão da OUCAB.",
+    descricao: "Trabalho no perímetro de adesão ou expandido da OUCAB.",
     icone: Building2,
     cor: "green",
   },
   {
-    valor: "REP_MOVIMENTOS_MORADIA",
+    valor: "REP_MORADIA",
     label: "Representante de Movimentos de Moradia",
-    descricao: "Represento um movimento de moradia com atuação na região do perímetro de adesão da OUCAB.",
+    descricao: "Represento um movimento de moradia com atuação na área da OUCAB.",
     icone: Users,
     cor: "orange",
+    soCandidato: true,
+  },
+  {
+    valor: "REP_ONGS",
+    label: "Representante de Organização Não Governamental",
+    descricao: "Represento uma ONG com atuação nas temáticas urbana e ambiental.",
+    icone: Briefcase,
+    cor: "purple",
+    soCandidato: true,
+  },
+  {
+    valor: "REP_PROFISSIONAIS",
+    label: "Representante de Entidade Profissional",
+    descricao: "Represento uma entidade profissional com atuação na área da OUCAB.",
+    icone: Building,
+    cor: "teal",
+    soCandidato: true,
+  },
+  {
+    valor: "REP_EMPRESARIAIS",
+    label: "Representante de Entidade Empresarial",
+    descricao: "Represento uma entidade empresarial com atuação na área da OUCAB.",
+    icone: Landmark,
+    cor: "rose",
+    soCandidato: true,
   },
 ];
 
@@ -86,6 +112,30 @@ const cores = {
     iconBgIdle: "bg-muted",
     iconIdle: "text-muted-foreground",
   },
+  purple: {
+    card: "border-purple-500 bg-purple-50 dark:bg-purple-950",
+    cardIdle: "border-border hover:border-purple-300 dark:hover:border-purple-700",
+    iconBg: "bg-purple-100 dark:bg-purple-900",
+    icon: "text-purple-600 dark:text-purple-400",
+    iconBgIdle: "bg-muted",
+    iconIdle: "text-muted-foreground",
+  },
+  teal: {
+    card: "border-teal-500 bg-teal-50 dark:bg-teal-950",
+    cardIdle: "border-border hover:border-teal-300 dark:hover:border-teal-700",
+    iconBg: "bg-teal-100 dark:bg-teal-900",
+    icon: "text-teal-600 dark:text-teal-400",
+    iconBgIdle: "bg-muted",
+    iconIdle: "text-muted-foreground",
+  },
+  rose: {
+    card: "border-rose-500 bg-rose-50 dark:bg-rose-950",
+    cardIdle: "border-border hover:border-rose-300 dark:hover:border-rose-700",
+    iconBg: "bg-rose-100 dark:bg-rose-900",
+    icon: "text-rose-600 dark:text-rose-400",
+    iconBgIdle: "bg-muted",
+    iconIdle: "text-muted-foreground",
+  },
   indigo: {
     card: "border-indigo-500 bg-indigo-50 dark:bg-indigo-950",
     cardIdle: "border-border hover:border-indigo-300 dark:hover:border-indigo-700",
@@ -108,25 +158,25 @@ export default function EtapaTipoInscricao() {
   const { setValue, watch, formState: { errors } } = useFormContext<FormularioInscricaoData>();
   const tipoInscricao = watch("tipoInscricao");
   const tipoCadastro = watch("tipoCadastro");
-  const vaga = watch("vaga");
+
+  const isRep = tipoInscricao && ["REP_MORADIA", "REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
 
   const opcoesFiltradas = opcoes.filter(
-    (o) => o.valor !== "REP_MOVIMENTOS_MORADIA" || tipoCadastro === "CANDIDATO"
+    (o) => !o.soCandidato || tipoCadastro === "CANDIDATO"
   );
 
   const handleTipoChange = (valor: TipoInscricao) => {
     setValue("tipoInscricao", valor, { shouldValidate: true });
-    if (valor !== "TRABALHADOR") setValue("votante.empresa", "");
     setValue("endereco.areaPerimetro", null);
   };
 
-  const handleVagaChange = (valor: Vaga) => {
-    setValue("vaga", valor, { shouldValidate: true });
-  };
+  const numColunas = opcoesFiltradas.length === 2 ? "md:grid-cols-2" :
+    opcoesFiltradas.length === 3 ? "md:grid-cols-3" :
+    "md:grid-cols-3";
 
   return (
     <div className="space-y-6">
-      <div className={`grid grid-cols-1 gap-4 ${opcoesFiltradas.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+      <div className={`grid grid-cols-1 gap-4 ${numColunas}`}>
         {opcoesFiltradas.map(({ valor, label, descricao, icone: Icone, cor }) => {
           const selecionado = tipoInscricao === valor;
           const c = cores[cor];
@@ -137,18 +187,18 @@ export default function EtapaTipoInscricao() {
               type="button"
               onClick={() => handleTipoChange(valor)}
               className={cn(
-                "w-full rounded-xl border-2 p-6 text-center transition-all duration-200 hover:shadow-md",
+                "w-full rounded-xl border-2 p-5 text-left transition-all duration-200 hover:shadow-md",
                 selecionado ? c.card : c.cardIdle
               )}
             >
               <div className={cn(
-                "mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full",
+                "mb-3 flex h-10 w-10 items-center justify-center rounded-full",
                 selecionado ? c.iconBg : c.iconBgIdle
               )}>
-                <Icone className={cn("h-6 w-6", selecionado ? c.icon : c.iconIdle)} />
+                <Icone className={cn("h-5 w-5", selecionado ? c.icon : c.iconIdle)} />
               </div>
-              <p className="text-base font-semibold">{label}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{descricao}</p>
+              <p className="text-sm font-semibold">{label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{descricao}</p>
             </button>
           );
         })}
@@ -160,54 +210,14 @@ export default function EtapaTipoInscricao() {
         </p>
       )}
 
-      {/* Seleção de vaga — apenas para candidatos */}
-      {tipoCadastro === "CANDIDATO" && (
-        <div className="space-y-3">
-          <div className="border-t pt-4">
-            <h4 className="text-sm font-semibold mb-3">Vaga pretendida</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {opcoesVaga.map(({ valor, label, descricao, icone: Icone, cor }) => {
-                const selecionado = vaga === valor;
-                const c = cores[cor];
-
-                return (
-                  <button
-                    key={valor}
-                    type="button"
-                    onClick={() => handleVagaChange(valor)}
-                    className={cn(
-                      "w-full rounded-xl border-2 p-6 text-center transition-all duration-200 hover:shadow-md",
-                      selecionado ? c.card : c.cardIdle
-                    )}
-                  >
-                    <div className={cn(
-                      "mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full",
-                      selecionado ? c.iconBg : c.iconBgIdle
-                    )}>
-                      <Icone className={cn("h-6 w-6", selecionado ? c.icon : c.iconIdle)} />
-                    </div>
-                    <p className="text-base font-semibold">{label}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{descricao}</p>
-                  </button>
-                );
-              })}
-            </div>
-            {(errors as any).vaga && (
-              <p className="text-center text-sm text-destructive mt-2">
-                {(errors as any).vaga.message}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="rounded-lg bg-muted/50 p-4">
-        <h4 className="mb-2 font-medium">Informações importantes:</h4>
+        <h4 className="mb-2 font-medium text-sm">Informações importantes:</h4>
         <ul className="space-y-1 text-sm text-muted-foreground">
-          <li>• <strong>Moradores:</strong> Devem comprovar residência no perímetro de adesão</li>
-          <li>• <strong>Trabalhadores:</strong> Devem comprovar vínculo empregatício na região</li>
-          <li>• <strong>Representantes de movimentos de moradia:</strong> O endereço deve estar obrigatoriamente no perímetro de adesão</li>
-          <li>• A documentação necessária varia conforme o tipo selecionado</li>
+          <li>• <strong>Moradores e Trabalhadores:</strong> Devem comprovar vínculo com o perímetro de adesão ou expandido</li>
+          <li>• <strong>Representantes de movimentos de moradia:</strong> A entidade deve atuar na região há ao menos 2 anos</li>
+          <li>• <strong>Representantes de ONGs, Entidades Profissionais e Empresariais:</strong> A entidade deve ter sede em São Paulo e ao menos 2 anos de existência</li>
+          <li>• A documentação exigida varia conforme o tipo selecionado</li>
         </ul>
       </div>
     </div>

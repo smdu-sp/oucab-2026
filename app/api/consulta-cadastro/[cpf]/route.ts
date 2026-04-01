@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
 
-// Consulta pública do status de cadastro por CPF
+// Consulta pública do status de inscrição por CPF
 export async function GET(
   _request: Request,
   context: { params: Promise<{ cpf: string }> }
@@ -17,30 +17,29 @@ export async function GET(
       );
     }
 
-    const votante = await db.votante.findUnique({
+    const candidato = await db.candidato.findUnique({
       where: { cpf: cpfLimpo },
       select: {
-        id: true,
         cpf: true,
         nome: true,
-        status: true,
-        criadoEm: true,
-        atualizadoEm: true,
+        candidatura: {
+          select: { status: true, criadoEm: true, atualizadoEm: true },
+        },
       },
     });
 
-    if (!votante) {
+    if (!candidato) {
       return NextResponse.json({ found: false, status: null }, { status: 404 });
     }
 
     return NextResponse.json(
       {
         found: true,
-        cpf: votante.cpf,
-        nome: votante.nome,
-        status: votante.status,
-        criadoEm: votante.criadoEm,
-        atualizadoEm: votante.atualizadoEm,
+        cpf: candidato.cpf,
+        nome: candidato.nome,
+        status: candidato.candidatura.status,
+        criadoEm: candidato.candidatura.criadoEm,
+        atualizadoEm: candidato.candidatura.atualizadoEm,
       },
       { status: 200 }
     );
@@ -52,4 +51,3 @@ export async function GET(
     );
   }
 }
-

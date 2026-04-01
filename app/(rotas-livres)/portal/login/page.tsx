@@ -39,7 +39,7 @@ export default function PortalLoginPage() {
 
     setIsLoading(true);
     try {
-      const result = await signIn("votante", { cpf: cpfLimpo, senha, redirect: false });
+      const result = await signIn("credentials", { login: cpfLimpo, senha, redirect: false });
       if (result?.error) {
         toast.error("CPF ou senha incorretos. Verifique seus dados.");
         return;

@@ -1,380 +1,488 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
-import { formularioInscricaoSchema } from "@/lib/schemas/formulario-inscricao";
-import { writeFile, mkdir, rm } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import { gerarSenha, hashSenha } from "@/lib/password";
 import { sendEmail, emailBoasVindas } from "@/lib/email";
 import { PRAZO_INSCRICAO } from "@/lib/config";
+import type { CategoriaArquivo } from "@prisma/client";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function parseDateBR(dateStr: string): Date {
+  const [dia, mes, ano] = dateStr.split("/").map(Number);
+  return new Date(ano, mes - 1, dia);
+}
+
+async function salvarArquivo(
+  arquivo: File,
+  dir: string,
+): Promise<{ nome: string; tipo: string; tamanho: number; caminho: string }> {
+  const nomeArquivo = `${Date.now()}-${Math.random().toString(36).substring(2)}-${arquivo.name}`;
+  const caminho = join(dir, nomeArquivo);
+  await writeFile(caminho, Buffer.from(await arquivo.arrayBuffer()));
+  return { nome: arquivo.name, tipo: arquivo.type, tamanho: arquivo.size, caminho };
+}
+
+async function garantirDiretorio(dir: string): Promise<void> {
+  if (!existsSync(dir)) await mkdir(dir, { recursive: true });
+}
+
+// Mapeia nome do campo de arquivo para CategoriaArquivo do Prisma
+const CATEGORIA_MAP: Record<string, CategoriaArquivo> = {
+  docRequerimento: "REQUERIMENTO",
+  docIdentidade: "DOCUMENTO_IDENTIDADE",
+  docCPF: "CPF",
+  docTituloEleitor: "TITULO_ELEITOR",
+  docFoto3x4: "FOTO",
+  docDeclaracao: "DECLARACAO",
+  orgDocRequerimento: "REQUERIMENTO",
+  orgDocDeclaracaoAtuacao: "DECLARACAO_ATUACAO",
+  orgDocEstatutoSocial: "ESTATUTO_SOCIAL",
+  orgDocAtaEleicao: "ATA_ELEICAO",
+  orgDocCertidaoCNPJ: "CERTIDAO_CNPJ",
+  orgDocComprovanteCNPJ: "CERTIDAO_CNPJ",
+  titularDocRequerimento: "REQUERIMENTO",
+  titularDocIdentidade: "DOCUMENTO_IDENTIDADE",
+  titularDocCPF: "CPF",
+  titularDocTituloEleitor: "TITULO_ELEITOR",
+  titularDocComprovante: "COMPROVANTE_RESIDENCIA",
+  titularDocFoto3x4: "FOTO",
+  titularDocDeclaracao: "DECLARACAO",
+  suplenteDocRequerimento: "REQUERIMENTO",
+  suplenteDocIdentidade: "DOCUMENTO_IDENTIDADE",
+  suplenteDocCPF: "CPF",
+  suplenteDocTituloEleitor: "TITULO_ELEITOR",
+  suplenteDocComprovante: "COMPROVANTE_RESIDENCIA",
+  suplenteDocFoto3x4: "FOTO",
+  suplenteDocDeclaracao: "DECLARACAO",
+};
+
+const CAMPOS_ARQUIVO_INDIVIDUAL = [
+  "docRequerimento", "docIdentidade", "docCPF", "docTituloEleitor",
+  "docFoto3x4", "docDeclaracao",
+] as const;
+
+const CAMPOS_ARQUIVO_COMPROVANTE = ["docComprovante"] as const;
+
+const CAMPOS_ARQUIVO_ORG = [
+  "orgDocRequerimento", "orgDocDeclaracaoAtuacao", "orgDocEstatutoSocial",
+  "orgDocAtaEleicao", "orgDocCertidaoCNPJ", "orgDocComprovanteCNPJ",
+] as const;
+
+const CAMPOS_ARQUIVO_TITULAR = [
+  "titularDocRequerimento", "titularDocIdentidade", "titularDocCPF",
+  "titularDocTituloEleitor", "titularDocComprovante", "titularDocFoto3x4", "titularDocDeclaracao",
+] as const;
+
+const CAMPOS_ARQUIVO_SUPLENTE = [
+  "suplenteDocRequerimento", "suplenteDocIdentidade", "suplenteDocCPF",
+  "suplenteDocTituloEleitor", "suplenteDocComprovante", "suplenteDocFoto3x4", "suplenteDocDeclaracao",
+] as const;
+
+// ---------------------------------------------------------------------------
+// Handler principal
+// ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
   if (new Date() > PRAZO_INSCRICAO) {
-    return NextResponse.json(
-      { error: "Não é possível se inscrever fora do prazo." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Não é possível se inscrever fora do prazo." }, { status: 400 });
   }
+
   try {
     const formData = await request.formData();
-    
-    // Extrair arquivos
-    const arquivos: File[] = [];
-    let index = 0;
-    while (formData.get(`arquivos[${index}]`)) {
-      const arquivo = formData.get(`arquivos[${index}]`) as File;
-      if (arquivo && arquivo.size > 0) {
-        arquivos.push(arquivo);
-      }
-      index++;
-    }
-    
-    // Extrair dados do formulário
-    const dadosFormulario = {
-      tipoCadastro: formData.get("tipoCadastro") as "ELEITOR" | "CANDIDATO",
-      tipoInscricao: formData.get("tipoInscricao") as "MORADOR" | "TRABALHADOR" | "REP_MOVIMENTOS_MORADIA",
-      vaga: (formData.get("vaga") as "TITULAR" | "SUPLENTE") || undefined,
-      votante: {
-        nome: formData.get("votante.nome") as string,
-        nomeSocial: formData.get("votante.nomeSocial") as string || undefined,
-        telefone: formData.get("votante.telefone") as string,
-        genero: formData.get("votante.genero") as "MASCULINO" | "FEMININO" | "OUTRO",
-        email: formData.get("votante.email") as string,
-        cpf: formData.get("votante.cpf") as string,
-        dataNascimento: formData.get("votante.dataNascimento") as string,
-        empresa: formData.get("votante.empresa") as string || undefined,
-        tituloEleitor: formData.get("votante.tituloEleitor") as string || undefined,
-      },
-      endereco: {
-        logradouro: formData.get("endereco.logradouro") as string,
-        numero: formData.get("endereco.numero") as string || null,
-        complemento: formData.get("endereco.complemento") as string || null,
-        bairro: formData.get("endereco.bairro") as string,
-        cidade: formData.get("endereco.cidade") as string,
-        estado: formData.get("endereco.estado") as string,
-        cep: formData.get("endereco.cep") as string,
-        latitude: formData.get("endereco.latitude") ? parseFloat(formData.get("endereco.latitude") as string) : null,
-        longitude: formData.get("endereco.longitude") ? parseFloat(formData.get("endereco.longitude") as string) : null,
-        areaPerimetro: (formData.get("endereco.areaPerimetro") as "ADESAO" | "EXPANDIDO" | null) || null,
-      },
-      arquivos: {
-        arquivos: arquivos
-      },
-      declaracoes: {
-        declaracaoIdentidade: formData.get("declaracoes.declaracaoIdentidade") === "true",
-        declaracaoVotacao: formData.get("declaracoes.declaracaoVotacao") === "true",
-        declaracaoDocumento: formData.get("declaracoes.declaracaoDocumento") === "true",
-        declaracaoAutorizacao: formData.get("declaracoes.declaracaoAutorizacao") === "true",
-        declaracaoVeracidade: formData.get("declaracoes.declaracaoVeracidade") === "true"
-      }
+
+    const tipoCadastro = formData.get("tipoCadastro") as "ELEITOR" | "CANDIDATO";
+    console.log("[API /inscricao] recebido tipoCadastro:", tipoCadastro, "tipoInscricao:", formData.get("tipoInscricao"));
+    const tipoInscricao = formData.get("tipoInscricao") as
+      | "MORADOR" | "TRABALHADOR" | "REP_MORADIA" | "REP_ONGS" | "REP_PROFISSIONAIS" | "REP_EMPRESARIAIS";
+    const vaga = formData.get("vaga") as "TITULAR" | "SUPLENTE" | null;
+
+    const isRep = ["REP_MORADIA", "REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
+    const isRepMoradia = tipoInscricao === "REP_MORADIA";
+
+    const areaPerimetroRaw = formData.get("endereco.areaPerimetro") as "ADESAO" | "EXPANDIDO" | null;
+    const endereco = {
+      logradouro: formData.get("endereco.logradouro") as string,
+      numero: (formData.get("endereco.numero") as string) || undefined,
+      complemento: (formData.get("endereco.complemento") as string) || undefined,
+      bairro: formData.get("endereco.bairro") as string,
+      cidade: formData.get("endereco.cidade") as string,
+      estado: formData.get("endereco.estado") as string,
+      cep: formData.get("endereco.cep") as string,
+      latitude: formData.get("endereco.latitude") ? parseFloat(formData.get("endereco.latitude") as string) : undefined,
+      longitude: formData.get("endereco.longitude") ? parseFloat(formData.get("endereco.longitude") as string) : undefined,
+      ...(areaPerimetroRaw ? { areaPerimetro: areaPerimetroRaw } : {}),
     };
 
-    // Validar dados com o schema
-    const dadosValidados = formularioInscricaoSchema.parse(dadosFormulario);
+    const uploadsBase = join(process.cwd(), "uploads");
+    await garantirDiretorio(uploadsBase);
 
-    // Verificar existência de cadastro por email ou cpf
-    const emailNormalizado = dadosValidados.votante.email.toLowerCase();
-    const cpfNormalizado = dadosValidados.votante.cpf.replace(/[^\d]/g, "");
+    // -----------------------------------------------------------------------
+    // Fluxo REP_* (organização)
+    // -----------------------------------------------------------------------
+    if (isRep) {
+      const cnpjRaw = formData.get("organizacao.cnpj") as string;
+      const cnpj = cnpjRaw.replace(/[^\d]/g, "");
+      const razaoSocial = formData.get("organizacao.razaoSocial") as string;
+      const emailOrg = (formData.get("organizacao.email") as string).toLowerCase();
 
-    const [existentePorEmail, existentePorCpf] = await Promise.all([
-      db.votante.findFirst({ where: { usuario: { email: emailNormalizado } } }),
-      db.votante.findUnique({ where: { cpf: cpfNormalizado } }),
-    ]);
-
-    const existente = existentePorEmail ?? existentePorCpf;
-
-    // Se existe e não está indeferido, bloquear novo envio
-    if (existente && existente.status !== "INDEFERIDO") {
-      return NextResponse.json(
-        { error: "Cadastro já existente (EM_ANÁLISE/DEFERIDO)." },
-        { status: 400 }
-      );
-    }
-
-    // Se existe e está INDEFERIDO, atualizar dados e substituir arquivos
-    if (existente && existente.status === "INDEFERIDO") {
-      const votanteId = existente.id;
-
-      // Limpar diretório de uploads do votante (se existir)
-      const uploadsDir = join(process.cwd(), "uploads");
-      const votanteDir = join(uploadsDir, votanteId.toString());
-      try {
-        await rm(votanteDir, { recursive: true, force: true });
-      } catch (e) {
-        // Ignorar falhas ao remover diretório
+      // Impedir duplicata por CNPJ
+      const orgExistente = await db.organizacao.findUnique({ where: { cnpj } });
+      if (orgExistente) {
+        return NextResponse.json(
+          { error: "CNPJ já cadastrado. Para atualizar a inscrição, acesse o portal com suas credenciais." },
+          { status: 400 },
+        );
       }
 
-      // Recriar diretório
-      if (!existsSync(uploadsDir)) {
-        await mkdir(uploadsDir, { recursive: true });
-      }
-      await mkdir(votanteDir, { recursive: true });
+      const titular = {
+        nome: formData.get("titular.nome") as string,
+        nomeSocial: (formData.get("titular.nomeSocial") as string) || null,
+        cpf: (formData.get("titular.cpf") as string).replace(/[^\d]/g, ""),
+        dataNascimento: formData.get("titular.dataNascimento") as string,
+        telefone: formData.get("titular.telefone") as string,
+        genero: formData.get("titular.genero") as "MASCULINO" | "FEMININO" | "OUTRO",
+        email: formData.get("titular.email") as string,
+        tituloEleitor: (formData.get("titular.tituloEleitor") as string) || null,
+      };
 
-      // Gerar senha antes da transação (bcrypt é lento, não deve bloquear conexão do pool)
-      let senhaPlana: string | null = null;
-      let senhaHash: string | null = null;
-      if (dadosValidados.tipoCadastro === "CANDIDATO") {
-        senhaPlana = gerarSenha();
-        senhaHash = await hashSenha(senhaPlana);
-      }
+      const suplente = {
+        nome: formData.get("suplente.nome") as string,
+        nomeSocial: (formData.get("suplente.nomeSocial") as string) || null,
+        cpf: (formData.get("suplente.cpf") as string).replace(/[^\d]/g, ""),
+        dataNascimento: formData.get("suplente.dataNascimento") as string,
+        telefone: formData.get("suplente.telefone") as string,
+        genero: formData.get("suplente.genero") as "MASCULINO" | "FEMININO" | "OUTRO",
+        email: formData.get("suplente.email") as string,
+        tituloEleitor: (formData.get("suplente.tituloEleitor") as string) || null,
+      };
+
+      // Senhas para org
+      const senhaPlana = gerarSenha();
+      const senhaHash = await hashSenha(senhaPlana);
 
       const resultado = await db.$transaction(async (tx) => {
-        // Atualizar dados do votante e retornar a EM_ANALISE
-        // Atualizar Usuario vinculado (nome + email)
-        if (existente?.usuarioId) {
-          await tx.usuario.update({
-            where: { id: existente.usuarioId },
-            data: { nome: dadosValidados.votante.nome, email: emailNormalizado },
-          });
-        }
-
-        const votanteAtualizado = await tx.votante.update({
-          where: { id: votanteId },
+        // Usuário da organização
+        const usuario = await tx.usuario.create({
           data: {
-            tipoCadastro: dadosValidados.tipoCadastro,
-            tipoInscricao: dadosValidados.tipoInscricao,
-            areaPerimetro: dadosValidados.endereco.areaPerimetro ?? undefined,
-            vaga: dadosValidados.vaga ?? null,
-            nomeSocial: dadosValidados.votante.nomeSocial || null,
-            telefone: dadosValidados.votante.telefone,
-            genero: dadosValidados.votante.genero,
-            cpf: cpfNormalizado,
-            dataNascimento: (() => {
-              const [dia, mes, ano] = dadosValidados.votante.dataNascimento.split("/").map(Number);
-              return new Date(ano, mes - 1, dia);
-            })(),
-            empresa: dadosValidados.votante.empresa || null,
-            tituloEleitor: dadosValidados.votante.tituloEleitor || null,
-            status: "EM_ANALISE",
-          }
-        });
-
-        // Upsert de endereço
-        await tx.endereco.upsert({
-          where: { votanteId },
-          update: {
-            logradouro: dadosValidados.endereco.logradouro,
-            numero: dadosValidados.endereco.numero,
-            complemento: dadosValidados.endereco.complemento,
-            bairro: dadosValidados.endereco.bairro,
-            cidade: dadosValidados.endereco.cidade,
-            estado: dadosValidados.endereco.estado,
-            cep: dadosValidados.endereco.cep,
-            latitude: dadosValidados.endereco.latitude,
-            longitude: dadosValidados.endereco.longitude,
-          },
-          create: {
-            logradouro: dadosValidados.endereco.logradouro,
-            numero: dadosValidados.endereco.numero,
-            complemento: dadosValidados.endereco.complemento,
-            bairro: dadosValidados.endereco.bairro,
-            cidade: dadosValidados.endereco.cidade,
-            estado: dadosValidados.endereco.estado,
-            cep: dadosValidados.endereco.cep,
-            latitude: dadosValidados.endereco.latitude,
-            longitude: dadosValidados.endereco.longitude,
-            votanteId,
+            tipo: "EXTERNO",
+            nome: razaoSocial,
+            email: emailOrg,
+            senha: senhaHash,
+            primeiroAcesso: true,
           },
         });
 
-        // Apagar registros antigos de arquivos
-        await tx.arquivo.deleteMany({ where: { votanteId } });
+        // Candidatura
+        const candidatura = await tx.candidatura.create({
+          data: {
+            tipoCadastro: "CANDIDATO",
+            tipoInscricao,
+            usuarioId: usuario.id,
+          },
+        });
 
-        // Salvar novos arquivos
-        const arquivosSalvos: { nome: string; tipo: string; tamanho: number; caminho: string }[] = [];
-        if (dadosValidados.arquivos && dadosValidados.arquivos.arquivos && dadosValidados.arquivos.arquivos.length > 0) {
-          for (const arquivo of dadosValidados.arquivos.arquivos) {
-            const timestamp = Date.now();
-            const random = Math.random().toString(36).substring(2);
-            const nomeArquivo = `${timestamp}-${random}-${arquivo.name}`;
-            const caminhoArquivo = join(votanteDir, nomeArquivo);
+        // Organização
+        const org = await tx.organizacao.create({
+          data: { cnpj, razaoSocial, candidaturaId: candidatura.id },
+        });
 
-            const bytes = await arquivo.arrayBuffer();
-            const buffer = Buffer.from(bytes);
-            await writeFile(caminhoArquivo, buffer);
+        // Endereço
+        await tx.endereco.create({
+          data: { ...endereco, candidaturaId: candidatura.id },
+        });
 
-            arquivosSalvos.push({
-              nome: arquivo.name,
-              tipo: arquivo.type,
-              tamanho: arquivo.size,
-              caminho: caminhoArquivo,
+        // Diretório de uploads
+        const orgDir = join(uploadsBase, `candidatura-${candidatura.id}`);
+        await garantirDiretorio(orgDir);
+
+        // Arquivos da organização
+        for (const campo of CAMPOS_ARQUIVO_ORG) {
+          const arquivo = formData.get(campo) as File | null;
+          if (arquivo && arquivo.size > 0) {
+            const salvo = await salvarArquivo(arquivo, orgDir);
+            await tx.arquivo.create({
+              data: { ...salvo, organizacaoId: org.id, categoria: CATEGORIA_MAP[campo] ?? "OUTRO" },
             });
           }
         }
 
-        // Criar registros dos novos arquivos
-        for (const arquivoSalvo of arquivosSalvos) {
-          await tx.arquivo.create({
-            data: {
-              nome: arquivoSalvo.nome,
-              tipo: arquivoSalvo.tipo,
-              tamanho: arquivoSalvo.tamanho,
-              caminho: arquivoSalvo.caminho,
-              votanteId,
-            }
-          });
+        // Candidato titular
+        const candidatoTitular = await tx.candidato.create({
+          data: {
+            nome: titular.nome,
+            email: titular.email,
+            telefone: titular.telefone,
+            cpf: titular.cpf,
+            dataNascimento: parseDateBR(titular.dataNascimento),
+            genero: titular.genero,
+            tipoCandidato: "TITULAR",
+            candidaturaId: candidatura.id,
+          },
+        });
+
+        // Eleitor titular
+        await tx.eleitor.create({
+          data: {
+            nome: titular.nome,
+            email: titular.email,
+            telefone: titular.telefone,
+            cpf: titular.cpf,
+            dataNascimento: parseDateBR(titular.dataNascimento),
+            genero: titular.genero,
+            tituloEleitor: titular.tituloEleitor,
+          },
+        });
+
+        // Documentos do titular
+        for (const campo of CAMPOS_ARQUIVO_TITULAR) {
+          const arquivo = formData.get(campo) as File | null;
+          // Pular campos exclusivos do REP_MORADIA para outros tipos
+          if (!isRepMoradia && (campo === "titularDocRequerimento" || campo === "titularDocComprovante")) continue;
+          if (arquivo && arquivo.size > 0) {
+            const salvo = await salvarArquivo(arquivo, orgDir);
+            await tx.arquivo.create({
+              data: { ...salvo, candidatoId: candidatoTitular.id, categoria: CATEGORIA_MAP[campo] ?? "OUTRO" },
+            });
+          }
         }
 
-        // Atualizar senha do Usuario se CANDIDATO
-        if (dadosValidados.tipoCadastro === "CANDIDATO" && senhaHash && existente?.usuarioId) {
-          await tx.usuario.update({
-            where: { id: existente.usuarioId },
-            data: { senha: senhaHash, primeiroAcesso: true },
-          });
+        // Candidato suplente
+        const candidatoSuplente = await tx.candidato.create({
+          data: {
+            nome: suplente.nome,
+            email: suplente.email,
+            telefone: suplente.telefone,
+            cpf: suplente.cpf,
+            dataNascimento: parseDateBR(suplente.dataNascimento),
+            genero: suplente.genero,
+            tipoCandidato: "SUPLENTE",
+            candidaturaId: candidatura.id,
+          },
+        });
+
+        // Eleitor suplente
+        await tx.eleitor.create({
+          data: {
+            nome: suplente.nome,
+            email: suplente.email,
+            telefone: suplente.telefone,
+            cpf: suplente.cpf,
+            dataNascimento: parseDateBR(suplente.dataNascimento),
+            genero: suplente.genero,
+            tituloEleitor: suplente.tituloEleitor,
+          },
+        });
+
+        // Documentos do suplente
+        for (const campo of CAMPOS_ARQUIVO_SUPLENTE) {
+          const arquivo = formData.get(campo) as File | null;
+          // Pular campos exclusivos do REP_MORADIA para outros tipos
+          if (!isRepMoradia && (campo === "suplenteDocRequerimento" || campo === "suplenteDocComprovante")) continue;
+          if (arquivo && arquivo.size > 0) {
+            const salvo = await salvarArquivo(arquivo, orgDir);
+            await tx.arquivo.create({
+              data: { ...salvo, candidatoId: candidatoSuplente.id, categoria: CATEGORIA_MAP[campo] ?? "OUTRO" },
+            });
+          }
         }
 
-        return votanteAtualizado;
+        return { candidatura, org };
       });
 
-      const cpfLimpo = dadosValidados.votante.cpf.replace(/\D/g, "");
-      if (dadosValidados.tipoCadastro === "CANDIDATO" && senhaPlana) {
-        const { html, text } = emailBoasVindas({ nome: dadosValidados.votante.nome, cpf: cpfLimpo, senha: senhaPlana, tipoCadastro: dadosValidados.tipoCadastro });
-        await sendEmail({ to: emailNormalizado, subject: "OUCAB 2026 — Reenvio de cadastro", html, text }).catch(console.error);
-      }
+      await sendEmail({
+        to: emailOrg,
+        subject: "OUCAB 2026 — Inscrição recebida",
+        html: `<p>Olá, <strong>${razaoSocial}</strong>!</p>
+               <p>Sua inscrição foi recebida com sucesso e será analisada pela equipe da SMUL.</p>
+               <p>CNPJ: <strong>${cnpj}</strong><br>
+               Acesso ao portal — E-mail: <strong>${emailOrg}</strong> | Senha: <strong>${senhaPlana}</strong></p>
+               <p>Guarde a senha com segurança. Você poderá acompanhar o status da inscrição pelo portal.</p>`,
+        text: `Inscrição recebida. CNPJ: ${cnpj}. Email: ${emailOrg}. Senha: ${senhaPlana}`,
+      }).catch(console.error);
 
       return NextResponse.json({
         success: true,
-        message: "Reenvio realizado com sucesso! Verifique seu e-mail para as novas credenciais de acesso.",
-        votanteId: resultado.id,
+        message: "Inscrição da organização realizada com sucesso! Verifique o e-mail cadastrado para as credenciais de acesso ao portal.",
+        candidaturaId: resultado.candidatura.id,
       });
     }
 
-    // Gerar senha antes da transação para nova inscrição CANDIDATO
+    // -----------------------------------------------------------------------
+    // Fluxo individual (MORADOR / TRABALHADOR)
+    // -----------------------------------------------------------------------
+
+    const nome = formData.get("votante.nome") as string;
+    const nomeSocial = (formData.get("votante.nomeSocial") as string) || null;
+    const telefone = formData.get("votante.telefone") as string;
+    const genero = formData.get("votante.genero") as "MASCULINO" | "FEMININO" | "OUTRO";
+    const email = (formData.get("votante.email") as string).toLowerCase();
+    const cpf = (formData.get("votante.cpf") as string).replace(/[^\d]/g, "");
+    const dataNascimento = formData.get("votante.dataNascimento") as string;
+    const empresa = (formData.get("votante.empresa") as string) || null;
+    const tituloEleitor = (formData.get("votante.tituloEleitor") as string) || null;
+
+    // Verificar duplicata por email ou CPF
+    const [existenteEmail, existenteCPF] = await Promise.all([
+      db.usuario.findUnique({ where: { email } }),
+      db.eleitor.findUnique({ where: { cpf } }),
+    ]);
+
+    if (existenteEmail || existenteCPF) {
+      return NextResponse.json(
+        { error: "Já existe um cadastro com este e-mail ou CPF. Acesse o portal para verificar sua inscrição." },
+        { status: 400 },
+      );
+    }
+
+    // Senha para candidatos
     let senhaPlana: string | null = null;
     let senhaHash: string | null = null;
-    if (dadosValidados.tipoCadastro === "CANDIDATO") {
+    if (tipoCadastro === "CANDIDATO") {
       senhaPlana = gerarSenha();
       senhaHash = await hashSenha(senhaPlana);
     }
 
-    // Salvar no banco de dados usando transação
     const resultado = await db.$transaction(async (tx) => {
-      // Criar votante primeiro para obter o ID
-      // Criar Usuario para todo votante (EXTERNO), com senha apenas para CANDIDATO
-      const novoUsuario = await tx.usuario.create({
+      // Usuário
+      const usuario = await tx.usuario.create({
         data: {
           tipo: "EXTERNO",
-          nome: dadosValidados.votante.nome,
-          email: emailNormalizado,
+          nome,
+          email,
           ...(senhaHash ? { senha: senhaHash, primeiroAcesso: true } : {}),
         },
       });
 
-      const votante = await tx.votante.create({
+      // Candidatura
+      const candidatura = await tx.candidatura.create({
         data: {
-          tipoCadastro: dadosValidados.tipoCadastro,
-          tipoInscricao: dadosValidados.tipoInscricao,
-          areaPerimetro: dadosValidados.endereco.areaPerimetro ?? "ADESAO",
-          vaga: dadosValidados.vaga ?? null,
-          nomeSocial: dadosValidados.votante.nomeSocial || null,
-          telefone: dadosValidados.votante.telefone,
-          genero: dadosValidados.votante.genero,
-          cpf: dadosValidados.votante.cpf.replace(/[^\d]/g, ''),
-          usuarioId: novoUsuario.id,
-          dataNascimento: (() => {
-            const [dia, mes, ano] = dadosValidados.votante.dataNascimento.split("/").map(Number);
-            return new Date(ano, mes - 1, dia);
-          })(),
-          empresa: dadosValidados.votante.empresa || null,
-          tituloEleitor: dadosValidados.votante.tituloEleitor || null,
-          status: "EM_ANALISE",
-        }
+          tipoCadastro,
+          tipoInscricao,
+          usuarioId: usuario.id,
+        },
       });
 
-      // Criar endereço
+      // Endereço
       await tx.endereco.create({
-        data: {
-          logradouro: dadosValidados.endereco.logradouro,
-          numero: dadosValidados.endereco.numero,
-          complemento: dadosValidados.endereco.complemento,
-          bairro: dadosValidados.endereco.bairro,
-          cidade: dadosValidados.endereco.cidade,
-          estado: dadosValidados.endereco.estado,
-          cep: dadosValidados.endereco.cep,
-          latitude: dadosValidados.endereco.latitude,
-          longitude: dadosValidados.endereco.longitude,
-          votanteId: votante.id,
-        }
+        data: { ...endereco, candidaturaId: candidatura.id },
       });
 
-      // Processar e salvar arquivos após ter o ID do votante
-      const arquivosSalvos: { nome: string; tipo: string; tamanho: number; caminho: string }[] = [];
-      
-      if (dadosValidados.arquivos && dadosValidados.arquivos.arquivos && dadosValidados.arquivos.arquivos.length > 0) {
-        // Criar diretório específico para o votante
-        const uploadsDir = join(process.cwd(), "uploads");
-        const votanteDir = join(uploadsDir, votante.id.toString());
-        
-        if (!existsSync(uploadsDir)) {
-          await mkdir(uploadsDir, { recursive: true });
-        }
-        
-        if (!existsSync(votanteDir)) {
-          await mkdir(votanteDir, { recursive: true });
-        }
+      // Eleitor (sempre criado, independente de ser ELEITOR ou CANDIDATO)
+      const eleitor = await tx.eleitor.create({
+        data: {
+          nome,
+          email,
+          telefone,
+          cpf,
+          dataNascimento: parseDateBR(dataNascimento),
+          genero,
+          tituloEleitor,
+          usuarioId: usuario.id,
+        },
+      });
 
-        for (const arquivo of dadosValidados.arquivos.arquivos) {
-          // Gerar nome único para o arquivo
-          const timestamp = Date.now();
-          const random = Math.random().toString(36).substring(2);
-          const nomeArquivo = `${timestamp}-${random}-${arquivo.name}`;
-          const caminhoArquivo = join(votanteDir, nomeArquivo);
-
-          // Salvar arquivo
-          const bytes = await arquivo.arrayBuffer();
-          const buffer = Buffer.from(bytes);
-          await writeFile(caminhoArquivo, buffer);
-
-          arquivosSalvos.push({
-            nome: arquivo.name,
-            tipo: arquivo.type,
-            tamanho: arquivo.size,
-            caminho: caminhoArquivo
-          });
-        }
-      }
-
-      // Criar registros dos arquivos
-      for (const arquivoSalvo of arquivosSalvos) {
-        await tx.arquivo.create({
+      // Candidato (apenas para CANDIDATO)
+      let candidato = null;
+      if (tipoCadastro === "CANDIDATO") {
+        candidato = await tx.candidato.create({
           data: {
-            nome: arquivoSalvo.nome,
-            tipo: arquivoSalvo.tipo,
-            tamanho: arquivoSalvo.tamanho,
-            caminho: arquivoSalvo.caminho,
-            votanteId: votante.id,
-          }
+            nome,
+            email,
+            telefone,
+            cpf,
+            dataNascimento: parseDateBR(dataNascimento),
+            genero,
+            tipoCandidato: "INDIVIDUAL",
+            candidaturaId: candidatura.id,
+          },
         });
       }
 
-      return { ...votante, usuario: novoUsuario };
+      // Diretório de uploads
+      const dir = join(uploadsBase, `candidatura-${candidatura.id}`);
+      await garantirDiretorio(dir);
+
+      // Documentos individuais
+      for (const campo of CAMPOS_ARQUIVO_INDIVIDUAL) {
+        const arquivo = formData.get(campo) as File | null;
+        if (arquivo && arquivo.size > 0) {
+          const salvo = await salvarArquivo(arquivo, dir);
+          const categoria = CATEGORIA_MAP[campo] ?? "OUTRO";
+          if (candidato) {
+            await tx.arquivo.create({
+              data: { ...salvo, candidatoId: candidato.id, categoria },
+            });
+          } else {
+            await tx.arquivo.create({
+              data: { ...salvo, eleitorId: eleitor.id, categoria },
+            });
+          }
+        }
+      }
+
+      // Comprovante (residência ou trabalho)
+      const comprovanteArquivo = formData.get("docComprovante") as File | null;
+      if (comprovanteArquivo && comprovanteArquivo.size > 0) {
+        const salvo = await salvarArquivo(comprovanteArquivo, dir);
+        const categoria = tipoInscricao === "TRABALHADOR" ? "COMPROVANTE_TRABALHO" : "COMPROVANTE_RESIDENCIA";
+        if (candidato) {
+          await tx.arquivo.create({ data: { ...salvo, candidatoId: candidato.id, categoria } });
+        } else {
+          await tx.arquivo.create({ data: { ...salvo, eleitorId: eleitor.id, categoria } });
+        }
+      }
+
+      return { candidatura, eleitor, candidato, usuario };
     });
 
-    const cpfLimpo = dadosValidados.votante.cpf.replace(/\D/g, "");
-    if (dadosValidados.tipoCadastro === "CANDIDATO" && senhaPlana) {
-      const { html, text } = emailBoasVindas({ nome: resultado.usuario?.nome ?? dadosValidados.votante.nome, cpf: cpfLimpo, senha: senhaPlana, tipoCadastro: dadosValidados.tipoCadastro });
-      await sendEmail({ to: resultado.usuario?.email ?? emailNormalizado, subject: "OUCAB 2026 — Cadastro realizado", html, text }).catch(console.error);
+    if (tipoCadastro === "CANDIDATO" && senhaPlana) {
+      const { html, text } = emailBoasVindas({
+        nome,
+        cpf,
+        senha: senhaPlana,
+        tipoCadastro,
+      });
+      await sendEmail({ to: email, subject: "OUCAB 2026 — Cadastro realizado", html, text }).catch(console.error);
+    } else {
+      await sendEmail({
+        to: email,
+        subject: "OUCAB 2026 — Cadastro de Eleitor recebido",
+        html: `<p>Olá, <strong>${nome}</strong>!</p>
+               <p>Seu cadastro de eleitor foi recebido e será analisado pela equipe da SMUL.</p>`,
+        text: `Olá, ${nome}! Seu cadastro de eleitor foi recebido com sucesso.`,
+      }).catch(console.error);
     }
 
     return NextResponse.json({
       success: true,
-      message: "Inscrição realizada com sucesso! Verifique seu e-mail para as credenciais de acesso ao portal.",
-      votanteId: resultado.id,
+      message: tipoCadastro === "CANDIDATO"
+        ? "Inscrição realizada com sucesso! Verifique seu e-mail para as credenciais de acesso ao portal."
+        : "Cadastro de eleitor realizado com sucesso! Verifique seu e-mail para confirmação.",
+      candidaturaId: resultado.candidatura.id,
     });
 
   } catch (error) {
-    console.error("Erro ao processar inscrição:", error);
-    
-    if (error instanceof Error && error.name === "ZodError") {
+    console.error("[API /inscricao] Erro ao processar inscrição:", error);
+
+    if (error instanceof Error) {
+      console.error("[API /inscricao] message:", error.message);
+      console.error("[API /inscricao] stack:", error.stack);
+    }
+
+    if (error instanceof Error && "code" in error && (error as any).code === "P2002") {
+      const campo = (error as any).meta?.target?.join(", ") ?? "CPF ou e-mail";
       return NextResponse.json(
-        { error: "Dados inválidos", details: error.message },
-        { status: 400 }
+        { error: `Já existe um cadastro com este ${campo}.` },
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: "Erro interno do servidor" },
-      { status: 500 }
-    );
+    const mensagem = error instanceof Error ? error.message : "Erro desconhecido";
+    return NextResponse.json({ error: `Erro interno do servidor: ${mensagem}` }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import { db } from "@/lib/prisma";
 import { verificaLimite, verificaPagina } from "@/lib/utils";
-import { Arquivo, Endereco, Status, Usuario, Votante } from "@prisma/client";
+import { Arquivo, Candidato, Candidatura, Endereco, Organizacao, Status, Usuario } from "@prisma/client";
 import { retornaPermissao } from "./usuario";
 
 export interface IVotantePaginado {
@@ -9,10 +9,13 @@ export interface IVotantePaginado {
     pagina: number;
     limite: number;
 }
-export interface IVotante extends Votante {
-    usuario?: Usuario;
-    endereco?: Endereco;
-    arquivos?: Arquivo[];
+
+export interface IVotante extends Candidatura {
+    usuario?: Usuario | null;
+    endereco?: Endereco | null;
+    arquivos?: Pick<Arquivo, "id">[];
+    candidatos?: Candidato[];
+    organizacao?: Organizacao | null;
 }
 
 export async function buscarVotantes(
@@ -30,46 +33,48 @@ export async function buscarVotantes(
             ],
         }),
         ...(status && status !== 'all' && { status: status as Status }),
-    }
-    const total = await db.votante.count({ where });
+    };
+    const total = await db.candidatura.count({ where });
     if (total === 0) return { data: [], total, pagina, limite };
     [pagina, limite] = verificaLimite(pagina, limite, total);
-    const usuarios = await db.votante.findMany({
+    const candidaturas = await db.candidatura.findMany({
         skip: (pagina - 1) * limite,
         take: limite,
         orderBy: { criadoEm: 'asc' },
         include: {
             usuario: true,
             endereco: true,
-            arquivos: {
-                select: { id: true }
-            },
+            candidatos: true,
+            organizacao: true,
+            arquivos: { select: { id: true } },
         },
-        where
+        where,
     });
-    return { data: usuarios, total, pagina, limite };
+    return { data: candidaturas as IVotante[], total, pagina, limite };
 }
 
 export async function buscarVotantePorId(id: string) {
-    const votante = await db.votante.findUnique({
+    const candidatura = await db.candidatura.findUnique({
         where: { id },
         include: {
             usuario: true,
             endereco: true,
+            candidatos: true,
+            organizacao: true,
             arquivos: true,
         },
     });
-    return votante as IVotante | null;
+    return candidatura as IVotante | null;
 }
 
 export async function atualizarStatusVotante(id: string, novoStatus: Status, usuarioId: string) {
     const permissao = await retornaPermissao(usuarioId);
     if (!permissao || !["DEV", "ADM"].includes(permissao)) return null;
-    const existe = await db.votante.findUnique({ where: { id } });
+    const existe = await db.candidatura.findUnique({ where: { id } });
     if (!existe) return null;
-    const atualizado = await db.votante.update({
+    const atualizado = await db.candidatura.update({
         where: { id },
         data: { status: novoStatus },
     });
-    return atualizado as IVotante;
+    return atualizado;
 }

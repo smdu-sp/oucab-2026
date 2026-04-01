@@ -3,8 +3,11 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-	/* config options here */
 	output: 'standalone',
+	basePath: '/oucab',
+	env: {
+		NEXT_PUBLIC_BASE_PATH: '/oucab',
+	},
 	experimental: {
 		serverActions: {
 			bodySizeLimit: '10mb',

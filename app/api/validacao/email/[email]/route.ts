@@ -13,16 +13,12 @@ export async function GET(
         { status: 400 }
       );
     }
-    const votanteExistente = await db.votante.findFirst({
-      where: {
-        usuario: { email: email.toLowerCase() },
-        status: { in: ["DEFERIDO", "EM_ANALISE"] },
-      },
+    const usuarioExistente = await db.usuario.findUnique({
+      where: { email: email.toLowerCase() },
     });
-    const emailJaCadastrado = votanteExistente;
     return NextResponse.json({
-      disponivel: !emailJaCadastrado,
-      message: emailJaCadastrado ? "Email já cadastrado" : "Email disponível"
+      disponivel: !usuarioExistente,
+      message: usuarioExistente ? "Email já cadastrado" : "Email disponível"
     });
   } catch (error) {
     console.error("Erro ao validar email:", error);

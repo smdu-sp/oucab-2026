@@ -27,6 +27,7 @@ import { ArrowRight, Loader2 } from 'lucide-react';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { BASE_PATH } from '@/lib/config';
 import { z } from 'zod';
 
 const formSchemaUsuario = z.object({
@@ -67,7 +68,7 @@ export default function FormUsuario({ isUpdating, user }: FormUsuarioProps) {
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { login } = values;
-		const resp = await fetch(`/api/usuarios/buscar-por-login/${login}`);
+		const resp = await fetch(`${BASE_PATH}/api/usuarios/buscar-por-login/${login}`);
 		if (resp.status !== 200) {
 			toast.error('Usuário não encontrado');
 			return;
@@ -86,7 +87,7 @@ export default function FormUsuario({ isUpdating, user }: FormUsuarioProps) {
 			if (isUpdating && user?.id) {
 
 			} else {
-				const resposta = await fetch('/api/usuarios', {
+				const resposta = await fetch(`${BASE_PATH}/api/usuarios`, {
 					method: 'POST',
 					body: JSON.stringify(values),
 				});

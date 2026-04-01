@@ -1,44 +1,46 @@
-## Multi-stage Dockerfile for Next.js (build + production)
-## Base on Debian to ensure Prisma binary compatibility
+## Multi-stage build com Alpine — imagem compacta para servidor com espaço limitado
+## Alpine (~5x menor que Debian slim), sem binários desnecessários
 
-FROM node:20 AS deps
+# ── Etapa 1: Dependências ────────────────────────────────────────────────────
+FROM node:20-alpine AS deps
 WORKDIR /app
-COPY package.json package-lock.json* .npmrc* ./
+RUN apk add --no-cache openssl libc6-compat
+COPY package.json package-lock.json* ./
 RUN npm ci
 
-FROM node:20 AS builder
+# ── Etapa 2: Build ───────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 COPY --from=deps /app/node_modules ./node_modules
 COPY prisma ./prisma
+# Gera o Prisma Client dentro do Alpine (garante binário musl correto)
 RUN npx prisma generate
 COPY . .
 ENV NODE_ENV=production
 RUN npm run build
 
-FROM node:20-slim AS runner
+# ── Etapa 3: Runner (produção) ───────────────────────────────────────────────
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3005
+ENV PORT=3080
 ENV HOSTNAME=0.0.0.0
-# Use Node-API engine to avoid OpenSSL runtime mismatch
+# Usa engine Node-API (evita incompatibilidade de OpenSSL em runtime)
 ENV PRISMA_CLIENT_ENGINE_TYPE=library
 
-# Ensure OpenSSL is available for Prisma CLI tooling (e.g., migrate)
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends openssl ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache openssl ca-certificates
 
-# Copy only necessary files for standalone runtime
+# Apenas o output standalone do Next.js (já inclui node_modules mínimos)
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 
-# Persistent uploads will be mounted at /app/uploads
+# Uploads persistidos via volume externo
 VOLUME ["/app/uploads"]
 
-# The project start script uses port 3005
-EXPOSE 3005
+EXPOSE 3080
 CMD ["node", "server.js"]

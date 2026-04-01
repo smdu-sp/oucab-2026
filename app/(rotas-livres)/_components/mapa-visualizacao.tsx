@@ -8,12 +8,15 @@ import VectorSource from "ol/source/Vector";
 import OSM from "ol/source/OSM";
 import { fromLonLat } from "ol/proj";
 import { Style, Fill, Stroke } from "ol/style";
+import type { Feature } from "ol";
+import type { Geometry } from "ol/geom";
 import { defaults as defaultControls } from "ol/control";
 import KML from "ol/format/KML";
 import GeoJSON from "ol/format/GeoJSON";
 import { union } from "@turf/union";
 import { featureCollection, feature as turfFeature } from "@turf/helpers";
 import type { Polygon, MultiPolygon, Feature as GeoJSONFeature } from "geojson";
+import { BASE_PATH } from "@/lib/config";
 
 interface MapaVisualizacaoProps {
   className?: string;
@@ -55,7 +58,7 @@ async function loadLayer(
   merge: boolean
 ) {
   try {
-    const kmlText = await fetch(`/api/shapes/${name}`).then((r) => r.text());
+    const kmlText = await fetch(`${BASE_PATH}/api/shapes/${name}`).then((r) => r.text());
     const features = kmlToGeoJSONFeatures(kmlText);
 
     if (merge) {
@@ -64,7 +67,7 @@ async function loadLayer(
       const olFeature = geoJsonFormat.readFeature(merged, {
         dataProjection: "EPSG:4326",
         featureProjection: "EPSG:3857",
-      });
+      }) as Feature<Geometry>;
       olFeature.setStyle(style);
       layer.getSource()?.addFeature(olFeature);
     } else {

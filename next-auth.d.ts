@@ -7,11 +7,19 @@ declare module 'next-auth' {
         user: {
             id: string
             email: string
-        } & {
             nome: string
+            tipo: "admin" | "externo"
+            // Campos admin (usuário INTERNO/EXTERNO administrativo)
             login?: string
-            permissao: Permissao
+            permissao?: Permissao
             avatar?: string
+            status?: boolean
+            // Campos votante/candidato (usuário EXTERNO do portal)
+            cpf?: string
+            tipoCadastro?: string
+            tipoInscricao?: string
+            primeiroAcesso?: boolean
+            cnpj?: string
         }
     }
 
@@ -19,9 +27,16 @@ declare module 'next-auth' {
         id: string
         email: string
         nome: string
+        tipo: "admin" | "externo"
         login?: string
-        permissao: Permissao
+        permissao?: Permissao
         avatar?: string
+        status?: boolean
+        cpf?: string
+        tipoCadastro?: string
+        tipoInscricao?: string
+        primeiroAcesso?: boolean
+        cnpj?: string
     }
 }
 
@@ -30,8 +45,15 @@ declare module 'next-auth/jwt' {
         id: string
         email: string
         nome: string
+        tipo: "admin" | "externo"
         login?: string
-        permissao: Permissao
+        permissao?: Permissao
         avatar?: string
+        status?: boolean
+        cpf?: string
+        tipoCadastro?: string
+        tipoInscricao?: string
+        primeiroAcesso?: boolean
+        cnpj?: string
     }
 }

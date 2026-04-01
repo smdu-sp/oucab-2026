@@ -6,9 +6,8 @@ import Credentials from "next-auth/providers/credentials";
 
 export const authConfig = {
   providers: [
-    // Provider para usuários administrativos (LDAP)
     Credentials({
-      id: "admin",
+      id: "credentials",
       name: "credentials",
       credentials: {
         login: {},
@@ -17,62 +16,48 @@ export const authConfig = {
       authorize: async (credentials) => {
         const { login, senha } = credentials ?? {};
         if (!login || !senha) return null;
-        const usuario = await db.usuario.findUnique({ where: { login: login as string } });
-        if (!usuario || usuario.tipo !== "INTERNO") return null;
-        if (process.env.ENVIRONMENT !== "local") {
-          const response = await fetch(`${process.env.AUTH_SERVER}ldap/autenticar`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ login: login as string, senha: senha as string }),
-          });
-          if (response.status !== 200) {
-            const responseJson = await response.json();
-            throw new Error(responseJson.message || "Erro ao autenticar usuário");
-          }
-        }
-        return {
-          id: usuario.id,
-          email: usuario.email,
-          nome: usuario.nome,
-          login: usuario.login || undefined,
-          permissao: usuario.permissao,
-          avatar: usuario.avatar || undefined,
-          status: usuario.status,
-          tipo: "admin" as const,
-        };
-      },
-    }),
 
-    // Provider para votantes/candidatos (portal externo)
-    Credentials({
-      id: "votante",
-      name: "portal",
-      credentials: {
-        cpf: {},
-        senha: {},
-      },
-      authorize: async (credentials) => {
-        const { cpf, senha } = credentials ?? {};
-        if (!cpf || !senha) return null;
-        const cpfLimpo = (cpf as string).replace(/\D/g, "");
-        const votante = await db.votante.findUnique({
-          where: { cpf: cpfLimpo },
-          include: { usuario: true },
+        // Tenta encontrar usuário INTERNO pelo campo login
+        const buscarUsuario = await db.usuario.findFirst({ 
+          where: {
+            OR: [{
+              login: login as string,
+            }, {
+              email: login as string,
+            }]
+          }
         });
-        if (!votante || !votante.usuario || !votante.usuario.senha) return null;
-        const senhaCorreta = await verificarSenha(senha as string, votante.usuario.senha);
-        if (!senhaCorreta) return null;
-        return {
-          id: votante.id,
-          email: votante.usuario.email,
-          nome: votante.usuario.nome,
-          cpf: votante.cpf,
-          tipoCadastro: votante.tipoCadastro,
-          tipoInscricao: votante.tipoInscricao,
-          primeiroAcesso: votante.usuario.primeiroAcesso,
-          status: votante.status,
-          tipo: "votante" as const,
-        };
+        if (buscarUsuario) {
+          if (process.env.ENVIRONMENT !== "local") {
+            if (buscarUsuario.tipo === "INTERNO") {
+              const response = await fetch(`${process.env.AUTH_SERVER}ldap/autenticar`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ login: login as string, senha: senha as string }),
+              });
+              if (response.status !== 200) {
+                const responseJson = await response.json();
+                throw new Error(responseJson.message || "Erro ao autenticar usuário");
+              }
+            }
+            if (buscarUsuario.tipo === "EXTERNO" && buscarUsuario.senha) {
+              const senhaCorreta = await verificarSenha(senha as string, buscarUsuario.senha);
+              if (!senhaCorreta) return null;
+            }
+          }
+          return {
+            id: buscarUsuario.id,
+            email: buscarUsuario.email,
+            nome: buscarUsuario.nome,
+            login: buscarUsuario.login || undefined,
+            permissao: buscarUsuario.permissao ?? undefined,
+            avatar: buscarUsuario.avatar || undefined,
+            status: buscarUsuario.status,
+            tipo: buscarUsuario.tipo === "INTERNO" ? ("admin" as const) : ("externo" as const),
+          };
+        }
+
+        return null;
       },
     }),
   ],
@@ -95,6 +80,7 @@ export const authConfig = {
         token.tipoInscricao = user.tipoInscricao;
         token.primeiroAcesso = user.primeiroAcesso;
         token.status = user.status;
+        token.cnpj = user.cnpj;
       }
       return token;
     },
@@ -114,6 +100,7 @@ export const authConfig = {
       session.user.tipoInscricao = token.tipoInscricao;
       session.user.primeiroAcesso = token.primeiroAcesso;
       session.user.status = token.status;
+      session.user.cnpj = token.cnpj;
       return session;
     },
   },

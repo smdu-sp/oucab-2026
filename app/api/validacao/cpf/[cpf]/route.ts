@@ -17,19 +17,14 @@ export async function GET(
     // Remove formatação do CPF
     const cpfLimpo = cpf.replace(/[^\d]/g, '');
 
-    // Verifica se o CPF já existe no banco
-    const votanteExistente = await db.votante.findUnique({
-      where: {
-        cpf: cpfLimpo,
-        status: {
-          in: ['DEFERIDO', 'EM_ANALISE']
-        }
-      }
-    });
+    // Verifica se o CPF já existe no banco (eleitor ou candidato)
+    const eleitorExistente = await db.eleitor.findUnique({ where: { cpf: cpfLimpo } });
+    const candidatoExistente = await db.candidato.findUnique({ where: { cpf: cpfLimpo } });
+    const existente = !!eleitorExistente || !!candidatoExistente;
 
     return NextResponse.json({
-      disponivel: !votanteExistente,
-      message: votanteExistente ? "CPF já cadastrado" : "CPF disponível"
+      disponivel: !existente,
+      message: existente ? "CPF já cadastrado" : "CPF disponível"
     });
 
   } catch (error) {

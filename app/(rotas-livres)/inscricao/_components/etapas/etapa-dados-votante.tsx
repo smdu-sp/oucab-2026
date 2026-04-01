@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FormularioInscricaoData } from "@/lib/schemas/formulario-inscricao";
+import { BASE_PATH } from "@/lib/config";
 
 // Validação local do título de eleitor (espelho da lógica do schema)
 function validarTituloEleitor(titulo: string): boolean {
@@ -111,7 +112,7 @@ export default function EtapaDadosVotante() {
     }
     setValidandoCPF(true);
     try {
-      const response = await fetch(`/api/validacao/cpf/${cpfLimpo}`);
+      const response = await fetch(`${BASE_PATH}/api/validacao/cpf/${cpfLimpo}`);
       const data = await response.json();
       if (data.disponivel) {
         clearErrors("votante.cpf");
@@ -141,7 +142,7 @@ export default function EtapaDadosVotante() {
 
     setValidandoEmail(true);
     try {
-      const response = await fetch(`/api/validacao/email/${encodeURIComponent(email)}`);
+      const response = await fetch(`${BASE_PATH}/api/validacao/email/${encodeURIComponent(email)}`);
       const data = await response.json();
       
       if (!data.disponivel) {

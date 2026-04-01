@@ -139,27 +139,27 @@ export default function EtapaEndereco() {
         setValue("endereco.latitude", lat);
         setValue("endereco.longitude", lng);
 
-        const { isValid, area } = await checkOUCABPerimeter(lat, lng);
+        const isRep = ["REP_MORADIA", "REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
 
-        const isRepMovimentos = tipoInscricao === "REP_MOVIMENTOS_MORADIA";
-        const bloqueadoPorTipo = isRepMovimentos && area === "EXPANDIDO";
-
-        if (isValid && !bloqueadoPorTipo) {
-          setValue("endereco.areaPerimetro", area);
-          toast.success("Endereço localizado no mapa e dentro da área de abrangência da OUCAB");
+        if (isRep) {
+          // Para representantes não há validação de perímetro — apenas coleta o endereço
+          toast.success("Endereço localizado no mapa");
         } else {
-          setValue("endereco.areaPerimetro", null);
-          if (bloqueadoPorTipo) {
-            toast.error("Representantes de movimentos de moradia só podem cadastrar endereços dentro do perímetro de adesão");
+          const { isValid, area } = await checkOUCABPerimeter(lat, lng);
+
+          if (isValid) {
+            setValue("endereco.areaPerimetro", area);
+            toast.success("Endereço localizado no mapa e dentro da área de abrangência da OUCAB");
           } else {
+            setValue("endereco.areaPerimetro", null);
             toast.error("Endereço localizado, mas está fora das áreas de abrangência da OUCAB");
+            setValue("endereco.logradouro", "");
+            setValue("endereco.numero", "");
+            setValue("endereco.bairro", "");
+            setValue("endereco.cidade", "");
+            setValue("endereco.estado", "");
+            setValue("endereco.complemento", "");
           }
-          setValue("endereco.logradouro", "");
-          setValue("endereco.numero", "");
-          setValue("endereco.bairro", "");
-          setValue("endereco.cidade", "");
-          setValue("endereco.estado", "");
-          setValue("endereco.complemento", "");
         }
       } else {
         toast.warning("Não foi possível localizar o endereço no mapa");

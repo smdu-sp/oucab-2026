@@ -1,10 +1,11 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Info } from "lucide-react";
 const MapaVisualizacao = dynamic(() => import("./_components/mapa-visualizacao"));
-const MapaLocalVotacao = dynamic(() => import("./_components/mapa-local-votacao"));
+// const MapaLocalVotacao = dynamic(() => import("./_components/mapa-local-votacao"));
 
 export default function Home() {
   const limiteExibicao = new Date(
@@ -16,20 +17,25 @@ export default function Home() {
       {/* Sobre a OUC */}
       <section className="space-y-6">
         <div className="text-center space-y-2 flex flex-col items-center gap-2">
-          <h2 className="text-3xl font-bold">Sobre a Inscrição para Eleitor (Moradores e trabalhadores)</h2>
-          <a href="https://gestaourbana.prefeitura.sp.gov.br/wp-content/uploads/2025/09/Edital_002_2025_SPURB_OUCBT_Trabalhadores_e_251017_092250-1.pdf" target="_blank" className="text-muted-foreground underline">
-            Edital Nº 002/2025/SPURB/OUCBT
-          </a>
-          <Button asChild size="lg" className="text-lg mx-4 px-8 bg-amber-500 hover:bg-amber-600 text-white">
+          <h2 className="text-3xl font-bold">Sobre as Inscrições</h2>
+          <div className="flex gap-2">
+            <a href={`${BASE_PATH}/editais/Edital_N__001_2026_SMUL_OUCAB.pdf`} target="_blank" className="text-muted-foreground underline">
+              Edital Nº 001
+            </a>
+            <a href={`${BASE_PATH}/editais/Edital_N__002_2026_SMUL_OUCAB.pdf`} target="_blank" className="text-muted-foreground underline">
+              Edital Nº 002
+            </a>
+          </div>
+          {/* <Button asChild size="lg" className="text-lg mx-4 px-8 bg-amber-500 hover:bg-amber-600 text-white">
             <Link href="/consulta-cadastro">
               Consultar status de inscrição
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
-          </Button>
+          </Button> */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="col-span-2 lg:col-span-1 rounded-none md:rounded-md flex justify-between">
+          <Card className="col-span-2 rounded-none md:rounded-md flex justify-between">
             <CardHeader>
               <CardTitle>Área de Abrangência</CardTitle>
               <CardDescription>
@@ -40,7 +46,7 @@ export default function Home() {
               <MapaVisualizacao className="flex-1 h-full" />
             </CardContent>
           </Card>
-          <Card className="col-span-2 lg:col-span-1 rounded-none md:rounded-md">
+          {/* <Card className="col-span-2 lg:col-span-1 rounded-none md:rounded-md">
             <CardHeader>
               <CardTitle>Sobre a Eleição</CardTitle>
               <CardDescription>
@@ -50,7 +56,7 @@ export default function Home() {
             <CardContent>
               <MapaLocalVotacao className="flex-1 h-full" />
             </CardContent>
-          </Card>
+          </Card> */}
           {/* <Card className="rounded-none col-span-2 md:rounded-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

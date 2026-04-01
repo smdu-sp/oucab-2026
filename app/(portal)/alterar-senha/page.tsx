@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, KeyRound, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import { BASE_PATH } from "@/lib/config";
 
 export default function AlterarSenhaPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function AlterarSenhaPage() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("/api/portal/alterar-senha", {
+      const res = await fetch(`${BASE_PATH}/api/portal/alterar-senha`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ senhaAtual, novaSenha }),

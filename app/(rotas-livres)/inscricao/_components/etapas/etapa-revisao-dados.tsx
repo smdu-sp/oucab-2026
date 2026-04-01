@@ -11,9 +11,42 @@ export default function EtapaRevisaoDados() {
   const { watch } = useFormContext<FormularioInscricaoData>();
   
   const tipoInscricao = watch("tipoInscricao");
+  const tipoCadastro = watch("tipoCadastro");
   const votante = watch("votante");
   const endereco = watch("endereco");
-  const arquivos = watch("arquivos");
+
+  const CAMPOS_ARQUIVO: { campo: keyof FormularioInscricaoData; label: string }[] = [
+    { campo: "docRequerimento", label: "Requerimento de Inscrição" },
+    { campo: "docIdentidade", label: "Documento de Identidade" },
+    { campo: "docCPF", label: "CPF" },
+    { campo: "docTituloEleitor", label: "Título de Eleitor" },
+    { campo: "docComprovante", label: "Comprovante de Residência/Trabalho" },
+    { campo: "docFoto3x4", label: "Foto 3×4" },
+    { campo: "docDeclaracao", label: "Declaração de Não Impedimento" },
+    { campo: "orgDocRequerimento", label: "Requerimento da Entidade" },
+    { campo: "orgDocDeclaracaoAtuacao", label: "Declaração de Atuação" },
+    { campo: "orgDocEstatutoSocial", label: "Estatuto Social" },
+    { campo: "orgDocAtaEleicao", label: "Ata da Última Eleição" },
+    { campo: "orgDocCertidaoCNPJ", label: "Certidão CNPJ" },
+    { campo: "orgDocComprovanteCNPJ", label: "Comprovante CNPJ" },
+    { campo: "titularDocRequerimento", label: "Requerimento — Titular" },
+    { campo: "titularDocIdentidade", label: "Identidade — Titular" },
+    { campo: "titularDocCPF", label: "CPF — Titular" },
+    { campo: "titularDocTituloEleitor", label: "Título Eleitor — Titular" },
+    { campo: "titularDocFoto3x4", label: "Foto 3×4 — Titular" },
+    { campo: "titularDocDeclaracao", label: "Declaração — Titular" },
+    { campo: "suplenteDocRequerimento", label: "Requerimento — Suplente" },
+    { campo: "suplenteDocIdentidade", label: "Identidade — Suplente" },
+    { campo: "suplenteDocCPF", label: "CPF — Suplente" },
+    { campo: "suplenteDocTituloEleitor", label: "Título Eleitor — Suplente" },
+    { campo: "suplenteDocFoto3x4", label: "Foto 3×4 — Suplente" },
+    { campo: "suplenteDocDeclaracao", label: "Declaração — Suplente" },
+  ];
+
+  const arquivosEnviados = CAMPOS_ARQUIVO.filter(({ campo }) => {
+    const val = watch(campo);
+    return val instanceof File;
+  });
 
   const formatarCPF = (cpf: string) => {
     return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
@@ -54,8 +87,8 @@ export default function EtapaRevisaoDados() {
 
   return (
     <div className="space-y-6">
-      <Badge variant={tipoInscricao === "MORADOR" ? "success" : "default"} className="text-sm capitalize mx-auto block">
-        {tipoInscricao === "MORADOR" ? "Morador" : "Trabalhador"}
+      <Badge variant="outline" className="text-sm mx-auto block w-fit">
+        {tipoCadastro === "CANDIDATO" ? "Candidato(a)" : "Eleitor(a)"} — {tipoInscricao}
       </Badge>
 
       {/* Dados Pessoais */}
@@ -161,26 +194,25 @@ export default function EtapaRevisaoDados() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {arquivos?.arquivos?.map((arquivo, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                <FileText className="w-4 h-4" />
-                <span className="text-sm">{arquivo.name}</span>
-                <span className="text-xs text-muted-foreground ml-auto">
-                  {(arquivo.size / 1024 / 1024).toFixed(2)} MB
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Atenção:</strong> Se você está refazendo seu cadastro, envie todos os documentos novamente. 
-                Os arquivos antigos serão substituídos pelos novos após o envio.
-              </AlertDescription>
-            </Alert>
-          </div>
+          {arquivosEnviados.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum documento enviado.</p>
+          ) : (
+            <div className="space-y-2">
+              {arquivosEnviados.map(({ campo, label }) => {
+                const arquivo = watch(campo) as File;
+                return (
+                  <div key={campo} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span className="text-sm font-medium">{label}:</span>
+                    <span className="text-sm text-muted-foreground truncate">{arquivo.name}</span>
+                    <span className="text-xs text-muted-foreground ml-auto shrink-0">
+                      {(arquivo.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 

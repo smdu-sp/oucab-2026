@@ -8,7 +8,7 @@ export default auth((req: NextRequest & { auth: any }) => {
 
   // Rotas do portal externo (/portal/* exceto /portal/login)
   if (pathname.startsWith("/portal") && pathname !== "/portal/login") {
-    if (!session || session.user?.tipo !== "votante") {
+    if (!session || session.user?.tipo !== "externo") {
       return NextResponse.redirect(new URL("/portal/login", req.url));
     }
     // Força troca de senha no primeiro acesso (exceto se já está na página)
@@ -18,7 +18,7 @@ export default auth((req: NextRequest & { auth: any }) => {
   }
 
   // Se já está autenticado como votante e tenta acessar /portal/login, redireciona
-  if (pathname === "/portal/login" && session?.user?.tipo === "votante") {
+  if (pathname === "/portal/login" && session?.user?.tipo === "externo") {
     if (session.user?.primeiroAcesso) {
       return NextResponse.redirect(new URL("/portal/alterar-senha", req.url));
     }

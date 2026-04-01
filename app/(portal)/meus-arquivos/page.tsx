@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, AlertTriangle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import DragDropInput from "@/components/drag-drop-input";
+import { BASE_PATH } from "@/lib/config";
 
 const PRAZO_INSCRICAO = new Date("2026-11-30T23:59:59.999Z");
 
@@ -19,7 +20,7 @@ export default function MeusArquivosPage() {
   const prazoEncerrado = new Date() > PRAZO_INSCRICAO;
 
   useEffect(() => {
-    fetch("/api/portal/arquivos")
+    fetch(`${BASE_PATH}/api/portal/arquivos`)
       .then((r) => r.json())
       .then((data) => {
         setArquivosAtuais(data.arquivos ?? []);
@@ -40,7 +41,7 @@ export default function MeusArquivosPage() {
     try {
       const formData = new FormData();
       novosArquivos.forEach((f, i) => formData.append(`arquivos[${i}]`, f));
-      const res = await fetch("/api/portal/arquivos", { method: "PUT", body: formData });
+      const res = await fetch(`${BASE_PATH}/api/portal/arquivos`, { method: "PUT", body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao salvar");
       toast.success("Arquivos atualizados com sucesso!");

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { BASE_PATH } from "@/lib/config";
 
 type ConsultaResposta = {
   found: boolean;
@@ -74,7 +75,7 @@ export default function ConsultaCadastroPage() {
     }
     setCarregando(true);
     try {
-      const res = await fetch(`/api/consulta-cadastro/${cpfLimpo}`);
+      const res = await fetch(`${BASE_PATH}/api/consulta-cadastro/${cpfLimpo}`);
       const json: ConsultaResposta = await res.json();
       setResultado(json);
       if (!res.ok && !json.found) {

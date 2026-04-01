@@ -6,25 +6,33 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { PRAZO_INSCRICAO } from "@/lib/config";
 
+async function getCandidatura(usuarioId: string) {
+  return db.candidatura.findUnique({
+    where: { usuarioId },
+    select: { id: true, status: true },
+  });
+}
+
 export async function GET() {
   const session = await auth();
-  if (!session || (session.user as any)?.tipo !== "votante") {
+  if (!session || session.user?.tipo !== "externo") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const votante = await db.votante.findUnique({
-    where: { id: session.user?.id as string },
-    select: { status: true, arquivos: { select: { id: true, nome: true, tamanho: true } } },
+  const candidatura = await getCandidatura(session.user.id as string);
+  if (!candidatura) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
+
+  const arquivos = await db.arquivo.findMany({
+    where: { candidaturaId: candidatura.id },
+    select: { id: true, nome: true, tamanho: true },
   });
 
-  if (!votante) return NextResponse.json({ error: "Votante não encontrado" }, { status: 404 });
-
-  return NextResponse.json({ arquivos: votante.arquivos, status: votante.status });
+  return NextResponse.json({ arquivos, status: candidatura.status });
 }
 
 export async function PUT(request: NextRequest) {
   const session = await auth();
-  if (!session || (session.user as any)?.tipo !== "votante") {
+  if (!session || session.user?.tipo !== "externo") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -32,11 +40,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Prazo de inscrições encerrado." }, { status: 400 });
   }
 
-  const votanteId = session.user?.id as string;
-  const votante = await db.votante.findUnique({ where: { id: votanteId }, select: { status: true } });
-
-  if (!votante) return NextResponse.json({ error: "Votante não encontrado" }, { status: 404 });
-  if (votante.status === "DEFERIDO") {
+  const candidatura = await getCandidatura(session.user.id as string);
+  if (!candidatura) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
+  if (candidatura.status === "DEFERIDO") {
     return NextResponse.json({ error: "Inscrição deferida. Não é possível alterar documentos." }, { status: 400 });
   }
 
@@ -54,26 +60,27 @@ export async function PUT(request: NextRequest) {
   const totalSize = arquivos.reduce((s, f) => s + f.size, 0);
   if (totalSize > 250 * 1024 * 1024) return NextResponse.json({ error: "Tamanho total excede 250 MB." }, { status: 400 });
 
-  // Remover arquivos antigos
-  const votanteDir = join(process.cwd(), "uploads", votanteId);
-  try { await rm(votanteDir, { recursive: true, force: true }); } catch {}
+  const uploadDir = join(process.cwd(), "uploads", candidatura.id);
+  try { await rm(uploadDir, { recursive: true, force: true }); } catch {}
 
   if (!existsSync(join(process.cwd(), "uploads"))) {
     await mkdir(join(process.cwd(), "uploads"), { recursive: true });
   }
-  await mkdir(votanteDir, { recursive: true });
+  await mkdir(uploadDir, { recursive: true });
 
   const novosArquivos: { nome: string; tipo: string; tamanho: number; caminho: string }[] = [];
   for (const arquivo of arquivos) {
     const nomeArquivo = `${Date.now()}-${Math.random().toString(36).substring(2)}-${arquivo.name}`;
-    const caminho = join(votanteDir, nomeArquivo);
+    const caminho = join(uploadDir, nomeArquivo);
     await writeFile(caminho, Buffer.from(await arquivo.arrayBuffer()));
     novosArquivos.push({ nome: arquivo.name, tipo: arquivo.type, tamanho: arquivo.size, caminho });
   }
 
-  await db.arquivo.deleteMany({ where: { votanteId } });
+  await db.arquivo.deleteMany({ where: { candidaturaId: candidatura.id } });
   const criados = await Promise.all(
-    novosArquivos.map((a) => db.arquivo.create({ data: { ...a, votanteId } }))
+    novosArquivos.map((a) =>
+      db.arquivo.create({ data: { ...a, candidaturaId: candidatura.id, categoria: "OUTRO" } })
+    )
   );
 
   return NextResponse.json({ arquivos: criados.map(({ id, nome, tamanho }) => ({ id, nome, tamanho })) });

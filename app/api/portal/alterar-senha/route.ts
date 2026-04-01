@@ -5,11 +5,12 @@ import { verificarSenha, hashSenha } from "@/lib/password";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
-  if (!session || (session.user as any)?.tipo !== "votante") {
+  if (!session || session.user?.tipo !== "externo") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const votanteId = session.user?.id as string;
+  // session.user.id é o Usuario.id diretamente
+  const usuarioId = session.user.id as string;
   const { senhaAtual, novaSenha } = await request.json();
 
   if (!senhaAtual || !novaSenha) {
@@ -19,16 +20,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A nova senha deve ter pelo menos 8 caracteres." }, { status: 400 });
   }
 
-  const votante = await db.votante.findUnique({
-    where: { id: votanteId },
-    select: { usuarioId: true },
-  });
-  if (!votante?.usuarioId) {
-    return NextResponse.json({ error: "Usuário não encontrado." }, { status: 404 });
-  }
-
   const usuario = await db.usuario.findUnique({
-    where: { id: votante.usuarioId },
+    where: { id: usuarioId },
     select: { senha: true },
   });
   if (!usuario?.senha) {
@@ -42,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   const novoHash = await hashSenha(novaSenha);
   await db.usuario.update({
-    where: { id: votante.usuarioId },
+    where: { id: usuarioId },
     data: { senha: novoHash, primeiroAcesso: false },
   });
 

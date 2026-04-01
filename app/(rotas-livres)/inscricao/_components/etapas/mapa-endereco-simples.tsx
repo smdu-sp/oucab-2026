@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
@@ -14,6 +14,7 @@ import { Style, Fill, Stroke, Circle } from "ol/style";
 import { defaults as defaultControls } from "ol/control";
 import KML from "ol/format/KML";
 import { Loader2, Plus, Minus } from "lucide-react";
+import { BASE_PATH } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { checkOUCABPerimeter } from "@/lib/utils/polygon-validation";
@@ -38,31 +39,27 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
   const latitude = watch("endereco.latitude");
   const longitude = watch("endereco.longitude");
   const tipoInscricao = watch("tipoInscricao") as string;
-  const apenasAdesao = tipoInscricao === "REP_MOVIMENTOS_MORADIA";
+  const isRep = ["REP_MORADIA", "REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
 
   // Ref para uso dentro do closure do map click handler
-  const apenasAdesaoRef = useRef(apenasAdesao);
-  useEffect(() => { apenasAdesaoRef.current = apenasAdesao; }, [apenasAdesao]);
+  const isRepRef = useRef(isRep);
+  useEffect(() => { isRepRef.current = isRep; }, [isRep]);
 
   const validateCoordinates = async (lat: number, lon: number): Promise<boolean> => {
+    // Para representantes não há validação de perímetro — qualquer endereço é aceito
+    if (isRepRef.current) {
+      setIsWithinPerimeter(null);
+      return true;
+    }
+
     const { isValid, area } = await checkOUCABPerimeter(lat, lon);
+    setIsWithinPerimeter(isValid);
 
-    const bloqueado = isValid && area === "EXPANDIDO" && apenasAdesaoRef.current;
-    const aceito = isValid && !bloqueado;
-
-    setIsWithinPerimeter(aceito);
-
-    if (!aceito) {
+    if (!isValid) {
       setValue("endereco.areaPerimetro", null);
-      if (bloqueado) {
-        toast.error(
-          "Representantes de movimentos de moradia só podem selecionar endereços dentro do perímetro de adesão."
-        );
-      } else {
-        toast.error(
-          "Este endereço está fora das áreas de abrangência da OUCAB. Por favor, selecione um endereço dentro da área permitida."
-        );
-      }
+      toast.error(
+        "Este endereço está fora das áreas de abrangência da OUCAB. Por favor, selecione um endereço dentro da área permitida."
+      );
       setValue("endereco.logradouro", "");
       setValue("endereco.numero", "");
       setValue("endereco.bairro", "");
@@ -75,7 +72,7 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
       toast.success("Endereço dentro da área de abrangência da OUCAB!");
     }
 
-    return aceito;
+    return isValid;
   };
 
   const getEstadoSigla = (nomeEstado: string): string => {
@@ -153,7 +150,7 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
   ) => {
     if (!layerRef.current) return;
     try {
-      const response = await fetch(`/api/shapes/${shapeName}`);
+      const response = await fetch(`${BASE_PATH}/api/shapes/${shapeName}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const kmlText = await response.text();
 
@@ -264,19 +261,22 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
   useEffect(() => {
     if (latitude && longitude && typeof latitude === "number" && typeof longitude === "number") {
       addMarker(latitude, longitude);
-      checkOUCABPerimeter(latitude, longitude).then(({ isValid, area }) => {
-        const aceito = isValid && !(area === "EXPANDIDO" && apenasAdesao);
-        setIsWithinPerimeter(aceito);
-      });
+      if (!isRep) {
+        checkOUCABPerimeter(latitude, longitude).then(({ isValid }) => {
+          setIsWithinPerimeter(isValid);
+        });
+      } else {
+        setIsWithinPerimeter(null);
+      }
     }
-  }, [latitude, longitude]);
+  }, [latitude, longitude, isRep]);
 
-  // Mostrar/ocultar perímetro expandido conforme tipo de inscrição
+  // Mostrar/ocultar perímetro expandido — para REP_* sempre mostra ambas as camadas
   useEffect(() => {
     if (kmlExpandidoLayerRef.current) {
-      kmlExpandidoLayerRef.current.setVisible(!apenasAdesao);
+      kmlExpandidoLayerRef.current.setVisible(true);
     }
-  }, [apenasAdesao]);
+  }, [isRep]);
 
   return (
     <div className={`w-full ${className}`}>
@@ -346,12 +346,10 @@ const MapaEnderecoOpenLayers: React.FC<MapaEnderecoOpenLayersProps> = ({
             <div className="w-3 h-3 rounded-sm border-2 border-purple-600 bg-purple-400/40 flex-shrink-0" />
             <span className="text-gray-600">Perímetro de Adesão</span>
           </div>
-          {!apenasAdesao && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm border-2 border-blue-500 bg-blue-300/40 flex-shrink-0" />
-              <span className="text-gray-600">Perímetro Expandido</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm border-2 border-blue-500 bg-blue-300/40 flex-shrink-0" />
+            <span className="text-gray-600">Perímetro Expandido</span>
+          </div>
         </div>
       </div>
     </div>

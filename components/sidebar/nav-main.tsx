@@ -1,6 +1,6 @@
 /** @format */
 
-import { ChevronRight, House, LucideProps, Users, Vote } from 'lucide-react';
+import { ChevronRight, ClipboardList, House, LucideProps, Users, Vote } from 'lucide-react';
 
 import {
 	Collapsible,
@@ -48,11 +48,6 @@ export async function NavMain() {
 			titulo: 'Página Inicial',
 			url: '/',
 		},
-		{
-			icone: Vote,
-			titulo: 'Eleitores',
-			url: '/eleitores',
-		},
 	];
 
 	const menuAdmin: IMenu[] = [
@@ -61,6 +56,11 @@ export async function NavMain() {
 			titulo: 'Usuários',
 			url: '/usuarios',
 			permissao: 'usuario_buscar_tudo',
+		},
+		{
+			icone: ClipboardList,
+			titulo: 'Candidaturas',
+			url: '/candidaturas',
 		},
 	];
 

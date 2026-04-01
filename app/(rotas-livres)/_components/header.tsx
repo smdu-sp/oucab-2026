@@ -1,13 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Header() {    
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
+export default function Header() {
     return (
         <header className="relative top-0 left-0 w-full z-50">
-            <div 
+            <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{
-                    backgroundImage: "url('/banner.png')"
+                    backgroundImage: `url('${BASE_PATH}/banner.png')`
                 }}
             />
             <div className="relative z-10 flex justify-between items-center p-8 gap-4">
@@ -27,7 +29,7 @@ export default function Header() {
                         height={290}
                     />
                 </Link>
-                <Link 
+                <Link
                     href="https://prefeitura.sp.gov.br/web/sp_urbanismo/w/operacoes_urbanas/agua_branca/ouc_agua_branca/325192"
                     className="text-white text-lg md:text-2xl font-bold text-center md:text-right md:max-w-[50%]"
                     target="_blank"

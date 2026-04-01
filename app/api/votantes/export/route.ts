@@ -5,8 +5,8 @@ import { db } from "@/lib/prisma";
 
 export async function GET(_req: NextRequest) {
   try {
-    const votantes = await db.votante.findMany({
-      where: { status: "DEFERIDO" },
+    const candidatos = await db.candidato.findMany({
+      where: { candidatura: { status: "DEFERIDO" } },
       orderBy: { nome: "asc" },
       select: {
         nome: true,
@@ -15,12 +15,11 @@ export async function GET(_req: NextRequest) {
       },
     });
 
-    const linhas = votantes.map((v) => {
-      const cpf = (v.cpf || "").replace(/[^\d]/g, "");
-      const nome = (v.nome || "").trim();
-      // Formatar data como YYYY-MM-DD usando a parte UTC para evitar deslocamento
-      const data = v.dataNascimento
-        ? new Date(v.dataNascimento).toISOString().slice(0, 10)
+    const linhas = candidatos.map((c) => {
+      const cpf = (c.cpf || "").replace(/[^\d]/g, "");
+      const nome = (c.nome || "").trim();
+      const data = c.dataNascimento
+        ? new Date(c.dataNascimento).toISOString().slice(0, 10)
         : "";
       return `${cpf}|${nome}|${data}|${cpf}`;
     });

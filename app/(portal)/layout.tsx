@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LogOut, FileText, Upload, KeyRound } from "lucide-react";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
-  if (!session || session.user?.tipo !== "votante") {
+  if (!session || session.user?.tipo !== "externo") {
     redirect("/portal/login");
   }
 
@@ -29,7 +29,7 @@ export default async function PortalLayout({ children }: { children: React.React
             <span className="text-sm text-muted-foreground hidden sm:block">
               {nome} · <span className="capitalize">{tipoCadastro?.toLowerCase()}</span>
             </span>
-            <form action="/api/auth/signout" method="POST">
+            <form action={async () => { "use server"; await signOut({ redirectTo: "/portal/login" }); }}>
               <Button type="submit" variant="ghost" size="sm">
                 <LogOut className="w-4 h-4 mr-1" />
                 Sair

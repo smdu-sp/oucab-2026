@@ -10,7 +10,10 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npm install:*)",
       "Bash(npx prisma:*)",
-      "Bash(npm list:*)"
+      "Bash(npm list:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls d:/www/oucab-2026/app/\\\\\\(rotas-auth\\\\\\)/\\\\\\(rotas-adm\\\\\\)/)",
+      "Bash(ls \"d:/www/oucab-2026/app/\\(rotas-auth\\)/\\(rotas-adm\\)/\")"
     ]
   }
 }

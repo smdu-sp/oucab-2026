@@ -10,16 +10,12 @@ datasource db {
 enum Permissao {
     DEV
     ADM
+    USR
 }
 
 enum TipoUsuario {
     INTERNO
     EXTERNO
-}
-
-enum TipoCadastro {
-    ELEITOR
-    CANDIDATO
 }
 
 model Usuario {
@@ -38,7 +34,8 @@ model Usuario {
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt
 
-    votante                Votante?
+    eleitor                Eleitor?
+    candidatura            Candidatura?
 
     @@map("usuarios")
 }
@@ -52,15 +49,14 @@ enum Status {
 enum TipoInscricao {
     MORADOR
     TRABALHADOR
-    REP_MOVIMENTOS_MORADIA
+    REP_MORADIA
+    REP_ONGS
+    REP_PROFISSIONAIS
+    REP_EMPRESARIAIS
 }
 
-enum AreaPerimetro {
-    ADESAO
-    EXPANDIDO
-}
-
-enum Vaga {
+enum TipoCandidato {
+    INDIVIDUAL
     TITULAR
     SUPLENTE
 }
@@ -71,29 +67,73 @@ enum Genero {
     OUTRO
 }
 
-model Votante {
+enum TipoCadastro {
+    ELEITOR
+    CANDIDATO
+}
+
+enum CategoriaArquivo {
+    REQUERIMENTO
+    DOCUMENTO_IDENTIDADE
+    CPF
+    TITULO_ELEITOR
+    COMPROVANTE_RESIDENCIA
+    COMPROVANTE_TRABALHO
+    FOTO
+    DECLARACAO
+    DECLARACAO_ATUACAO
+    ESTATUTO_SOCIAL
+    ATA_ELEICAO
+    CERTIDAO_CNPJ
+    OUTRO
+}
+
+enum AreaPerimetro {
+    ADESAO
+    EXPANDIDO
+    NAO_APLICA
+}
+
+model Candidatura {
     id                     String                 @id @default(uuid())
-    tipoInscricao          TipoInscricao          @default(MORADOR)
-    empresa                String?
-    tituloEleitor          String?
-    nomeSocial             String?
-    telefone               String?
-    genero                 Genero                 @default(OUTRO)
-    cpf                    String                 @unique
-    dataNascimento         DateTime               @db.Date
     tipoCadastro           TipoCadastro           @default(ELEITOR)
-    areaPerimetro          AreaPerimetro
-    vaga                   Vaga?
+    tipoInscricao          TipoInscricao          @default(MORADOR)
     usuarioId              String                 @unique
     status                 Status                 @default(EM_ANALISE)
+
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt
 
-    usuario                Usuario?               @relation(fields: [usuarioId], references: [id])
-    endereco               Endereco?
+    usuario                Usuario                @relation(fields: [usuarioId], references: [id])
+    candidatos             Candidato[]
+    organizacao            Organizacao?
     arquivos               Arquivo[]
+    endereco               Endereco?
 
-    @@map("votantes")
+    @@map("inscricoes")
+}
+
+model Arquivo {
+    id                     String                  @id @default(uuid())
+    nome                   String
+    tipo                   String
+    tamanho                Int
+    caminho                String
+    candidaturaId          String?
+    candidatoId            String?
+    organizacaoId          String?
+    eleitorId              String?
+    categoria              CategoriaArquivo
+
+    criadoEm               DateTime                @default(now())
+    atualizadoEm           DateTime                @default(now()) @updatedAt
+
+    candidatura            Candidatura?            @relation(fields: [candidaturaId], references: [id])
+    candidato              Candidato?              @relation(fields: [candidatoId], references: [id])
+    organizacao            Organizacao?            @relation(fields: [organizacaoId], references: [id])
+    eleitor                Eleitor?                @relation(fields: [eleitorId], references: [id])
+
+    @@map("arquivos")
 }
 
 model Endereco {
@@ -107,25 +147,70 @@ model Endereco {
     cep                    String
     latitude               Float?
     longitude              Float?
-    votanteId              String                 @unique
+    areaPerimetro          AreaPerimetro          @default(NAO_APLICA)
+    candidaturaId          String                 @unique
+
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt
 
-    votante                Votante                @relation(fields: [votanteId], references: [id])
+    candidatura            Candidatura            @relation(fields: [candidaturaId], references: [id])
 
     @@map("enderecos")
 }
 
-model Arquivo {
+model Organizacao {
     id                     String                 @id @default(uuid())
-    nome                   String
-    tipo                   String
-    tamanho                Int
-    caminho                String
-    votanteId              String
+    cnpj                   String                 @unique
+    razaoSocial            String
+    candidaturaId          String                 @unique
+
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt
-    votante                Votante                @relation(fields: [votanteId], references: [id])
 
-    @@map("arquivos")
+    candidatura            Candidatura            @relation(fields: [candidaturaId], references: [id])
+    arquivos               Arquivo[]
+
+    @@map("organizacoes")
+}
+
+model Candidato {
+    id                     String                 @id @default(uuid())
+    nome                   String
+    nomeEmpresa            String?
+    nomeSocial             String?
+    email                  String
+    telefone               String?
+    cpf                    String                 @unique
+    dataNascimento         DateTime               @db.Date
+    genero                 Genero
+    tipoCandidato          TipoCandidato          @default(INDIVIDUAL)
+    candidaturaId          String
+
+    criadoEm               DateTime               @default(now())
+    atualizadoEm           DateTime               @default(now()) @updatedAt
+    
+    candidatura            Candidatura            @relation(fields: [candidaturaId], references: [id])
+    arquivos               Arquivo[]
+
+    @@map("representantes")
+}
+
+model Eleitor {
+    id                     String                 @id @default(uuid())
+    nome                   String
+    email                  String
+    telefone               String?
+    cpf                    String                 @unique
+    dataNascimento         DateTime               @db.Date
+    genero                 Genero
+    tituloEleitor          String?                @unique
+    usuarioId              String?                @unique
+
+    criadoEm               DateTime               @default(now())
+    atualizadoEm           DateTime               @default(now()) @updatedAt
+
+    usuario                Usuario?               @relation(fields: [usuarioId], references: [id])
+    arquivos               Arquivo[]
+
+    @@map("eleitores")
 }
