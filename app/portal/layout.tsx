@@ -8,7 +8,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const session = await auth();
 
   if (!session || session.user?.tipo !== "externo") {
-    redirect("/portal/login");
+    redirect("/login");
   }
 
   const nome = session.user?.nome ?? "";
