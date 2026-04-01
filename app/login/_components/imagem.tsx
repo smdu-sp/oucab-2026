@@ -22,7 +22,7 @@ export default function Imagem() {
         <Image
             width={1200}
             height={1200}
-            src={tema === "dark" ? "/martinelli_noite.jpeg" : "/martinelli_dia.jpg"}
+            src={tema === "dark" ? "/oucab/martinelli_noite.jpeg" : "/oucab/martinelli_dia.jpg"}
             alt="Edíficio Martinelli"
             className="absolute inset-0 h-full w-full object-cover"
         />
