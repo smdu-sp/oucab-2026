@@ -117,7 +117,7 @@ export default function Home() {
           )}
           
           <Button variant="outline" size="lg" className="text-lg px-8" asChild>
-            <Link href="https://gestaourbana.prefeitura.sp.gov.br/estruturacao-territorial/operacoes-urbanas/oucbt/" target="_blank">
+            <Link href="https://prefeitura.sp.gov.br/web/sp_urbanismo/w/operacoes_urbanas/agua_branca/ouc_agua_branca/325192" target="_blank">
               Saiba Mais
               <Info className="ml-2 h-5 w-5" />
             </Link>
