@@ -1,6 +1,5 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Info } from "lucide-react";
@@ -19,12 +18,12 @@ export default function Home() {
         <div className="text-center space-y-2 flex flex-col items-center gap-2">
           <h2 className="text-3xl font-bold">Sobre as Inscrições</h2>
           <div className="flex gap-2">
-            <a href={`${BASE_PATH}/editais/Edital_N__001_2026_SMUL_OUCAB.pdf`} target="_blank" className="text-muted-foreground underline">
+            <Link href="/edital/001" className="text-muted-foreground underline">
               Edital Nº 001
-            </a>
-            <a href={`${BASE_PATH}/editais/Edital_N__002_2026_SMUL_OUCAB.pdf`} target="_blank" className="text-muted-foreground underline">
+            </Link>
+            <Link href="/edital/002" className="text-muted-foreground underline">
               Edital Nº 002
-            </a>
+            </Link>
           </div>
           {/* <Button asChild size="lg" className="text-lg mx-4 px-8 bg-amber-500 hover:bg-amber-600 text-white">
             <Link href="/consulta-cadastro">
@@ -115,7 +114,6 @@ export default function Home() {
               Inscrição Encerrada
             </Button>
           )}
-          
           <Button variant="outline" size="lg" className="text-lg px-8" asChild>
             <Link href="https://prefeitura.sp.gov.br/web/sp_urbanismo/w/operacoes_urbanas/agua_branca/ouc_agua_branca/325192" target="_blank">
               Saiba Mais
