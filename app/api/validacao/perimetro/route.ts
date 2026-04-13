@@ -43,18 +43,24 @@ function isPointInPolygon(point: [number, number], polygon: [number, number][]):
   return inside;
 }
 
-async function loadKMZPolygons(filename: string): Promise<[number, number][][]> {
-  const filePath = join(process.cwd(), "public", "shapes", filename);
-  const fileBuffer = await readFile(filePath);
-  const zip = await JSZip.loadAsync(fileBuffer);
+async function loadShapePolygons(name: string): Promise<[number, number][][]> {
+  const shapesDir = join(process.cwd(), "public", "shapes");
 
-  for (const name of Object.keys(zip.files)) {
-    if (name.endsWith(".kml")) {
-      const kmlContent = await zip.files[name].async("string");
-      return parseKMLCoordinates(kmlContent);
+  // Tenta KML direto primeiro, depois KMZ
+  try {
+    const kmlContent = await readFile(join(shapesDir, `${name}.kml`), "utf-8");
+    return parseKMLCoordinates(kmlContent);
+  } catch {
+    const fileBuffer = await readFile(join(shapesDir, `${name}.kmz`));
+    const zip = await JSZip.loadAsync(fileBuffer);
+    for (const filename of Object.keys(zip.files)) {
+      if (filename.endsWith(".kml")) {
+        const kmlContent = await zip.files[filename].async("string");
+        return parseKMLCoordinates(kmlContent);
+      }
     }
+    return [];
   }
-  return [];
 }
 
 export async function GET(request: NextRequest) {
@@ -68,16 +74,16 @@ export async function GET(request: NextRequest) {
 
   try {
     const [adesaoPolygons, expandidoPolygons] = await Promise.all([
-      loadKMZPolygons("perimetro_adesao.kmz"),
-      loadKMZPolygons("perimetro_expandido.kmz"),
+      loadShapePolygons("perimetro_adesao"),
+      loadShapePolygons("perimetro_expandido"),
     ]);
 
     const point: [number, number] = [lng, lat];
 
-    if (adesaoPolygons.some((polygon) => isPointInPolygon(point, polygon))) {
+    if (adesaoPolygons.some((polygon: [number, number][]) => isPointInPolygon(point, polygon))) {
       return NextResponse.json({ valid: true, area: "ADESAO" });
     }
-    if (expandidoPolygons.some((polygon) => isPointInPolygon(point, polygon))) {
+    if (expandidoPolygons.some((polygon: [number, number][]) => isPointInPolygon(point, polygon))) {
       return NextResponse.json({ valid: true, area: "EXPANDIDO" });
     }
 

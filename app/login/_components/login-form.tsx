@@ -61,7 +61,13 @@ export function LoginForm() {
 				if (resp.error) toast.error('Credenciais incorretas.');
 				else if (resp.ok) {
 					toast.success('Login realizado com sucesso.');
-					router.push('/')
+					const { getSession } = await import('next-auth/react');
+					const session = await getSession();
+					if (session?.user?.tipo === 'externo') {
+						router.push('/portal/minha-inscricao');
+					} else {
+						router.push('/usuarios');
+					}
 				}
 			}
 		} catch (e) {

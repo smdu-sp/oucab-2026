@@ -10,7 +10,10 @@ import { redirect } from 'next/navigation';
 
 export default async function Login() {
 	const session = await auth();
-	if (session) redirect('/');
+	if (session) {
+		if (session.user?.tipo === 'externo') redirect('/portal/minha-inscricao');
+		else redirect('/usuarios');
+	}
 	return (
 		<>
 			<Background />

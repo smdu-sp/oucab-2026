@@ -16,30 +16,35 @@ export async function GET(
   }
 
   try {
-    const filePath = join(process.cwd(), "public", "shapes", `${name}.kmz`);
-    const fileBuffer = await readFile(filePath);
-    const zip = await JSZip.loadAsync(fileBuffer);
-
+    const shapesDir = join(process.cwd(), "public", "shapes");
     let kmlContent: string | null = null;
-    for (const filename of Object.keys(zip.files)) {
-      if (filename.endsWith(".kml")) {
-        kmlContent = await zip.files[filename].async("string");
-        break;
+
+    // Tenta KML direto primeiro, depois KMZ
+    try {
+      kmlContent = await readFile(join(shapesDir, `${name}.kml`), "utf-8");
+    } catch {
+      const fileBuffer = await readFile(join(shapesDir, `${name}.kmz`));
+      const zip = await JSZip.loadAsync(fileBuffer);
+      for (const filename of Object.keys(zip.files)) {
+        if (filename.endsWith(".kml")) {
+          kmlContent = await zip.files[filename].async("string");
+          break;
+        }
       }
     }
 
     if (!kmlContent) {
-      return NextResponse.json({ error: "KML não encontrado no arquivo KMZ" }, { status: 500 });
+      return NextResponse.json({ error: "KML não encontrado" }, { status: 500 });
     }
 
     return new NextResponse(kmlContent, {
       headers: {
         "Content-Type": "application/vnd.google-earth.kml+xml",
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "no-cache",
       },
     });
   } catch (error) {
-    console.error("Erro ao carregar KMZ:", error);
+    console.error("Erro ao carregar shape:", error);
     return NextResponse.json({ error: "Erro ao carregar arquivo de perímetro" }, { status: 500 });
   }
 }
