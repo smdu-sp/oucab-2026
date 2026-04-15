@@ -225,7 +225,7 @@ export default async function CandidaturaDetalhe({
 											{candidato.arquivos.map((arq) => (
 												<a
 													key={arq.id}
-													href={arq.caminho}
+													href={`/api/arquivos/${arq.id}`}
 													target='_blank'
 													rel='noopener noreferrer'
 													className='text-xs px-2 py-1 rounded border hover:bg-muted transition-colors'>
@@ -252,7 +252,7 @@ export default async function CandidaturaDetalhe({
 							{candidatura.arquivos.map((arq) => (
 								<a
 									key={arq.id}
-									href={arq.caminho}
+									href={`/api/arquivos/${arq.id}`}
 									target='_blank'
 									rel='noopener noreferrer'
 									className='text-sm px-3 py-2 rounded border hover:bg-muted transition-colors'>
