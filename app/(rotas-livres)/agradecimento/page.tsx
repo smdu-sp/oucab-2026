@@ -36,7 +36,7 @@ export default function Agradecimento() {
         <CardContent className="space-y-6">
           <div className="text-center space-y-3">
             <p className="text-lg text-gray-700">
-              Sua inscrição como eleitor para <strong>OUC Bairros do Tamanduateí</strong> foi enviada com sucesso.
+              Sua inscrição como eleitor para <strong>Operação Urbana Consorciada da Água Branca</strong> foi enviada com sucesso.
             </p>
             <p className="text-muted-foreground">
               Seus dados foram salvos e estão aguardando análise e aprovação pela equipe responsável.
