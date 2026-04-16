@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/utils";
 import { BASE_PATH } from "@/lib/config";
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
@@ -98,7 +99,7 @@ export default async function EleitorAiusceDetalhe({
             </div>
             <div>
               <p className="text-muted-foreground">Data de Nascimento</p>
-              <p className="font-medium">{format(new Date(cand.dataNascimento), "dd/MM/yyyy")}</p>
+              <p className="font-medium">{formatDateBR(cand.dataNascimento)}</p>
             </div>
             <div>
               <p className="text-muted-foreground">E-mail</p>
@@ -144,7 +145,7 @@ export default async function EleitorAiusceDetalhe({
             </div>
             <div>
               <p className="text-muted-foreground">Data de Abertura</p>
-              <p className="font-medium">{format(new Date(org.dataAbertura), "dd/MM/yyyy")}</p>
+              <p className="font-medium">{formatDateBR(org.dataAbertura)}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Sede</p>

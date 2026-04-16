@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDateBR } from '@/lib/utils';
 import { BASE_PATH } from '@/lib/config';
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -201,7 +202,7 @@ export default async function CandidaturaDetalhe({
 									<div>
 										<p className='text-muted-foreground'>Data de Nascimento</p>
 										<p className='font-medium'>
-											{format(new Date(candidato.dataNascimento), 'dd/MM/yyyy')}
+											{formatDateBR(candidato.dataNascimento)}
 										</p>
 									</div>
 									<div>

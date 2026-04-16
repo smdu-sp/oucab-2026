@@ -18,6 +18,18 @@ export function verificaLimite(pagina: number, limite: number, total: number) {
   return [pagina, limite];
 }
 
+/**
+ * Formata um campo DATE do banco (DateTime @db.Date) sem conversão de fuso.
+ * Prisma retorna esses campos como meia-noite UTC; usar getDate() local jogaria
+ * para o dia anterior em UTC-3. Usar getUTC* garante o dia correto.
+ */
+export function formatDateBR(date: Date): string {
+  const dia = String(date.getUTCDate()).padStart(2, "0");
+  const mes = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const ano = date.getUTCFullYear();
+  return `${dia}/${mes}/${ano}`;
+}
+
 export function verificaData(dataInicio: string, dataFim: string): [Date, Date] {
   let inicio: Date, fim: Date;
   if (!dataInicio) inicio = new Date();

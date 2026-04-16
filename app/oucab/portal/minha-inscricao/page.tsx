@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/utils";
 
 const statusLabel: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
   EM_ANALISE: { label: "Em Análise", variant: "secondary" },
@@ -78,7 +79,7 @@ export default async function MinhaInscricaoPage() {
               <div><span className="text-muted-foreground">Nome Social:</span> <span className="font-medium">{candidato.nomeSocial}</span></div>
             )}
             <div><span className="text-muted-foreground">CPF:</span> <span className="font-medium">{cpfFormatado(candidato.cpf)}</span></div>
-            <div><span className="text-muted-foreground">Data de Nascimento:</span> <span className="font-medium">{format(candidato.dataNascimento, "dd/MM/yyyy")}</span></div>
+            <div><span className="text-muted-foreground">Data de Nascimento:</span> <span className="font-medium">{formatDateBR(candidato.dataNascimento)}</span></div>
             <div><span className="text-muted-foreground">Gênero:</span> <span className="font-medium capitalize">{candidato.genero.toLowerCase()}</span></div>
             <div><span className="text-muted-foreground">E-mail:</span> <span className="font-medium">{candidatura.usuario?.email}</span></div>
             {candidato.telefone && (
