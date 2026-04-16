@@ -151,6 +151,30 @@ const DOCS_ORG_MORADIA = {
   ),
 };
 
+const DOCS_ANEXOS_ORG_OUTROS = {
+  orgDocAnexoV: criarEtapaDocumento(
+    "orgDocAnexoV",
+    "Anexo V — Declaração de Idoneidade da Entidade (Opcional)",
+    "Modelo de Declaração de Idoneidade da Entidade, conforme Anexo V do Edital 002.",
+    ["Documento opcional"],
+    false,
+  ),
+  orgDocAnexoVI: criarEtapaDocumento(
+    "orgDocAnexoVI",
+    "Anexo VI — Requerimento de Inscrição Entidade Eleitora (Opcional)",
+    "Requerimento de Inscrição de Entidade Eleitora, conforme Anexo VI do Edital 002.",
+    ["Documento opcional"],
+    false,
+  ),
+  orgDocAnexoVII: criarEtapaDocumento(
+    "orgDocAnexoVII",
+    "Anexo VII — Requerimento de Inscrição de Chapa (Opcional)",
+    "Requerimento de Inscrição de Chapa, conforme Anexo VII do Edital 002.",
+    ["Documento opcional"],
+    false,
+  ),
+};
+
 const DOCS_ORG_OUTROS = {
   orgDocRequerimento: criarEtapaDocumento(
     "orgDocRequerimento",
@@ -534,6 +558,9 @@ function buildEtapas(tipoCadastro: string, tipoInscricao: string): StepDef[] {
       etapaDoc(suplenteDocs.suplenteDocTituloEleitor, "Título de Eleitor — Suplente", "suplenteDocTituloEleitor"),
       etapaDoc(suplenteDocs.suplenteDocFoto3x4, "Foto 3×4 — Suplente", "suplenteDocFoto3x4"),
       etapaDoc(suplenteDocs.suplenteDocDeclaracao, "Declaração — Suplente", "suplenteDocDeclaracao"),
+      etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoV, "Anexo V — Declaração de Idoneidade (opcional)", "orgDocAnexoV", false),
+      etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoVI, "Anexo VI — Requerimento Entidade Eleitora (opcional)", "orgDocAnexoVI", false),
+      etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoVII, "Anexo VII — Requerimento de Chapa (opcional)", "orgDocAnexoVII", false),
       ETAPA_REVISAO,
     ];
   }
@@ -894,6 +921,7 @@ export default function FormularioInscricao() {
         "titularDocTituloEleitor", "titularDocFoto3x4", "titularDocDeclaracao",
         "suplenteDocRequerimento", "suplenteDocIdentidade", "suplenteDocCPF",
         "suplenteDocTituloEleitor", "suplenteDocFoto3x4", "suplenteDocDeclaracao",
+        "orgDocAnexoV", "orgDocAnexoVI", "orgDocAnexoVII",
       ];
       for (const campo of camposArquivo) {
         const arquivo = (data as any)[campo];

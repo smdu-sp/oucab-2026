@@ -53,6 +53,9 @@ const CATEGORIA_MAP: Record<string, CategoriaArquivo> = {
   orgDocAtaEleicao: "ATA_ELEICAO",
   orgDocCertidaoCNPJ: "CERTIDAO_CNPJ",
   orgDocComprovanteCNPJ: "CERTIDAO_CNPJ",
+  orgDocAnexoV: "DECLARACAO_IDONEIDADE",
+  orgDocAnexoVI: "REQUERIMENTO_ENTIDADE_ELEITORA",
+  orgDocAnexoVII: "REQUERIMENTO_CHAPA",
   titularDocRequerimento: "REQUERIMENTO",
   titularDocIdentidade: "DOCUMENTO_IDENTIDADE",
   titularDocCPF: "CPF",
@@ -79,6 +82,7 @@ const CAMPOS_ARQUIVO_COMPROVANTE = ["docComprovante"] as const;
 const CAMPOS_ARQUIVO_ORG = [
   "orgDocRequerimento", "orgDocDeclaracaoAtuacao", "orgDocEstatutoSocial",
   "orgDocAtaEleicao", "orgDocCertidaoCNPJ", "orgDocComprovanteCNPJ",
+  "orgDocAnexoV", "orgDocAnexoVI", "orgDocAnexoVII",
 ] as const;
 
 const CAMPOS_ARQUIVO_TITULAR = [

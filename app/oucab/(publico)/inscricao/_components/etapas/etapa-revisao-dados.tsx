@@ -39,6 +39,9 @@ const CAMPOS_ARQUIVO: { campo: keyof FormularioInscricaoData; label: string }[] 
   { campo: "suplenteDocTituloEleitor", label: "Título Eleitor — Suplente" },
   { campo: "suplenteDocFoto3x4", label: "Foto 3×4 — Suplente" },
   { campo: "suplenteDocDeclaracao", label: "Declaração — Suplente" },
+  { campo: "orgDocAnexoV", label: "Anexo V — Declaração de Idoneidade da Entidade" },
+  { campo: "orgDocAnexoVI", label: "Anexo VI — Requerimento de Inscrição Entidade Eleitora" },
+  { campo: "orgDocAnexoVII", label: "Anexo VII — Requerimento de Inscrição de Chapa" },
 ];
 
 function formatarCPF(cpf: string) {

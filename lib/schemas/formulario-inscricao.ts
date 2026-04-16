@@ -251,6 +251,10 @@ export const formularioInscricaoSchema = z
     suplenteDocComprovante: arquivoOpcional,
     suplenteDocFoto3x4: arquivoOpcional,
     suplenteDocDeclaracao: arquivoOpcional,
+    // Anexos opcionais exclusivos de REP_ONGS / REP_PROFISSIONAIS / REP_EMPRESARIAIS
+    orgDocAnexoV: arquivoOpcional,
+    orgDocAnexoVI: arquivoOpcional,
+    orgDocAnexoVII: arquivoOpcional,
   })
   .superRefine((data, ctx) => {
     const isRep = (TIPOS_REP as readonly string[]).includes(data.tipoInscricao);
