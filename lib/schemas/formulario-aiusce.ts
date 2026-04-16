@@ -106,8 +106,7 @@ export const entidadeEleitoraSchema = z.object({
 export const candidatoSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
   nomeSocial: z.string().max(100).optional().or(z.literal("")),
-  nomeEmpresa: z.string().max(200).optional().or(z.literal("")),
-  genero: z.enum(["MASCULINO", "FEMININO", "OUTRO"], {
+  genero: z.enum(["MASCULINO", "FEMININO"], {
     required_error: "Selecione o gênero",
   }),
   dataNascimento: dataSchema.refine((data) => {

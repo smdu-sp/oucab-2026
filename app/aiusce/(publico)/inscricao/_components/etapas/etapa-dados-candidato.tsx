@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertCircle, CheckCircle, Loader2, Trophy, Award } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Trophy, Award, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FormularioAiusceData } from "@/lib/schemas/formulario-aiusce";
+import Link from "next/link";
 
 type Prefix = "titular" | "suplente";
 
@@ -124,11 +125,6 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
         </div>
 
         <div className="space-y-2">
-          <Label>Nome da Empresa/Organização (se aplicável)</Label>
-          <Input {...register(`${prefix}.nomeEmpresa` as any)} placeholder="Nome da empresa (opcional)" />
-        </div>
-
-        <div className="space-y-2">
           <Label>CPF *</Label>
           <div className="relative">
             <Input
@@ -158,9 +154,9 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
         </div>
 
         <div className="space-y-2">
-          <Label>Gênero *</Label>
+          <Label>Gênero * <Link href="https://legislacao.prefeitura.sp.gov.br/leis/decreto-56021-de-31-de-marco-de-2015" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">Decreto 56.021/2015</Link></Label>
           <Select
-            onValueChange={(v) => setValue(`${prefix}.genero` as any, v as "MASCULINO" | "FEMININO" | "OUTRO")}
+            onValueChange={(v) => setValue(`${prefix}.genero` as any, v as "MASCULINO" | "FEMININO")}
             value={watch(`${prefix}.genero` as any)}
           >
             <SelectTrigger className={cn(e.genero && "border-red-500")}>
@@ -169,7 +165,6 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
             <SelectContent>
               <SelectItem value="MASCULINO">Masculino</SelectItem>
               <SelectItem value="FEMININO">Feminino</SelectItem>
-              <SelectItem value="OUTRO">Outro / Autodeclarado</SelectItem>
             </SelectContent>
           </Select>
           {e.genero && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{e.genero.message}</p>}

@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../lib/generated/aiusce"
+  provider      = "prisma-client-js"
+  output        = "../../lib/generated/aiusce"
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {

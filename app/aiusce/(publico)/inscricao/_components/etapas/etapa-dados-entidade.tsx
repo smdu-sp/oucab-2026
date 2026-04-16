@@ -55,7 +55,7 @@ export function EtapaDadosEntidadeCandidata() {
       <Alert>
         <Building2 className="h-4 w-4" />
         <AlertDescription>
-          Informe os dados da entidade candidato. Nas próximas etapas você indicará os representantes titular e suplente.
+          Informe os dados da entidade candidata. Nas próximas etapas você indicará os representantes titular e suplente.
         </AlertDescription>
       </Alert>
 
@@ -172,7 +172,7 @@ export function EtapaDadosEntidadeEleitora() {
       <Alert>
         <Building2 className="h-4 w-4" />
         <AlertDescription>
-          Informe os dados da entidade eleitor e do seu representante legal.
+          Informe os dados da entidade eleitora e do seu representante legal.
         </AlertDescription>
       </Alert>
 

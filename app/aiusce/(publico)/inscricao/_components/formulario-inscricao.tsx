@@ -95,7 +95,6 @@ const DOCS_CAND_ENTIDADE: StepDef[] = [
       "candEntRequerimento",
       "Requerimento de Inscrição (Candidatura)",
       "Requerimento de inscrição da entidade candidata ao Conselho Gestor da AIUSCE, conforme <a href='/aiusce/editais/anexos/anexo_I.pdf' class='text-primary underline' target='_blank'>Anexo I do Edital</a>.",
-      ["O modelo está disponível no site da SMUL/SPURBANISMO", "Deve ser assinado pelo representante legal da entidade"],
     ),
     type: "doc",
     docField: "candEntRequerimento",
@@ -160,7 +159,6 @@ const DOCS_CAND_ENTIDADE: StepDef[] = [
       "candEntDeclaracaoIdoneidade",
       "Declaração de Idoneidade",
       "Declaração de que a entidade e seus representantes não possuem impedimentos legais para participação no processo eleitoral, conforme <a href='/aiusce/editais/anexos/anexo_IV.pdf' class='text-primary underline' target='_blank'>Anexo IV do Edital</a>.",
-      ["Modelo disponível no site da SMUL/SPURBANISMO"],
     ),
     type: "doc",
     docField: "candEntDeclaracaoIdoneidade",
@@ -173,11 +171,12 @@ const DOCS_CAND_ENTIDADE: StepDef[] = [
       "eleitEntRequerimento",
       "Requerimento de Inscrição de Entidade Eleitora (Anexo V)",
       "As entidades candidatas são automaticamente habilitadas como eleitoras (Art. 3°, §3°). Envie o requerimento conforme modelo do Edital, no <a href='/aiusce/editais/anexos/anexo_V.pdf' class='text-primary underline' target='_blank'>Anexo V</a>.",
-      ["Modelo disponível no site da SMUL/SPURBANISMO", "Deve ser assinado pelo representante legal da entidade"],
+      ["Deve ser assinado pelo representante legal da entidade"],
     ),
     type: "doc",
     docField: "eleitEntRequerimento",
     soParaCandidata: true,
+    soSeProcurador: true,
   },
 ];
 
@@ -468,7 +467,7 @@ const ALL_STEPS: StepDef[] = [
   },
   // CANDIDATA
   {
-    titulo: "Dados da Entidade Candidato",
+    titulo: "Dados da Entidade Candidata",
     descricao: "Preencha as informações da entidade que se candidata",
     component: EtapaDadosEntidadeCandidata,
     type: "entidadeCandidata",
@@ -476,7 +475,7 @@ const ALL_STEPS: StepDef[] = [
   },
   {
     titulo: "Endereço da Sede",
-    descricao: "Informe o endereço completo da sede da entidade candidato",
+    descricao: "Informe o endereço completo da sede da entidade candidata",
     component: EtapaEnderecoCandidata,
     type: "enderecoCandidata",
     soParaCandidata: true,
@@ -497,15 +496,15 @@ const ALL_STEPS: StepDef[] = [
   },
   // ELEITORA — dados
   {
-    titulo: "Dados da Entidade Eleitor",
-    descricao: "Preencha as informações da entidade eleitor",
+    titulo: "Dados da Entidade Eleitora",
+    descricao: "Preencha as informações da entidade eleitora",
     component: EtapaDadosEntidadeEleitora,
     type: "entidadeEleitora",
     soParaEleitora: true,
   },
   {
     titulo: "Endereço da Sede",
-    descricao: "Informe o endereço completo da sede da entidade eleitor",
+    descricao: "Informe o endereço completo da sede da entidade eleitora",
     component: EtapaEnderecoEleitora,
     type: "enderecoEleitora",
     soParaEleitora: true,
@@ -738,7 +737,6 @@ export default function FormularioInscricao() {
         if (!c) return;
         formData.append(`${prefix}.nome`, c.nome);
         formData.append(`${prefix}.nomeSocial`, c.nomeSocial ?? "");
-        formData.append(`${prefix}.nomeEmpresa`, c.nomeEmpresa ?? "");
         formData.append(`${prefix}.genero`, c.genero);
         formData.append(`${prefix}.dataNascimento`, c.dataNascimento);
         formData.append(`${prefix}.cpf`, c.cpf);

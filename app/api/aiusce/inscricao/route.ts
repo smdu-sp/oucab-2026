@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
       const parseCandidato = (prefix: string) => ({
         nome: formData.get(`${prefix}.nome`) as string,
         nomeSocial: (formData.get(`${prefix}.nomeSocial`) as string) || null,
-        nomeEmpresa: (formData.get(`${prefix}.nomeEmpresa`) as string) || null,
         genero: formData.get(`${prefix}.genero`) as Genero,
         dataNascimento: parseDateBR(formData.get(`${prefix}.dataNascimento`) as string),
         cpf: cleanCPF(formData.get(`${prefix}.cpf`) as string),
@@ -273,7 +272,7 @@ export async function POST(request: NextRequest) {
         to: emailEntidade,
         subject: "AIUSCE 2026 — Inscrição de Candidato recebida",
         html: `<p>Olá, <strong>${razaoSocial}</strong>!</p>
-               <p>A inscrição de candidato da sua entidade foi recebida com sucesso e será analisada pela equipe da SMUL/SPURBANISMO.</p>
+               <p>A inscrição de candidato da sua entidade foi recebida com sucesso e será analisada pela comissão eleitoral.</p>
                <p><strong>CNPJ:</strong> ${cnpj}</p>
                <p><strong>Acesso ao portal</strong> — E-mail: <strong>${emailEntidade}</strong> | Senha: <strong>${senhaPlana}</strong></p>
                <p>Guarde a senha com segurança. Você poderá acompanhar o status da inscrição pelo portal.</p>`,
@@ -398,7 +397,7 @@ export async function POST(request: NextRequest) {
         to: emailEntidade,
         subject: "AIUSCE 2026 — Inscrição de Eleitor recebida",
         html: `<p>Olá, <strong>${razaoSocial}</strong>!</p>
-               <p>A inscrição de habilitação como eleitor da sua entidade foi recebida com sucesso e será analisada pela equipe da SMUL/SPURBANISMO.</p>
+               <p>A inscrição de habilitação como eleitor da sua entidade foi recebida com sucesso e será analisada pela comissão eleitoral.</p>
                <p><strong>CNPJ:</strong> ${cnpj}</p>
                <p><strong>Acesso ao portal</strong> — E-mail: <strong>${emailEntidade}</strong> | Senha: <strong>${senhaPlana}</strong></p>
                <p>Guarde a senha com segurança. Você poderá acompanhar o status da inscrição pelo portal.</p>`,

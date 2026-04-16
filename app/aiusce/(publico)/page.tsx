@@ -134,7 +134,7 @@ export default function AiusceHome() {
             </Button>
           )}
           <Button variant="outline" size="lg" className="text-lg px-8" asChild>
-            <Link href="https://gestaourbana.prefeitura.sp.gov.br/estruturacao-territorial/areas-de-intervencao-urbana/aiu-do-setor-central/" target="_blank">
+            <Link href="https://gestaourbana.prefeitura.sp.gov.br/eleicao-do-conselho-gestor-da-aiu-do-setor-central-bienio-2026-2028/" target="_blank">
               Saiba Mais
               <Info className="ml-2 h-5 w-5" />
             </Link>

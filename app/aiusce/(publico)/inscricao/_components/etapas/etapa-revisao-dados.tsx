@@ -54,7 +54,7 @@ export default function EtapaRevisaoDados() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Revise os dados antes de enviar. Após o envio, a inscrição será analisada pela equipe da SMUL/SPURBANISMO.
+          Revise os dados antes de enviar. Após o envio, a inscrição será analisada pela comissão eleitoral.
         </AlertDescription>
       </Alert>
 
@@ -65,7 +65,7 @@ export default function EtapaRevisaoDados() {
       </div>
 
       {isCandidata && data.entidadeCandidata && (
-        <Secao titulo="Entidade Candidato" icone={Building2}>
+        <Secao titulo="Entidade Candidata" icone={Building2}>
           <Campo label="Razão Social" valor={data.entidadeCandidata.razaoSocial} />
           <Campo label="CNPJ" valor={data.entidadeCandidata.cnpj} />
           <Campo label="Segmento" valor={SEGMENTO_LABEL[data.entidadeCandidata.segmento ?? ""]} />
@@ -114,7 +114,7 @@ export default function EtapaRevisaoDados() {
       )}
 
       {!isCandidata && data.entidadeEleitora && (
-        <Secao titulo="Entidade Eleitor" icone={Building2}>
+        <Secao titulo="Entidade Eleitora" icone={Building2}>
           <Campo label="Razão Social" valor={data.entidadeEleitora.razaoSocial} />
           <Campo label="CNPJ" valor={data.entidadeEleitora.cnpj} />
           <Campo label="Segmento" valor={SEGMENTO_LABEL[data.entidadeEleitora.segmento ?? ""]} />
@@ -134,13 +134,16 @@ export default function EtapaRevisaoDados() {
         </Secao>
       )}
 
-      {!isCandidata && data.temProcurador && data.procurador && (
-        <Secao titulo="Procurador" icone={UserCheck}>
-          <Campo label="Nome" valor={data.procurador.nome} />
-          <Campo label="CPF" valor={data.procurador.cpf} />
-          {data.procurador.tituloEleitor && <Campo label="Título de Eleitor" valor={data.procurador.tituloEleitor} />}
-        </Secao>
-      )}
+      <Secao titulo="Procurador" icone={UserCheck}>
+        <Campo label="Optou por Procurador" valor={data.temProcurador ?? false} />
+        {data.temProcurador && data.procurador && (
+          <>
+            <Campo label="Nome" valor={data.procurador.nome} />
+            <Campo label="CPF" valor={data.procurador.cpf} />
+            {data.procurador.tituloEleitor && <Campo label="Título de Eleitor" valor={data.procurador.tituloEleitor} />}
+          </>
+        )}
+      </Secao>
 
       <Secao titulo="Documentos Anexados" icone={FileText}>
         {isCandidata ? (
@@ -151,6 +154,7 @@ export default function EtapaRevisaoDados() {
             <ArquivoStatus arquivo={data.candEntAtaEleicao as File | null} label="Ata de Eleição" />
             <ArquivoStatus arquivo={data.candEntCnpj as File | null} label="Comprovante CNPJ" />
             <ArquivoStatus arquivo={data.candEntDeclaracaoIdoneidade as File | null} label="Declaração de Idoneidade" />
+            {data.temProcurador && <ArquivoStatus arquivo={data.eleitEntRequerimento as File | null} label="Requerimento de inscrição eleitora (Anexo V)" />}
             <ArquivoStatus arquivo={data.titularIdentidade as File | null} label="Identidade (titular)" />
             <ArquivoStatus arquivo={data.titularTituloEleitor as File | null} label="Título de eleitor (titular)" />
             <ArquivoStatus arquivo={data.titularCpf as File | null} label="CPF (titular)" />

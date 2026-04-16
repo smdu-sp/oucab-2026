@@ -14,8 +14,8 @@ WORKDIR /app
 RUN apk add --no-cache openssl libc6-compat
 COPY --from=deps /app/node_modules ./node_modules
 COPY prisma ./prisma
-# Gera o Prisma Client dentro do Alpine (garante binário musl correto)
-RUN npx prisma generate
+# Gera os Prisma Clients dentro do Alpine (garante binário musl correto)
+RUN npx prisma generate && npx prisma generate --schema=prisma/aiusce/schema.prisma
 COPY . .
 ENV NODE_ENV=production
 RUN npm run build
@@ -38,6 +38,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/lib/generated ./lib/generated
 
 # Uploads persistidos via volume externo
 VOLUME ["/app/uploads"]

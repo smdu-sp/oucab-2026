@@ -86,7 +86,7 @@ export default async function MinhaInscricaoPage() {
         <>
           {candidatura.organizacao && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Entidade Candidato</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Entidade Candidata</CardTitle></CardHeader>
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Razão Social:</span> <span className="font-medium">{candidatura.organizacao.razaoSocial}</span></div>
                 <div><span className="text-muted-foreground">CNPJ:</span> <span className="font-medium">{cnpjFormatado(candidatura.organizacao.cnpj)}</span></div>
@@ -173,7 +173,7 @@ export default async function MinhaInscricaoPage() {
         <>
           {eleitor.organizacao && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Entidade Eleitor</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Entidade Eleitora</CardTitle></CardHeader>
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Razão Social:</span> <span className="font-medium">{eleitor.organizacao.razaoSocial}</span></div>
                 <div><span className="text-muted-foreground">CNPJ:</span> <span className="font-medium">{cnpjFormatado(eleitor.organizacao.cnpj)}</span></div>
