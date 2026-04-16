@@ -20,6 +20,14 @@ function parseDateBR(dateStr: string): Date {
 function cleanCNPJ(v: string) { return v.replace(/[^\d]/g, ""); }
 function cleanCPF(v: string) { return v.replace(/[^\d]/g, ""); }
 
+const CAMPO_LABELS: Record<string, string> = {
+  cpf: "CPF",
+  email: "e-mail",
+  cnpj: "CNPJ",
+  tituloEleitor: "Título de Eleitor",
+  login: "login",
+};
+
 async function salvarArquivo(arquivo: File, dir: string) {
   const nome = `${Date.now()}-${Math.random().toString(36).slice(2)}-${arquivo.name}`;
   const caminho = join(dir, nome);
@@ -417,11 +425,14 @@ export async function POST(request: NextRequest) {
     console.error("[API /aiusce/inscricao]", error);
 
     if (error instanceof Error && "code" in error && (error as any).code === "P2002") {
-      const campo = (error as any).meta?.target?.join(", ") ?? "campo";
+      const targets: string[] = (error as any).meta?.target ?? [];
+      const campo = targets.map((c) => CAMPO_LABELS[c] ?? c).join(" ou ") || "CNPJ ou CPF";
       return NextResponse.json({ error: `Já existe um cadastro com este ${campo}.` }, { status: 400 });
     }
 
-    const mensagem = error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: `Erro interno: ${mensagem}` }, { status: 500 });
+    return NextResponse.json(
+      { error: "Ocorreu um erro interno. Tente novamente em instantes ou entre em contato com a organização." },
+      { status: 500 },
+    );
   }
 }

@@ -27,6 +27,14 @@ async function salvarArquivo(
   return { nome: arquivo.name, tipo: arquivo.type, tamanho: arquivo.size, caminho };
 }
 
+const CAMPO_LABELS: Record<string, string> = {
+  cpf: "CPF",
+  email: "e-mail",
+  cnpj: "CNPJ",
+  tituloEleitor: "Título de Eleitor",
+  login: "login",
+};
+
 async function garantirDiretorio(dir: string): Promise<void> {
   if (!existsSync(dir)) await mkdir(dir, { recursive: true });
 }
@@ -477,14 +485,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof Error && "code" in error && (error as any).code === "P2002") {
-      const campo = (error as any).meta?.target?.join(", ") ?? "CPF ou e-mail";
+      const targets: string[] = (error as any).meta?.target ?? [];
+      const campo = targets.map((c) => CAMPO_LABELS[c] ?? c).join(" ou ") || "CPF ou e-mail";
       return NextResponse.json(
         { error: `Já existe um cadastro com este ${campo}.` },
         { status: 400 },
       );
     }
 
-    const mensagem = error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: `Erro interno do servidor: ${mensagem}` }, { status: 500 });
+    return NextResponse.json(
+      { error: "Ocorreu um erro interno. Tente novamente em instantes ou entre em contato com a organização." },
+      { status: 500 },
+    );
   }
 }

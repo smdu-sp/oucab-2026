@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { AlertCircle, CheckCircle, Loader2, Trophy, Award, Info } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Trophy, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FormularioAiusceData } from "@/lib/schemas/formulario-aiusce";
 import Link from "next/link";
@@ -118,12 +117,10 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
           <Input {...register(`${prefix}.nome` as any)} placeholder="Nome completo" className={cn(e.nome && "border-red-500")} />
           {e.nome && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{e.nome.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label>Nome Social</Label>
           <Input {...register(`${prefix}.nomeSocial` as any)} placeholder="Nome social (opcional)" />
         </div>
-
         <div className="space-y-2">
           <Label>CPF *</Label>
           <div className="relative">
@@ -140,7 +137,6 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
           </div>
           {e.cpf && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{e.cpf.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label>Data de Nascimento *</Label>
           <Input
@@ -152,7 +148,6 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
           />
           {e.dataNascimento && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{e.dataNascimento.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label>Gênero * <Link href="https://legislacao.prefeitura.sp.gov.br/leis/decreto-56021-de-31-de-marco-de-2015" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">Decreto 56.021/2015</Link></Label>
           <Select
@@ -169,7 +164,6 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
           </Select>
           {e.genero && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{e.genero.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label>E-mail *</Label>
           <div className="relative">
@@ -185,7 +179,6 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
           </div>
           {e.email && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{e.email.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label>Telefone</Label>
           <Input
@@ -195,7 +188,6 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
             maxLength={15}
           />
         </div>
-
         <div className="space-y-2">
           <Label>Título de Eleitor</Label>
           <Input
@@ -205,7 +197,6 @@ function CandidatoForm({ prefix }: { prefix: Prefix }) {
             maxLength={12}
           />
         </div>
-
         <div className="space-y-2">
           <Label>Domicílio Eleitoral</Label>
           <Input {...register(`${prefix}.domicilioEleitoral` as any)} placeholder="Município/UF" />

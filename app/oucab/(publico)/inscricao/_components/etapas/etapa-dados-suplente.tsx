@@ -28,7 +28,7 @@ export default function EtapaDadosSuplente() {
       {ambosPreenchidos && !temParidade && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
+          <AlertDescription className="text-red-500">
             É necessário que ao menos um dos candidatos (titular ou suplente) seja do gênero feminino ou autodeclarado para garantir a paridade de gênero.
           </AlertDescription>
         </Alert>
