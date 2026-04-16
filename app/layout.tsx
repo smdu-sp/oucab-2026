@@ -14,8 +14,8 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-	title: 'OUCAB - Operação Urbana Consorciada Água Branca',
-	description: 'Operação Urbana Consorciada Água Branca',
+	title: 'SMUL - Sistema de Eleições',
+	description: 'Sistema de Eleições',
 };
 
 export default function RootLayout({

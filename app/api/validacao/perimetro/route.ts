@@ -44,7 +44,7 @@ function isPointInPolygon(point: [number, number], polygon: [number, number][]):
 }
 
 async function loadShapePolygons(name: string): Promise<[number, number][][]> {
-  const shapesDir = join(process.cwd(), "public", "shapes");
+  const shapesDir = join(process.cwd(), "public", "oucab", "shapes");
 
   // Tenta KML direto primeiro, depois KMZ
   try {

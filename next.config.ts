@@ -2,11 +2,17 @@
 
 import type { NextConfig } from 'next';
 
+
 const nextConfig: NextConfig = {
 	output: 'standalone',
-	basePath: '/oucab',
-	env: {
-		NEXT_PUBLIC_BASE_PATH: '/oucab',
+	outputFileTracingRoot: process.cwd(),
+	outputFileTracingExcludes: {
+		'*': [
+			'C:\\Users\\aalev\\Ambiente de Rede/**',
+			'C:/Users/aalev/Ambiente de Rede/**',
+			'C:\\Users\\aalev\\Configurações Locais/**',
+			'C:/Users/aalev/Configurações Locais/**',
+		],
 	},
 	experimental: {
 		serverActions: {

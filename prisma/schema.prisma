@@ -169,6 +169,7 @@ model Organizacao {
 
     candidatura            Candidatura            @relation(fields: [candidaturaId], references: [id])
     arquivos               Arquivo[]
+    eleitores              Eleitor[]
 
     @@map("organizacoes")
 }
@@ -205,11 +206,13 @@ model Eleitor {
     genero                 Genero
     tituloEleitor          String?                @unique
     usuarioId              String?                @unique
+    organizacaoId          String?
 
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt
 
     usuario                Usuario?               @relation(fields: [usuarioId], references: [id])
+    organizacao            Organizacao?           @relation(fields: [organizacaoId], references: [id])
     arquivos               Arquivo[]
 
     @@map("eleitores")

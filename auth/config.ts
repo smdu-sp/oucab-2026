@@ -106,8 +106,8 @@ export const authConfig = {
   },
 
   pages: {
-    signIn: "/login",
-    error: "/login",
+    signIn: "/oucab/login",
+    error: "/oucab/login",
   },
   trustHost: true,
 };

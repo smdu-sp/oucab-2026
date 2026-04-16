@@ -76,7 +76,7 @@ export async function NavUser() {
 							<DropdownMenuItem
 								asChild
 								className='p-1 font-normal'>
-								<Link href='perfil'>
+								<Link href='/oucab/perfil'>
 									<div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
 										<Avatar className='h-8 w-8 rounded-full'>
 											<AvatarImage src={session.user.avatar} />

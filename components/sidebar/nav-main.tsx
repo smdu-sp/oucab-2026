@@ -1,6 +1,6 @@
 /** @format */
 
-import { ChevronRight, ClipboardList, House, LucideProps, Users, Vote } from 'lucide-react';
+import { ChevronRight, ClipboardList, House, LucideProps, Users } from 'lucide-react';
 
 import {
 	Collapsible,
@@ -26,7 +26,7 @@ export async function NavMain() {
 	let usuario: Usuario | null = null;
 	usuario = await validaUsuario();
 	if (!usuario) return null;
-	
+
 	interface IMenu {
 		icone: ForwardRefExoticComponent<
 			Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>
@@ -54,13 +54,13 @@ export async function NavMain() {
 		{
 			icone: Users,
 			titulo: 'Usuários',
-			url: '/usuarios',
+			url: '/oucab/usuarios',
 			permissao: 'usuario_buscar_tudo',
 		},
 		{
 			icone: ClipboardList,
 			titulo: 'Candidaturas',
-			url: '/candidaturas',
+			url: '/oucab/candidaturas',
 		},
 	];
 

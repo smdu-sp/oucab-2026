@@ -235,6 +235,7 @@ export async function POST(request: NextRequest) {
             dataNascimento: parseDateBR(titular.dataNascimento),
             genero: titular.genero,
             tituloEleitor: titular.tituloEleitor,
+            organizacaoId: org.id,
           },
         });
 
@@ -275,6 +276,7 @@ export async function POST(request: NextRequest) {
             dataNascimento: parseDateBR(suplente.dataNascimento),
             genero: suplente.genero,
             tituloEleitor: suplente.tituloEleitor,
+            organizacaoId: org.id,
           },
         });
 

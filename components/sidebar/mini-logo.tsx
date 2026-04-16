@@ -23,7 +23,7 @@ export default function MiniLogo() {
 			<Image
 				width={1200}
 				height={1200}
-				src={"/sis-icon.png"}
+				src={"/oucab/sis-icon.png"}
 				alt='LOGO PREFEITURA DE SÃO PAULO'
 			/>
 		</div>

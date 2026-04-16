@@ -16,7 +16,7 @@ export async function GET(
   }
 
   try {
-    const shapesDir = join(process.cwd(), "public", "shapes");
+    const shapesDir = join(process.cwd(), "public", "oucab", "shapes");
     let kmlContent: string | null = null;
 
     // Tenta KML direto primeiro, depois KMZ

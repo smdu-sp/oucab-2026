@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
 	return (
-		<SessionProvider basePath="/oucab/api/auth">
+		<SessionProvider basePath="/api/auth">
 			{children}
 		</SessionProvider>
 	);

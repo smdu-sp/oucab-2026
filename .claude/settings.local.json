@@ -13,7 +13,25 @@
       "Bash(npm list:*)",
       "Bash(npx tsc:*)",
       "Bash(ls d:/www/oucab-2026/app/\\\\\\(rotas-auth\\\\\\)/\\\\\\(rotas-adm\\\\\\)/)",
-      "Bash(ls \"d:/www/oucab-2026/app/\\(rotas-auth\\)/\\(rotas-adm\\)/\")"
+      "Bash(ls \"d:/www/oucab-2026/app/\\(rotas-auth\\)/\\(rotas-adm\\)/\")",
+      "Bash(node -e ':*)",
+      "Bash(curl -s http://localhost:3000/api/shapes/perimetro_adesao)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/oucab/api/shapes/perimetro_adesao)",
+      "Bash(curl -s http://localhost:3000/oucab/api/shapes/perimetro_adesao)",
+      "Bash(cp -r \"d:/www/oucab-2026/public/prefeitura\" \"d:/www/oucab-2026/public/oucab/\")",
+      "Bash(cp -r \"d:/www/oucab-2026/public/editais\" \"d:/www/oucab-2026/public/oucab/\")",
+      "Bash(cp -r \"d:/www/oucab-2026/public/shapes\" \"d:/www/oucab-2026/public/oucab/\")",
+      "Bash(sed -i \"s|redirect\\('/portal/minha-inscricao'\\)|redirect\\('/aiusce/portal/minha-inscricao'\\)|g\" \"app/aiusce/login/page.tsx\")",
+      "Bash(sed -i \"s|redirect\\('/usuarios'\\)|redirect\\('/usuarios'\\)|g\" \"app/aiusce/login/page.tsx\")",
+      "Bash(sed -i \"s|router.push\\('/portal/minha-inscricao'\\)|router.push\\('/aiusce/portal/minha-inscricao'\\)|g\" \"app/aiusce/login/_components/login-form.tsx\")",
+      "Bash(sed -i 's|/oucab/martinelli_noite.jpeg|/aiusce/martinelli_noite.jpeg|g' \"app/aiusce/login/_components/background.tsx\")",
+      "Bash(sed -i 's|/oucab/martinelli_dia.jpg|/aiusce/martinelli_dia.jpg|g' \"app/aiusce/login/_components/background.tsx\")",
+      "Bash(sed -i 's|/api/inscricao|/api/aiusce/inscricao|g' \"app/\\(rotas-livres\\)/aiusce/inscricao/_components/formulario-inscricao.tsx\")",
+      "Bash(sed -i 's|/api/validacao/|/api/aiusce/validacao/|g' \"app/\\(rotas-livres\\)/aiusce/inscricao/_components/formulario-inscricao.tsx\")",
+      "Bash(sed -i 's|router.push\\(\"/oucab/agradecimento\"\\)|router.push\\(\"/aiusce/agradecimento\"\\)|g' \"app/\\(rotas-livres\\)/aiusce/inscricao/_components/formulario-inscricao.tsx\")",
+      "Bash(find \"app/\\(rotas-livres\\)/aiusce/inscricao/_components/etapas\" -name \"*.tsx\" -exec sed -i 's|/api/validacao/|/api/aiusce/validacao/|g' {} \\\\;)",
+      "Bash(sed -i 's|redirect\\(\"/oucab\"\\)|redirect\\(\"/aiusce\"\\)|g' \"app/\\(rotas-livres\\)/aiusce/inscricao/page.tsx\")",
+      "Bash(cmd /c \"dir /al /s d:\\\\www\\\\oucab-2026\\\\node_modules 2>nul | findstr /i \\\\\"aalev\\\\|Users\\\\\"\")"
     ]
   }
 }

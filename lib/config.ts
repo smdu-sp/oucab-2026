@@ -11,3 +11,11 @@ export const PRAZO_INSCRICAO = new Date(
 export function prazoEncerrado(): boolean {
   return new Date() > PRAZO_INSCRICAO;
 }
+
+export const PRAZO_INSCRICAO_AIUSCE = new Date(
+  process.env.PRAZO_INSCRICAO_AIUSCE ?? "2026-05-08T23:59:59.999Z"
+);
+
+export function prazoAiusceEncerrado(): boolean {
+  return new Date() > PRAZO_INSCRICAO_AIUSCE;
+}

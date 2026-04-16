@@ -1,0 +1,236 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "../../lib/generated/aiusce"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL_AIUSCE")
+}
+
+enum Permissao {
+    DEV
+    ADM
+    USR
+}
+
+enum TipoUsuario {
+    INTERNO
+    EXTERNO
+}
+
+enum Segmento {
+    ONG_CULTURAL
+    ENTIDADE_URB_AMB
+}
+
+enum TipoInscricao {
+    CANDIDATO
+    ELEITOR
+}
+
+enum TipoCandidato {
+    TITULAR
+    SUPLENTE
+}
+
+enum Genero {
+    MASCULINO
+    FEMININO
+    OUTRO
+}
+
+enum Status {
+    EM_ANALISE
+    DEFERIDO
+    INDEFERIDO
+}
+
+enum CategoriaArquivo {
+    CAND_ENT_REQUERIMENTO
+    CAND_ENT_DECLARACAO_ATUACAO
+    CAND_ENT_ESTATUTO
+    CAND_ENT_ATA_ELEICAO
+    CAND_ENT_CNPJ
+    CAND_ENT_DECLARACAO_IDONEIDADE
+    CAND_REP_IDENTIDADE
+    CAND_REP_TITULO_ELEITOR
+    CAND_REP_CPF
+    CAND_REP_FOTO
+    CAND_REP_NAO_IMPEDIMENTO
+    CAND_CHAPA_REQUERIMENTO
+    ELEIT_ENT_REQUERIMENTO
+    ELEIT_ENT_DECLARACAO_ATUACAO
+    ELEIT_ENT_ESTATUTO
+    ELEIT_ENT_ATA_ELEICAO
+    ELEIT_ENT_CNPJ
+    ELEIT_ENT_DECLARACAO_IDONEIDADE
+    ELEIT_REP_IDENTIDADE
+    ELEIT_REP_TITULO_ELEITOR
+    ELEIT_REP_CPF
+    ELEIT_PROC_PROCURACAO
+    ELEIT_PROC_REQUERIMENTO
+}
+
+model Usuario {
+    id             String      @id @default(uuid())
+    tipo           TipoUsuario @default(INTERNO)
+    nome           String
+    email          String      @unique
+    login          String?     @unique
+    permissao      Permissao?
+    status         Boolean     @default(true)
+    senha          String?
+    primeiroAcesso Boolean     @default(true)
+    criadoEm      DateTime    @default(now())
+    atualizadoEm  DateTime    @default(now()) @updatedAt
+
+    candidatura Candidatura?
+    eleitor     Eleitor?
+
+    @@map("usuarios")
+}
+
+model Candidatura {
+    id            String        @id @default(uuid())
+    tipoInscricao TipoInscricao
+    status        Status        @default(EM_ANALISE)
+    usuarioId     String        @unique
+    criadoEm     DateTime      @default(now())
+    atualizadoEm DateTime      @default(now()) @updatedAt
+
+    usuario     Usuario              @relation(fields: [usuarioId], references: [id])
+    organizacao OrganizacaoCandidata?
+    candidatos  Candidato[]
+    arquivos    Arquivo[]
+
+    @@map("candidaturas")
+}
+
+model OrganizacaoCandidata {
+    id            String    @id @default(uuid())
+    razaoSocial   String
+    cnpj          String    @unique
+    segmento      Segmento
+    dataAbertura  DateTime  @db.Date
+    sede          String
+    repNome       String
+    repCpf        String
+    emailEntidade String
+    telefone      String?
+    formaChapa    Boolean   @default(false)
+    cnpjChapa     String?
+    candidaturaId String    @unique
+    criadoEm     DateTime  @default(now())
+    atualizadoEm DateTime  @default(now()) @updatedAt
+
+    candidatura Candidatura @relation(fields: [candidaturaId], references: [id])
+    arquivos    Arquivo[]
+
+    @@map("organizacoes_candidatas")
+}
+
+model Candidato {
+    id                 String        @id @default(uuid())
+    tipoCandidato      TipoCandidato
+    nome               String
+    nomeSocial         String?
+    nomeEmpresa        String?
+    genero             Genero
+    dataNascimento     DateTime      @db.Date
+    cpf                String        @unique
+    tituloEleitor      String?
+    domicilioEleitoral String?
+    email              String
+    telefone           String?
+    candidaturaId      String
+    criadoEm          DateTime      @default(now())
+    atualizadoEm      DateTime      @default(now()) @updatedAt
+
+    candidatura Candidatura @relation(fields: [candidaturaId], references: [id])
+    arquivos    Arquivo[]
+    eleitor     Eleitor?
+
+    @@map("candidatos")
+}
+
+model Eleitor {
+    id            String   @id @default(uuid())
+    status        Status   @default(EM_ANALISE)
+    usuarioId     String?  @unique
+    candidatoId   String?  @unique
+    eleitorPaiId  String?
+    criadoEm     DateTime @default(now())
+    atualizadoEm DateTime @default(now()) @updatedAt
+
+    usuario     Usuario?             @relation(fields: [usuarioId], references: [id])
+    candidato   Candidato?           @relation(fields: [candidatoId], references: [id])
+    eleitorPai  Eleitor?             @relation("EleitorHierarquia", fields: [eleitorPaiId], references: [id])
+    membros     Eleitor[]            @relation("EleitorHierarquia")
+    organizacao OrganizacaoEleitora?
+    procurador  Procurador?
+    arquivos    Arquivo[]
+
+    @@map("eleitores")
+}
+
+model OrganizacaoEleitora {
+    id               String    @id @default(uuid())
+    razaoSocial      String
+    cnpj             String    @unique
+    segmento         Segmento
+    dataAbertura     DateTime  @db.Date
+    sede             String
+    repNome          String
+    repCpf           String
+    repTituloEleitor String?
+    repDomicilio     String?
+    emailEntidade    String
+    telefone         String?
+    eleitorId        String    @unique
+    criadoEm        DateTime  @default(now())
+    atualizadoEm    DateTime  @default(now()) @updatedAt
+
+    eleitor  Eleitor  @relation(fields: [eleitorId], references: [id])
+    arquivos Arquivo[]
+
+    @@map("organizacoes_eleitoras")
+}
+
+model Procurador {
+    id            String   @id @default(uuid())
+    nome          String
+    cpf           String   @unique
+    tituloEleitor String?
+    eleitorId     String   @unique
+    criadoEm    DateTime @default(now())
+    atualizadoEm DateTime @default(now()) @updatedAt
+
+    eleitor Eleitor @relation(fields: [eleitorId], references: [id])
+
+    @@map("procuradores")
+}
+
+model Arquivo {
+    id             String           @id @default(uuid())
+    nome           String
+    tipo           String
+    tamanho        Int
+    caminho        String
+    categoria      CategoriaArquivo
+    candidaturaId  String?
+    candidatoId    String?
+    orgCandidataId String?
+    eleitorId      String?
+    orgEleitoraId  String?
+    criadoEm      DateTime         @default(now())
+    atualizadoEm  DateTime         @default(now()) @updatedAt
+
+    candidatura  Candidatura?          @relation(fields: [candidaturaId], references: [id])
+    candidato    Candidato?            @relation(fields: [candidatoId], references: [id])
+    orgCandidata OrganizacaoCandidata? @relation(fields: [orgCandidataId], references: [id])
+    eleitor      Eleitor?              @relation(fields: [eleitorId], references: [id])
+    orgEleitora  OrganizacaoEleitora?  @relation(fields: [orgEleitoraId], references: [id])
+
+    @@map("arquivos")
+}
