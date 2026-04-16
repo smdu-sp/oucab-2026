@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { BASE_PATH } from '@/lib/config';
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
 	EM_ANALISE: 'secondary',
@@ -221,7 +222,7 @@ export default async function CandidaturaDetalhe({
 											{candidato.arquivos.map((arq) => (
 												<a
 													key={arq.id}
-													href={`${process.env.NEXT_PUBLIC_BASE_PATH}/api/arquivos/${arq.id}`}
+													href={`${BASE_PATH}/api/arquivos/${arq.id}`}
 													target='_blank'
 													rel='noopener noreferrer'
 													className='text-xs px-2 py-1 rounded border hover:bg-muted transition-colors'>
@@ -247,7 +248,7 @@ export default async function CandidaturaDetalhe({
 							{candidatura.arquivos.map((arq) => (
 								<a
 									key={arq.id}
-									href={`${process.env.NEXT_PUBLIC_BASE_PATH}/api/arquivos/${arq.id}`}
+									href={`${BASE_PATH}/api/arquivos/${arq.id}`}
 									target='_blank'
 									rel='noopener noreferrer'
 									className='text-sm px-3 py-2 rounded border hover:bg-muted transition-colors'>
