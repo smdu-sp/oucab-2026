@@ -218,9 +218,20 @@ export function CandidatoPFForm({ prefix }: { prefix: CandidatoPrefix }) {
   );
 }
 
+function formatarCNPJDisplay(value: string): string {
+  const digits = value.replace(/[^\d]/g, "").slice(0, 14);
+  let display = digits;
+  if (digits.length > 2) display = digits.slice(0, 2) + "." + digits.slice(2);
+  if (digits.length > 5) display = display.slice(0, 6) + "." + display.slice(6);
+  if (digits.length > 8) display = display.slice(0, 10) + "/" + display.slice(10);
+  if (digits.length > 12) display = display.slice(0, 15) + "-" + display.slice(15);
+  return display;
+}
+
 export default function EtapaDadosOrganizacao() {
-  const { register, setValue, formState: { errors } } = useFormContext<FormularioInscricaoData>();
+  const { register, setValue, watch, formState: { errors } } = useFormContext<FormularioInscricaoData>();
   const errosOrg = (errors as any).organizacao || {};
+  const formaChapa = watch("organizacao.formaChapa" as any) as boolean | undefined;
 
   return (
     <div className="space-y-6">
@@ -238,12 +249,7 @@ export default function EtapaDadosOrganizacao() {
           onChange={(e) => {
             const digits = e.target.value.replace(/[^\d]/g, "").slice(0, 14);
             setValue("organizacao.cnpj" as any, digits);
-            let display = digits;
-            if (digits.length > 2) display = digits.slice(0, 2) + "." + digits.slice(2);
-            if (digits.length > 5) display = display.slice(0, 6) + "." + display.slice(6);
-            if (digits.length > 8) display = display.slice(0, 10) + "/" + display.slice(10);
-            if (digits.length > 12) display = display.slice(0, 15) + "-" + display.slice(15);
-            e.target.value = display;
+            e.target.value = formatarCNPJDisplay(digits);
           }}
           placeholder="00.000.000/0000-00"
           maxLength={18}
@@ -272,6 +278,56 @@ export default function EtapaDadosOrganizacao() {
         />
         {errosOrg.email && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{errosOrg.email.message}</p>}
         <p className="text-xs text-muted-foreground">As credenciais de acesso ao portal serão enviadas para este e-mail.</p>
+      </div>
+
+      {/* Inscrição de Chapa */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <div className="flex items-center gap-3">
+          <input
+            id="formaChapa"
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300 accent-primary"
+            checked={!!formaChapa}
+            onChange={(e) => setValue("organizacao.formaChapa" as any, e.target.checked)}
+          />
+          <Label htmlFor="formaChapa" className="cursor-pointer font-medium">
+            Esta é uma inscrição de chapa (duas entidades em conjunto)?
+          </Label>
+        </div>
+
+        {formaChapa && (
+          <div className="space-y-4 pt-2 border-t">
+            <p className="text-sm text-muted-foreground">
+              Informe os dados da segunda entidade que compõe a chapa. O envio do Anexo VII será obrigatório.
+            </p>
+
+            <div className="space-y-2">
+              <Label>CNPJ da Segunda Entidade *</Label>
+              <Input
+                {...register("organizacao.chapaCNPJ" as any)}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/[^\d]/g, "").slice(0, 14);
+                  setValue("organizacao.chapaCNPJ" as any, digits);
+                  e.target.value = formatarCNPJDisplay(digits);
+                }}
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+                className={cn(errosOrg.chapaCNPJ && "border-red-500")}
+              />
+              {errosOrg.chapaCNPJ && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{errosOrg.chapaCNPJ.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Razão Social da Segunda Entidade *</Label>
+              <Input
+                {...register("organizacao.chapaRazaoSocial" as any)}
+                placeholder="Razão social da segunda entidade"
+                className={cn(errosOrg.chapaRazaoSocial && "border-red-500")}
+              />
+              {errosOrg.chapaRazaoSocial && <p className="text-sm text-red-500 flex items-center gap-1"><AlertCircle className="w-4 h-4" />{errosOrg.chapaRazaoSocial.message}</p>}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

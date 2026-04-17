@@ -56,6 +56,11 @@ const CATEGORIA_MAP: Record<string, CategoriaArquivo> = {
   orgDocAnexoV: "DECLARACAO_IDONEIDADE",
   orgDocAnexoVI: "REQUERIMENTO_ENTIDADE_ELEITORA",
   orgDocAnexoVII: "REQUERIMENTO_CHAPA",
+  chapa2DocDeclaracaoAtuacao: "DECLARACAO_ATUACAO",
+  chapa2DocEstatutoSocial: "ESTATUTO_SOCIAL",
+  chapa2DocAtaEleicao: "ATA_ELEICAO",
+  chapa2DocCertidaoCNPJ: "CERTIDAO_CNPJ",
+  chapa2DocAnexoV: "DECLARACAO_IDONEIDADE",
   titularDocRequerimento: "REQUERIMENTO",
   titularDocIdentidade: "DOCUMENTO_IDENTIDADE",
   titularDocCPF: "CPF",
@@ -83,6 +88,11 @@ const CAMPOS_ARQUIVO_ORG = [
   "orgDocRequerimento", "orgDocDeclaracaoAtuacao", "orgDocEstatutoSocial",
   "orgDocAtaEleicao", "orgDocCertidaoCNPJ", "orgDocComprovanteCNPJ",
   "orgDocAnexoV", "orgDocAnexoVI", "orgDocAnexoVII",
+] as const;
+
+const CAMPOS_ARQUIVO_CHAPA2 = [
+  "chapa2DocDeclaracaoAtuacao", "chapa2DocEstatutoSocial",
+  "chapa2DocAtaEleicao", "chapa2DocCertidaoCNPJ", "chapa2DocAnexoV",
 ] as const;
 
 const CAMPOS_ARQUIVO_TITULAR = [
@@ -141,6 +151,23 @@ export async function POST(request: NextRequest) {
       const cnpj = cnpjRaw.replace(/[^\d]/g, "");
       const razaoSocial = formData.get("organizacao.razaoSocial") as string;
       const emailOrg = (formData.get("organizacao.email") as string).toLowerCase();
+      const formaChapa = formData.get("organizacao.formaChapa") === "true";
+      const chapaCNPJ = formaChapa
+        ? ((formData.get("organizacao.chapaCNPJ") as string) || "").replace(/[^\d]/g, "") || null
+        : null;
+      const chapaRazaoSocial = formaChapa
+        ? (formData.get("organizacao.chapaRazaoSocial") as string) || null
+        : null;
+
+      const enderecoChapa = formaChapa ? {
+        chapaLogradouro: (formData.get("enderecoChapa.logradouro") as string) || null,
+        chapaNumero: (formData.get("enderecoChapa.numero") as string) || null,
+        chapaComplemento: (formData.get("enderecoChapa.complemento") as string) || null,
+        chapaBairro: (formData.get("enderecoChapa.bairro") as string) || null,
+        chapaCidade: (formData.get("enderecoChapa.cidade") as string) || null,
+        chapaEstado: (formData.get("enderecoChapa.estado") as string) || null,
+        chapaCep: (formData.get("enderecoChapa.cep") as string) || null,
+      } : null;
 
       // Impedir duplicata por CNPJ
       const orgExistente = await db.organizacao.findUnique({ where: { cnpj } });
@@ -200,7 +227,11 @@ export async function POST(request: NextRequest) {
 
         // Organização
         const org = await tx.organizacao.create({
-          data: { cnpj, razaoSocial, candidaturaId: candidatura.id },
+          data: {
+            cnpj, razaoSocial, formaChapa, chapaCNPJ, chapaRazaoSocial,
+            ...(enderecoChapa ?? {}),
+            candidaturaId: candidatura.id,
+          },
         });
 
         // Endereço
@@ -220,6 +251,19 @@ export async function POST(request: NextRequest) {
             await tx.arquivo.create({
               data: { ...salvo, organizacaoId: org.id, categoria: CATEGORIA_MAP[campo] ?? "OUTRO" },
             });
+          }
+        }
+
+        // Arquivos da segunda entidade (apenas quando inscrição de chapa)
+        if (formaChapa) {
+          for (const campo of CAMPOS_ARQUIVO_CHAPA2) {
+            const arquivo = formData.get(campo) as File | null;
+            if (arquivo && arquivo.size > 0) {
+              const salvo = await salvarArquivo(arquivo, orgDir);
+              await tx.arquivo.create({
+                data: { ...salvo, organizacaoId: org.id, categoria: CATEGORIA_MAP[campo] ?? "OUTRO" },
+              });
+            }
           }
         }
 

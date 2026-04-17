@@ -23,6 +23,7 @@ import EtapaRevisaoDados from "./etapas/etapa-revisao-dados";
 import EtapaDadosOrganizacao from "./etapas/etapa-dados-organizacao";
 import EtapaDadosTitular from "./etapas/etapa-dados-titular";
 import EtapaDadosSuplente from "./etapas/etapa-dados-suplente";
+import EtapaEnderecoChapa from "./etapas/etapa-endereco-chapa";
 
 import { criarEtapaDocumento } from "./etapas/etapa-arquivo-unico";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ type StepType =
   | "dadosPessoais"
   | "endereco"
   | "orgDados"
+  | "enderecoChapa"
   | "titularDados"
   | "suplenteDados"
   | "revisao"
@@ -172,6 +174,39 @@ const DOCS_ANEXOS_ORG_OUTROS = {
     "Requerimento de Inscrição de Chapa, conforme Anexo VII do Edital 002.",
     ["Documento opcional"],
     false,
+  ),
+};
+
+const DOCS_CHAPA2 = {
+  chapa2DocDeclaracaoAtuacao: criarEtapaDocumento(
+    "chapa2DocDeclaracaoAtuacao",
+    "Segunda Entidade — Declaração de Atuação (Anexos II e III)",
+    "Declaração de atuação da segunda entidade da chapa, por pelo menos os últimos 2 (dois) anos, na região abrangida pelo perímetro da OUCAB ou nas temáticas urbana e ambiental, conforme modelos dos Anexos II e III do Edital.",
+    ["Deve comprovar 2 anos de atuação na região ou nas temáticas", "Os modelos estão disponíveis nos Anexos II e III do Edital"],
+  ),
+  chapa2DocEstatutoSocial: criarEtapaDocumento(
+    "chapa2DocEstatutoSocial",
+    "Segunda Entidade — Estatuto Social (Registrado em Cartório)",
+    "Estatuto Social da segunda entidade da chapa, devidamente registrado em cartório, comprovando ao menos 02 (dois) anos de existência, contados retroativamente da publicação do Edital.",
+    ["O estatuto deve estar registrado em cartório", "Deve comprovar ao menos 2 anos de existência da entidade"],
+  ),
+  chapa2DocAtaEleicao: criarEtapaDocumento(
+    "chapa2DocAtaEleicao",
+    "Segunda Entidade — Ata da Última Eleição dos Representantes Legais",
+    "Ata da última eleição dos/as representantes legais com mandato em vigor da segunda entidade da chapa, devidamente registrada em cartório.",
+    ["O mandato dos representantes legais deve estar em vigor", "A ata deve estar registrada em cartório"],
+  ),
+  chapa2DocCertidaoCNPJ: criarEtapaDocumento(
+    "chapa2DocCertidaoCNPJ",
+    "Segunda Entidade — Certidão de Regularidade do CNPJ (Últimos 30 dias)",
+    "Certidão de regularidade do CNPJ da segunda entidade da chapa, atualizada nos últimos 30 dias, comprovando sede no Município de São Paulo, obtida no site da Receita Federal.",
+    ["Deve ser emitida nos últimos 30 dias", "Deve comprovar sede no Município de São Paulo"],
+  ),
+  chapa2DocAnexoV: criarEtapaDocumento(
+    "chapa2DocAnexoV",
+    "Segunda Entidade — Anexo V — Declaração de Idoneidade",
+    "Modelo de Declaração de Idoneidade da segunda entidade da chapa, conforme Anexo V do Edital.",
+    ["O modelo do Anexo V está disponível no site da SMUL"],
   ),
 };
 
@@ -414,6 +449,13 @@ const ETAPA_ENDERECO_SP: StepDef = {
   component: EtapaEndereco,
 };
 
+const ETAPA_ENDERECO_CHAPA: StepDef = {
+  type: "enderecoChapa",
+  titulo: "Endereço da 2ª Entidade",
+  descricao: "Informe o endereço da segunda entidade que compõe a chapa",
+  component: EtapaEnderecoChapa,
+};
+
 const ETAPA_ORG_DADOS: StepDef = {
   type: "orgDados",
   titulo: "Dados da Organização",
@@ -464,7 +506,7 @@ function etapaDoc(
 // Fluxos de etapas por tipo
 // ---------------------------------------------------------------------------
 
-function buildEtapas(tipoCadastro: string, tipoInscricao: string): StepDef[] {
+function buildEtapas(tipoCadastro: string, tipoInscricao: string, formaChapa = false): StepDef[] {
   const isCandidato = tipoCadastro === "CANDIDATO";
   const isRepMoradia = tipoInscricao === "REP_MORADIA";
   const isRepOrg = ["REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
@@ -533,34 +575,55 @@ function buildEtapas(tipoCadastro: string, tipoInscricao: string): StepDef[] {
 
   if (isCandidato && isRepOrg) {
     // Candidato REP_ONGS / REP_PROFISSIONAIS / REP_EMPRESARIAIS
+    // Texto primeiro, arquivos depois
     const orgDocs = DOCS_ORG_OUTROS;
     const titularDocs = DOCS_TITULAR_OUTROS;
     const suplenteDocs = DOCS_SUPLENTE_OUTROS;
     return [
+      // ── Formulários de texto ──────────────────────────────────────────────
       ETAPA_TIPO_INSCRICAO,
       ETAPA_ORG_DADOS,
+      ETAPA_ENDERECO_SP,
+      ...(formaChapa ? [ETAPA_ENDERECO_CHAPA] : []),
+      ETAPA_TITULAR_DADOS,
+      ETAPA_SUPLENTE_DADOS,
+      // ── Documentos da entidade ────────────────────────────────────────────
       etapaDoc(orgDocs.orgDocRequerimento, "Requerimento da Entidade", "orgDocRequerimento"),
       etapaDoc(orgDocs.orgDocDeclaracaoAtuacao, "Declaração de Atuação", "orgDocDeclaracaoAtuacao"),
       etapaDoc(orgDocs.orgDocEstatutoSocial, "Estatuto Social", "orgDocEstatutoSocial"),
       etapaDoc(orgDocs.orgDocAtaEleicao, "Ata da Última Eleição", "orgDocAtaEleicao"),
       etapaDoc(orgDocs.orgDocCertidaoCNPJ, "Certidão CNPJ", "orgDocCertidaoCNPJ"),
       etapaDoc(orgDocs.orgDocComprovanteCNPJ, "Comprovante CNPJ (opcional)", "orgDocComprovanteCNPJ", false),
-      ETAPA_ENDERECO_SP,
-      ETAPA_TITULAR_DADOS,
+      etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoV, "Anexo V — Declaração de Idoneidade (opcional)", "orgDocAnexoV", false),
+      // ── Documentos da segunda entidade (apenas quando inscrição de chapa) ─
+      ...(formaChapa ? [
+        etapaDoc(DOCS_CHAPA2.chapa2DocDeclaracaoAtuacao, "2ª Entidade — Declaração de Atuação", "chapa2DocDeclaracaoAtuacao"),
+        etapaDoc(DOCS_CHAPA2.chapa2DocEstatutoSocial, "2ª Entidade — Estatuto Social", "chapa2DocEstatutoSocial"),
+        etapaDoc(DOCS_CHAPA2.chapa2DocAtaEleicao, "2ª Entidade — Ata da Última Eleição", "chapa2DocAtaEleicao"),
+        etapaDoc(DOCS_CHAPA2.chapa2DocCertidaoCNPJ, "2ª Entidade — Certidão CNPJ", "chapa2DocCertidaoCNPJ"),
+        etapaDoc(DOCS_CHAPA2.chapa2DocAnexoV, "2ª Entidade — Anexo V (Declaração de Idoneidade)", "chapa2DocAnexoV"),
+      ] : []),
+      // ── Documentos do titular ─────────────────────────────────────────────
       etapaDoc(titularDocs.titularDocIdentidade, "Identidade — Titular", "titularDocIdentidade"),
       etapaDoc(titularDocs.titularDocCPF, "CPF — Titular (opcional)", "titularDocCPF", false),
       etapaDoc(titularDocs.titularDocTituloEleitor, "Título de Eleitor — Titular", "titularDocTituloEleitor"),
       etapaDoc(titularDocs.titularDocFoto3x4, "Foto 3×4 — Titular", "titularDocFoto3x4"),
       etapaDoc(titularDocs.titularDocDeclaracao, "Declaração — Titular", "titularDocDeclaracao"),
-      ETAPA_SUPLENTE_DADOS,
+      // ── Documentos do suplente ────────────────────────────────────────────
       etapaDoc(suplenteDocs.suplenteDocIdentidade, "Identidade — Suplente", "suplenteDocIdentidade"),
       etapaDoc(suplenteDocs.suplenteDocCPF, "CPF — Suplente (opcional)", "suplenteDocCPF", false),
       etapaDoc(suplenteDocs.suplenteDocTituloEleitor, "Título de Eleitor — Suplente", "suplenteDocTituloEleitor"),
       etapaDoc(suplenteDocs.suplenteDocFoto3x4, "Foto 3×4 — Suplente", "suplenteDocFoto3x4"),
       etapaDoc(suplenteDocs.suplenteDocDeclaracao, "Declaração — Suplente", "suplenteDocDeclaracao"),
-      etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoV, "Anexo V — Declaração de Idoneidade (opcional)", "orgDocAnexoV", false),
+      // ── Anexos opcionais / chapa ──────────────────────────────────────────
       etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoVI, "Anexo VI — Requerimento Entidade Eleitora (opcional)", "orgDocAnexoVI", false),
-      etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoVII, "Anexo VII — Requerimento de Chapa (opcional)", "orgDocAnexoVII", false),
+      etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoVII,
+        formaChapa
+          ? "Anexo VII — Requerimento de Chapa"
+          : "Anexo VII — Requerimento de Chapa (opcional)",
+        "orgDocAnexoVII",
+        formaChapa, // obrigatório se for chapa
+      ),
       ETAPA_REVISAO,
     ];
   }
@@ -616,7 +679,7 @@ export default function FormularioInscricao() {
     defaultValues: {
       tipoCadastro: "CANDIDATO",
       tipoInscricao: undefined as any,
-      organizacao: { cnpj: "", razaoSocial: "", email: "" },
+      organizacao: { cnpj: "", razaoSocial: "", email: "", formaChapa: false, chapaRazaoSocial: "", chapaCNPJ: "" },
       titular: { nome: "", nomeSocial: "", cpf: "", dataNascimento: "", telefone: "", genero: undefined as any, email: "", tituloEleitor: "" },
       suplente: { nome: "", nomeSocial: "", cpf: "", dataNascimento: "", telefone: "", genero: undefined as any, email: "", tituloEleitor: "" },
       votante: {
@@ -624,6 +687,7 @@ export default function FormularioInscricao() {
         email: "", cpf: "", dataNascimento: "", empresa: "", tituloEleitor: "",
       },
       endereco: { logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", cep: "", latitude: null, longitude: null },
+      enderecoChapa: { logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", cep: "" },
     },
   });
 
@@ -631,10 +695,11 @@ export default function FormularioInscricao() {
 
   const tipoCadastroAtual = watch("tipoCadastro");
   const tipoInscricaoAtual = watch("tipoInscricao");
+  const formaChapa = !!(watch("organizacao.formaChapa" as any));
 
   const etapas = useMemo(
-    () => buildEtapas(tipoCadastroAtual, tipoInscricaoAtual),
-    [tipoCadastroAtual, tipoInscricaoAtual],
+    () => buildEtapas(tipoCadastroAtual, tipoInscricaoAtual, formaChapa),
+    [tipoCadastroAtual, tipoInscricaoAtual, formaChapa],
   );
 
   const stepAtual = etapas[etapaAtual - 1];
@@ -674,8 +739,16 @@ export default function FormularioInscricao() {
       }
 
       case "orgDados": {
-        const org = dados.organizacao;
-        return !!(org?.cnpj && org?.razaoSocial && org?.email);
+        const org = dados.organizacao as any;
+        const base = !!(org?.cnpj && org?.razaoSocial && org?.email);
+        if (!base) return false;
+        if (org?.formaChapa) return !!(org?.chapaCNPJ && org?.chapaRazaoSocial);
+        return true;
+      }
+
+      case "enderecoChapa": {
+        const ec = (dados as any).enderecoChapa;
+        return !!(ec?.logradouro && ec?.bairro && ec?.cidade && ec?.estado && ec?.cep);
       }
 
       case "titularDados": {
@@ -796,8 +869,20 @@ export default function FormularioInscricao() {
         break;
       }
 
-      case "orgDados":
-        isValid = await trigger(["organizacao.cnpj", "organizacao.razaoSocial", "organizacao.email"] as any);
+      case "orgDados": {
+        const camposOrg: any[] = ["organizacao.cnpj", "organizacao.razaoSocial", "organizacao.email"];
+        if ((getValues("organizacao" as any) as any)?.formaChapa) {
+          camposOrg.push("organizacao.chapaCNPJ", "organizacao.chapaRazaoSocial");
+        }
+        isValid = await trigger(camposOrg);
+        break;
+      }
+
+      case "enderecoChapa":
+        isValid = await trigger([
+          "enderecoChapa.logradouro", "enderecoChapa.bairro",
+          "enderecoChapa.cidade", "enderecoChapa.estado", "enderecoChapa.cep",
+        ] as any);
         break;
 
       case "titularDados":
@@ -871,6 +956,22 @@ export default function FormularioInscricao() {
         formData.append("organizacao.cnpj", data.organizacao?.cnpj || "");
         formData.append("organizacao.razaoSocial", data.organizacao?.razaoSocial || "");
         formData.append("organizacao.email", data.organizacao?.email || "");
+        const orgExtra = data.organizacao as any;
+        formData.append("organizacao.formaChapa", String(!!orgExtra?.formaChapa));
+        if (orgExtra?.formaChapa) {
+          formData.append("organizacao.chapaCNPJ", orgExtra.chapaCNPJ || "");
+          formData.append("organizacao.chapaRazaoSocial", orgExtra.chapaRazaoSocial || "");
+          const ec = (data as any).enderecoChapa;
+          if (ec) {
+            formData.append("enderecoChapa.logradouro", ec.logradouro || "");
+            if (ec.numero) formData.append("enderecoChapa.numero", ec.numero);
+            if (ec.complemento) formData.append("enderecoChapa.complemento", ec.complemento);
+            formData.append("enderecoChapa.bairro", ec.bairro || "");
+            formData.append("enderecoChapa.cidade", ec.cidade || "");
+            formData.append("enderecoChapa.estado", ec.estado || "");
+            formData.append("enderecoChapa.cep", ec.cep || "");
+          }
+        }
 
         // Dados dos candidatos
         const appendCandidato = (prefix: string, c: any) => {
@@ -922,6 +1023,8 @@ export default function FormularioInscricao() {
         "suplenteDocRequerimento", "suplenteDocIdentidade", "suplenteDocCPF",
         "suplenteDocTituloEleitor", "suplenteDocFoto3x4", "suplenteDocDeclaracao",
         "orgDocAnexoV", "orgDocAnexoVI", "orgDocAnexoVII",
+        "chapa2DocDeclaracaoAtuacao", "chapa2DocEstatutoSocial",
+        "chapa2DocAtaEleicao", "chapa2DocCertidaoCNPJ", "chapa2DocAnexoV",
       ];
       for (const campo of camposArquivo) {
         const arquivo = (data as any)[campo];

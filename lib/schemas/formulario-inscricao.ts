@@ -119,6 +119,24 @@ export const organizacaoSchema = z.object({
     .string()
     .email("E-mail inválido")
     .max(100, "E-mail deve ter no máximo 100 caracteres"),
+  formaChapa: z.boolean().optional(),
+  chapaRazaoSocial: z
+    .string()
+    .max(200, "Razão social deve ter no máximo 200 caracteres")
+    .optional()
+    .or(z.literal("")),
+  chapaCNPJ: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (v) => !v || v.replace(/[^\d]/g, "").length === 14,
+      "CNPJ da segunda entidade deve conter 14 dígitos",
+    )
+    .refine(
+      (v) => !v || validarCNPJ(v),
+      "CNPJ da segunda entidade inválido",
+    ),
 });
 
 // Schema para candidatos PF indicados por organização (titular ou suplente)
@@ -222,6 +240,7 @@ export const formularioInscricaoSchema = z
     suplente: candidatoPJSchema.optional(),
 
     endereco: enderecoSchema,
+    enderecoChapa: enderecoSchema.optional(),
 
     // Arquivos — todos opcionais no schema; obrigatoriedade gerida pelas etapas
     docRequerimento: arquivoOpcional,
@@ -255,6 +274,12 @@ export const formularioInscricaoSchema = z
     orgDocAnexoV: arquivoOpcional,
     orgDocAnexoVI: arquivoOpcional,
     orgDocAnexoVII: arquivoOpcional,
+    // Documentos obrigatórios da segunda entidade (apenas quando formaChapa = true)
+    chapa2DocDeclaracaoAtuacao: arquivoOpcional,
+    chapa2DocEstatutoSocial: arquivoOpcional,
+    chapa2DocAtaEleicao: arquivoOpcional,
+    chapa2DocCertidaoCNPJ: arquivoOpcional,
+    chapa2DocAnexoV: arquivoOpcional,
   })
   .superRefine((data, ctx) => {
     const isRep = (TIPOS_REP as readonly string[]).includes(data.tipoInscricao);

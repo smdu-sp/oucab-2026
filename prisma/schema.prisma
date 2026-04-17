@@ -166,6 +166,16 @@ model Organizacao {
     id                     String                 @id @default(uuid())
     cnpj                   String                 @unique
     razaoSocial            String
+    formaChapa             Boolean                @default(false)
+    chapaRazaoSocial       String?
+    chapaCNPJ              String?
+    chapaLogradouro        String?
+    chapaNumero            String?
+    chapaComplemento       String?
+    chapaBairro            String?
+    chapaCidade            String?
+    chapaEstado            String?
+    chapaCep               String?
     candidaturaId          String                 @unique
 
     criadoEm               DateTime               @default(now())

@@ -42,6 +42,11 @@ const CAMPOS_ARQUIVO: { campo: keyof FormularioInscricaoData; label: string }[] 
   { campo: "orgDocAnexoV", label: "Anexo V — Declaração de Idoneidade da Entidade" },
   { campo: "orgDocAnexoVI", label: "Anexo VI — Requerimento de Inscrição Entidade Eleitora" },
   { campo: "orgDocAnexoVII", label: "Anexo VII — Requerimento de Inscrição de Chapa" },
+  { campo: "chapa2DocDeclaracaoAtuacao", label: "2ª Entidade — Declaração de Atuação (Anexos II e III)" },
+  { campo: "chapa2DocEstatutoSocial", label: "2ª Entidade — Estatuto Social" },
+  { campo: "chapa2DocAtaEleicao", label: "2ª Entidade — Ata da Última Eleição" },
+  { campo: "chapa2DocCertidaoCNPJ", label: "2ª Entidade — Certidão de Regularidade do CNPJ" },
+  { campo: "chapa2DocAnexoV", label: "2ª Entidade — Anexo V (Declaração de Idoneidade)" },
 ];
 
 function formatarCPF(cpf: string) {
@@ -173,6 +178,18 @@ export default function EtapaRevisaoDados() {
     cnpj?: string;
     razaoSocial?: string;
     email?: string;
+    formaChapa?: boolean;
+    chapaCNPJ?: string;
+    chapaRazaoSocial?: string;
+  } | undefined;
+  const enderecoChapa = watch("enderecoChapa" as any) as {
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    estado?: string;
+    cep?: string;
   } | undefined;
   const titular = watch("titular" as any) as PessoaData | undefined;
   const suplente = watch("suplente" as any) as PessoaData | undefined;
@@ -215,6 +232,22 @@ export default function EtapaRevisaoDados() {
                 <p className="text-sm font-medium text-muted-foreground">E-mail da Entidade</p>
                 <p className="text-sm">{organizacao.email}</p>
               </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Inscrição de Chapa</p>
+                <p className="text-sm">{organizacao.formaChapa ? "Sim" : "Não"}</p>
+              </div>
+              {organizacao.formaChapa && organizacao.chapaCNPJ && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">CNPJ da Segunda Entidade</p>
+                  <p className="text-sm">{formatarCNPJ(organizacao.chapaCNPJ)}</p>
+                </div>
+              )}
+              {organizacao.formaChapa && organizacao.chapaRazaoSocial && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Razão Social da Segunda Entidade</p>
+                  <p className="text-sm">{organizacao.chapaRazaoSocial}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -230,6 +263,52 @@ export default function EtapaRevisaoDados() {
           }}
           mostrarEmpresa={tipoInscricao === "TRABALHADOR"}
         />
+      )}
+
+      {/* Endereço da 2ª Entidade (apenas chapa) */}
+      {isRepresentante && organizacao?.formaChapa && enderecoChapa?.logradouro && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MapPin className="w-5 h-5" />
+              Endereço da 2ª Entidade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Logradouro</p>
+                <p className="text-sm">{enderecoChapa.logradouro}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Número</p>
+                <p className="text-sm">{enderecoChapa.numero || "S/N"}</p>
+              </div>
+              {enderecoChapa.complemento && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Complemento</p>
+                  <p className="text-sm">{enderecoChapa.complemento}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Bairro</p>
+                <p className="text-sm">{enderecoChapa.bairro}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Cidade</p>
+                <p className="text-sm">{enderecoChapa.cidade}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Estado</p>
+                <p className="text-sm">{enderecoChapa.estado}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">CEP</p>
+                <p className="text-sm">{enderecoChapa.cep ? formatarCEP(enderecoChapa.cep) : ""}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Titular (apenas REP_*) */}
