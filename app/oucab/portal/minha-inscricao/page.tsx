@@ -33,7 +33,7 @@ export default async function MinhaInscricaoPage() {
       candidatos: true,
       endereco: true,
       arquivos: true,
-      organizacao: true,
+      organizacao: { include: { arquivos: true } },
     },
   });
 
@@ -95,13 +95,45 @@ export default async function MinhaInscricaoPage() {
       {isRep && (
         <>
           {candidatura.organizacao && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">Organização</CardTitle></CardHeader>
-              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground">Razão Social:</span> <span className="font-medium">{candidatura.organizacao.razaoSocial}</span></div>
-                <div><span className="text-muted-foreground">CNPJ:</span> <span className="font-medium">{candidatura.organizacao.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}</span></div>
-              </CardContent>
-            </Card>
+            <>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Organização</CardTitle></CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-muted-foreground">Razão Social:</span> <span className="font-medium">{candidatura.organizacao.razaoSocial}</span></div>
+                  <div><span className="text-muted-foreground">CNPJ:</span> <span className="font-medium">{candidatura.organizacao.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}</span></div>
+                  <div><span className="text-muted-foreground">Inscrição de Chapa:</span> <span className="font-medium">{candidatura.organizacao.formaChapa ? "Sim" : "Não"}</span></div>
+                  {candidatura.organizacao.formaChapa && candidatura.organizacao.chapaCNPJ && (
+                    <div><span className="text-muted-foreground">CNPJ da 2ª Entidade:</span> <span className="font-medium">{candidatura.organizacao.chapaCNPJ.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}</span></div>
+                  )}
+                  {candidatura.organizacao.formaChapa && candidatura.organizacao.chapaRazaoSocial && (
+                    <div className="sm:col-span-2"><span className="text-muted-foreground">Razão Social da 2ª Entidade:</span> <span className="font-medium">{candidatura.organizacao.chapaRazaoSocial}</span></div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {candidatura.organizacao.formaChapa && candidatura.organizacao.chapaLogradouro && (
+                <Card>
+                  <CardHeader><CardTitle className="text-base">Endereço da 2ª Entidade</CardTitle></CardHeader>
+                  <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Logradouro:</span>{" "}
+                      <span className="font-medium">
+                        {candidatura.organizacao.chapaLogradouro}
+                        {candidatura.organizacao.chapaNumero ? `, ${candidatura.organizacao.chapaNumero}` : ""}
+                      </span>
+                    </div>
+                    {candidatura.organizacao.chapaComplemento && (
+                      <div><span className="text-muted-foreground">Complemento:</span> <span className="font-medium">{candidatura.organizacao.chapaComplemento}</span></div>
+                    )}
+                    <div><span className="text-muted-foreground">Bairro:</span> <span className="font-medium">{candidatura.organizacao.chapaBairro}</span></div>
+                    <div><span className="text-muted-foreground">Cidade/UF:</span> <span className="font-medium">{candidatura.organizacao.chapaCidade} — {candidatura.organizacao.chapaEstado}</span></div>
+                    {candidatura.organizacao.chapaCep && (
+                      <div><span className="text-muted-foreground">CEP:</span> <span className="font-medium">{candidatura.organizacao.chapaCep.replace(/(\d{5})(\d{3})/, "$1-$2")}</span></div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
           {titular && (
             <Card>
@@ -156,11 +188,17 @@ export default async function MinhaInscricaoPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
         <CardContent>
-          {candidatura.arquivos.length === 0 ? (
+          {candidatura.arquivos.length === 0 && (!candidatura.organizacao?.arquivos?.length) ? (
             <p className="text-sm text-muted-foreground">Nenhum arquivo enviado.</p>
           ) : (
             <ul className="space-y-2">
               {candidatura.arquivos.map((a) => (
+                <li key={a.id} className="flex items-center justify-between text-sm">
+                  <span>{a.nome}</span>
+                  <span className="text-muted-foreground">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>
+                </li>
+              ))}
+              {candidatura.organizacao?.arquivos?.map((a) => (
                 <li key={a.id} className="flex items-center justify-between text-sm">
                   <span>{a.nome}</span>
                   <span className="text-muted-foreground">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>

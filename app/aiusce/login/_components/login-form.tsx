@@ -19,6 +19,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import Logo from './logo';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { loginAiusce } from '../actions';
@@ -103,6 +104,13 @@ export function LoginForm() {
 								</FormItem>
 							)}
 						/>
+					</div>
+					<div className='text-right text-sm'>
+						<Link
+							href='/aiusce/esqueci-senha'
+							className='text-muted-foreground hover:underline'>
+							Esqueci minha senha
+						</Link>
 					</div>
 					<Button
 						disabled={form.formState.isSubmitting || form.formState.isLoading}

@@ -48,8 +48,19 @@ const categoriaLabel: Record<string, string> = {
 	ESTATUTO_SOCIAL: 'Estatuto Social',
 	ATA_ELEICAO: 'Ata de Eleição',
 	CERTIDAO_CNPJ: 'Certidão CNPJ',
+	DECLARACAO_IDONEIDADE: 'Declaração de Idoneidade (Anexo V)',
+	REQUERIMENTO_ENTIDADE_ELEITORA: 'Req. Entidade Eleitora (Anexo VI)',
+	REQUERIMENTO_CHAPA: 'Req. Inscrição de Chapa (Anexo VII)',
 	OUTRO: 'Outro',
 };
+
+function formatarCNPJ(cnpj: string) {
+	return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+
+function formatarCEP(cep: string) {
+	return cep.replace(/(\d{5})(\d{3})/, '$1-$2');
+}
 
 export default async function CandidaturaDetalhe({
 	params,
@@ -157,7 +168,75 @@ export default async function CandidaturaDetalhe({
 						</div>
 						<div>
 							<p className='text-muted-foreground'>CNPJ</p>
-							<p className='font-medium'>{candidatura.organizacao.cnpj}</p>
+							<p className='font-medium'>{formatarCNPJ(candidatura.organizacao.cnpj)}</p>
+						</div>
+						<div>
+							<p className='text-muted-foreground'>Inscrição de Chapa</p>
+							<p className='font-medium'>{candidatura.organizacao.formaChapa ? 'Sim' : 'Não'}</p>
+						</div>
+						{candidatura.organizacao.formaChapa && candidatura.organizacao.chapaCNPJ && (
+							<div>
+								<p className='text-muted-foreground'>CNPJ da 2ª Entidade</p>
+								<p className='font-medium'>{formatarCNPJ(candidatura.organizacao.chapaCNPJ)}</p>
+							</div>
+						)}
+						{candidatura.organizacao.formaChapa && candidatura.organizacao.chapaRazaoSocial && (
+							<div className='md:col-span-2'>
+								<p className='text-muted-foreground'>Razão Social da 2ª Entidade</p>
+								<p className='font-medium'>{candidatura.organizacao.chapaRazaoSocial}</p>
+							</div>
+						)}
+					</CardContent>
+				</Card>
+			)}
+
+			{candidatura.organizacao?.formaChapa && candidatura.organizacao.chapaLogradouro && (
+				<Card>
+					<CardHeader>
+						<CardTitle>Endereço da 2ª Entidade</CardTitle>
+					</CardHeader>
+					<CardContent className='grid grid-cols-1 md:grid-cols-3 gap-4 text-sm'>
+						<div className='md:col-span-2'>
+							<p className='text-muted-foreground'>Logradouro</p>
+							<p className='font-medium'>
+								{candidatura.organizacao.chapaLogradouro}
+								{candidatura.organizacao.chapaNumero ? `, ${candidatura.organizacao.chapaNumero}` : ''}
+								{candidatura.organizacao.chapaComplemento ? ` — ${candidatura.organizacao.chapaComplemento}` : ''}
+							</p>
+						</div>
+						<div>
+							<p className='text-muted-foreground'>Bairro</p>
+							<p className='font-medium'>{candidatura.organizacao.chapaBairro}</p>
+						</div>
+						<div>
+							<p className='text-muted-foreground'>Cidade / Estado</p>
+							<p className='font-medium'>{candidatura.organizacao.chapaCidade} / {candidatura.organizacao.chapaEstado}</p>
+						</div>
+						<div>
+							<p className='text-muted-foreground'>CEP</p>
+							<p className='font-medium'>{candidatura.organizacao.chapaCep ? formatarCEP(candidatura.organizacao.chapaCep) : ''}</p>
+						</div>
+					</CardContent>
+				</Card>
+			)}
+
+			{candidatura.organizacao?.arquivos && candidatura.organizacao.arquivos.length > 0 && (
+				<Card>
+					<CardHeader>
+						<CardTitle>Documentos da Entidade</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className='flex flex-wrap gap-2'>
+							{candidatura.organizacao.arquivos.map((arq) => (
+								<a
+									key={arq.id}
+									href={`${BASE_PATH}/api/arquivos/${arq.id}`}
+									target='_blank'
+									rel='noopener noreferrer'
+									className='text-sm px-3 py-2 rounded border hover:bg-muted transition-colors'>
+									{categoriaLabel[arq.categoria] ?? arq.categoria} — {arq.nome}
+								</a>
+							))}
 						</div>
 					</CardContent>
 				</Card>

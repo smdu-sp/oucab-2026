@@ -24,7 +24,7 @@ export interface ICandidatura extends Candidatura {
 export interface ICandidaturaDetalhe extends Candidatura {
   usuario: Usuario;
   endereco?: Endereco | null;
-  organizacao?: Organizacao | null;
+  organizacao?: (Organizacao & { arquivos: Arquivo[] }) | null;
   candidatos: (Candidato & { arquivos: Arquivo[] })[];
   arquivos: Arquivo[];
 }
@@ -79,7 +79,7 @@ export async function buscarCandidaturaPorId(id: string): Promise<ICandidaturaDe
     include: {
       usuario: true,
       endereco: true,
-      organizacao: true,
+      organizacao: { include: { arquivos: true } },
       candidatos: { include: { arquivos: true } },
       arquivos: true,
     },
