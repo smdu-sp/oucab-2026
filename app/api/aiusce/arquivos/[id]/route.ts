@@ -27,10 +27,12 @@ export async function GET(
     const buffer = await readFile(filePath);
 
     const headers = new Headers();
-    headers.set("Content-Type", arquivo.tipo || "application/octet-stream");
+    const tipo = arquivo.tipo || "application/octet-stream";
+    const inline = tipo.startsWith("image/") || tipo === "application/pdf";
+    headers.set("Content-Type", tipo);
     headers.set(
       "Content-Disposition",
-      `attachment; filename="${encodeURIComponent(arquivo.nome)}"`
+      `${inline ? "inline" : "attachment"}; filename="${encodeURIComponent(arquivo.nome)}"`
     );
 
     return new NextResponse(buffer as unknown as BodyInit, { status: 200, headers });

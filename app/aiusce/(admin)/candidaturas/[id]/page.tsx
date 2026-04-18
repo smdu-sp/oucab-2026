@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
 import { BASE_PATH } from "@/lib/config";
+import VisualizadorArquivo from "@/components/visualizador-arquivo";
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
   EM_ANALISE: "secondary",
@@ -189,10 +190,14 @@ export default async function CandidaturaAiusceDetalhe({
                     <p className="text-muted-foreground text-sm mb-2">Documentos</p>
                     <div className="flex flex-wrap gap-2">
                       {c.arquivos.map((arq) => (
-                        <a key={arq.id} href={`${BASE_PATH}/api/aiusce/arquivos/${arq.id}`} target="_blank" rel="noopener noreferrer"
-                          className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors">
-                          {categoriaLabel[arq.categoria] ?? arq.categoria} — {arq.nome}
-                        </a>
+                        <VisualizadorArquivo
+                          key={arq.id}
+                          id={arq.id}
+                          nome={arq.nome}
+                          tipo={arq.tipo}
+                          label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                          url={`${BASE_PATH}/api/aiusce/arquivos/${arq.id}`}
+                        />
                       ))}
                     </div>
                   </div>
@@ -209,10 +214,14 @@ export default async function CandidaturaAiusceDetalhe({
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {candidatura.arquivos.map((arq) => (
-                <a key={arq.id} href={`${BASE_PATH}/api/aiusce/arquivos/${arq.id}`} target="_blank" rel="noopener noreferrer"
-                  className="text-sm px-3 py-2 rounded border hover:bg-muted transition-colors">
-                  {categoriaLabel[arq.categoria] ?? arq.categoria} — {arq.nome}
-                </a>
+                <VisualizadorArquivo
+                  key={arq.id}
+                  id={arq.id}
+                  nome={arq.nome}
+                  tipo={arq.tipo}
+                  label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                  url={`${BASE_PATH}/api/aiusce/arquivos/${arq.id}`}
+                />
               ))}
             </div>
           </CardContent>
