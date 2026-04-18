@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/sidebar";
 import { auth } from "@/auth/aiusce";
 import { redirect } from "next/navigation";
+import RelogioServidor from "@/components/relogio-servidor";
+import { PRAZO_INSCRICAO, PRAZO_INSCRICAO_AIUSCE } from "@/lib/config";
 
 export default async function AiusceAdminLayout({
   children,
@@ -22,6 +24,8 @@ export default async function AiusceAdminLayout({
     session.user?.permissao &&
     ["DEV", "ADM"].includes(session.user.permissao.toString());
   if (!isAdmin) redirect("/aiusce/login");
+
+  const isDev = session.user?.permissao?.toString() === "DEV";
 
   return (
     <div className="relative w-full bg-muted/50 dark:bg-background">
@@ -42,6 +46,17 @@ export default async function AiusceAdminLayout({
           <div className="h-full gap-4 p-4 sm:pt-0 items-center w-full bg-muted/50 dark:bg-background pt-10">
             {children}
           </div>
+          {isDev && (() => {
+            const now = new Date();
+            return (
+              <RelogioServidor
+                serverTimeISO={now.toISOString()}
+                serverTzOffsetMinutes={-now.getTimezoneOffset()}
+                prazoISO={PRAZO_INSCRICAO.toISOString()}
+                prazoAiusceISO={PRAZO_INSCRICAO_AIUSCE.toISOString()}
+              />
+            );
+          })()}
         </SidebarInset>
       </SidebarProvider>
     </div>

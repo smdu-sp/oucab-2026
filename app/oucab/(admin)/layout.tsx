@@ -9,6 +9,9 @@ import {
 } from "@/components/ui/sidebar";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { retornaPermissao } from "@/services/usuario";
+import RelogioServidor from "@/components/relogio-servidor";
+import { PRAZO_INSCRICAO, PRAZO_INSCRICAO_AIUSCE } from "@/lib/config";
 
 export default async function OucabAdminLayout({
   children,
@@ -17,6 +20,10 @@ export default async function OucabAdminLayout({
 }) {
   const session = await auth();
   if (!session) redirect("/oucab/login");
+
+  const permissao = await retornaPermissao(session.user?.id as string);
+  const isDev = permissao === "DEV";
+
   return (
     <div className="relative w-full bg-muted/50 dark:bg-background">
       <ModeToggle className="absolute top-4 right-4 z-50" />
@@ -36,6 +43,17 @@ export default async function OucabAdminLayout({
           <div className="h-full gap-4 p-4 sm:pt-0 items-center w-full bg-muted/50 dark:bg-background pt-10">
             {children}
           </div>
+          {isDev && (() => {
+            const now = new Date();
+            return (
+              <RelogioServidor
+                serverTimeISO={now.toISOString()}
+                serverTzOffsetMinutes={-now.getTimezoneOffset()}
+                prazoISO={PRAZO_INSCRICAO.toISOString()}
+                prazoAiusceISO={PRAZO_INSCRICAO_AIUSCE.toISOString()}
+              />
+            );
+          })()}
         </SidebarInset>
       </SidebarProvider>
     </div>
