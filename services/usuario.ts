@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/prisma";
 import { verificaLimite, verificaPagina } from "@/lib/utils";
-import { Permissao, Usuario } from "@prisma/client";
+import { Permissao, TipoUsuario, Usuario } from "@prisma/client";
 
 export interface IUsuarioCriar {
     login: string;
@@ -55,9 +55,14 @@ export async function buscarUsuarios(
     busca?: string,
     status?: string,
     permissao?: string,
+    tipo?: string,
 ) {
     [pagina, limite] = verificaPagina(pagina, limite);
+    const tipoWhere = tipo === 'all'
+        ? {}
+        : { tipo: (tipo as TipoUsuario) || 'INTERNO' as TipoUsuario };
     const where = {
+        ...tipoWhere,
         ...(busca && {
             OR: [
                 { nome: { contains: busca } },

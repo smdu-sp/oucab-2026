@@ -104,6 +104,7 @@ model Candidatura {
     tipoInscricao          TipoInscricao          @default(MORADOR)
     usuarioId              String                 @unique
     status                 Status                 @default(EM_ANALISE)
+    oculto                 Boolean                @default(false)
 
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt

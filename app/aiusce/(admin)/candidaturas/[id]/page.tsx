@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { buscarCandidaturaAiuscePorId } from "@/services/candidaturas-aiusce";
 import { validaUsuarioAiusce } from "@/services/usuario-aiusce";
+import { EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusActions } from "./_components/status-actions";
@@ -64,6 +65,7 @@ export default async function CandidaturaAiusceDetalhe({
   const usuario = await validaUsuarioAiusce();
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) redirect("/aiusce/login");
 
+  const isDev = usuario.permissao === "DEV";
   const { id } = await params;
   const candidatura = await buscarCandidaturaAiuscePorId(id);
   if (!candidatura) notFound();
@@ -88,7 +90,14 @@ export default async function CandidaturaAiusceDetalhe({
         </Badge>
       </div>
 
-      <StatusActions id={candidatura.id} statusAtual={candidatura.status} />
+      {isDev && candidatura.oculto && (
+        <div className="flex items-center gap-2 rounded-md border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <EyeOff className="h-4 w-4 shrink-0" />
+          Esta candidatura está <strong>oculta</strong> para outros usuários.
+        </div>
+      )}
+
+      <StatusActions id={candidatura.id} statusAtual={candidatura.status} isDev={isDev} oculto={candidatura.oculto} />
 
       {org && (
         <Card>

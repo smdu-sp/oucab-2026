@@ -28,7 +28,7 @@ async function Usuarios({
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	let { pagina = 1, limite = 10, total = 0 } = await searchParams;
-	const { busca = '', status = '', permissao = '' } = await searchParams;
+	const { busca = '', status = '', permissao = '', tipo = '' } = await searchParams;
 	let dados: Usuario[] = [];
 
 	const session = await auth();
@@ -39,6 +39,7 @@ async function Usuarios({
 			busca as string,
 			status as string,
 			permissao as string,
+			tipo as string,
 		);
 		if (response) {
 			const paginado = response as IUsuarioPaginado;
@@ -61,14 +62,13 @@ async function Usuarios({
 	];
 
 	const permissaoSelect = [
-		{
-			label: 'Desenvolvedor',
-			value: 'DEV',
-		},
-		{
-			label: 'Administrador',
-			value: 'ADM',
-		}
+		{ label: 'Desenvolvedor', value: 'DEV' },
+		{ label: 'Administrador', value: 'ADM' },
+	];
+
+	const tipoSelect = [
+		{ label: 'Interno', value: 'INTERNO' },
+		{ label: 'Externo', value: 'EXTERNO' },
 	];
 
 	return (
@@ -82,6 +82,13 @@ async function Usuarios({
 							tag: 'busca',
 							tipo: 0,
 							placeholder: 'Digite o nome, email ou login',
+						},
+						{
+							nome: 'Tipo',
+							tag: 'tipo',
+							tipo: 2,
+							valores: tipoSelect,
+							default: 'INTERNO',
 						},
 						{
 							nome: 'Status',

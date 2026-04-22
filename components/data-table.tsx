@@ -21,11 +21,13 @@ import { Skeleton } from './ui/skeleton';
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+	getRowClassName?: (row: TData) => string;
 }
 
 export default function DataTable<TData, TValue>({
 	columns,
 	data,
+	getRowClassName,
 }: DataTableProps<TData, TValue>) {
 	const table = useReactTable({
 		data,
@@ -61,7 +63,7 @@ export default function DataTable<TData, TValue>({
 					{table.getRowModel().rows?.length ? (
 						table.getRowModel().rows.map((row) => (
 							<TableRow
-								className='px-4'
+								className={`px-4 ${getRowClassName ? getRowClassName(row.original) : ''}`}
 								key={row.id}
 								data-state={row.getIsSelected() && 'selected'}>
 								{row.getVisibleCells().map((cell) => (

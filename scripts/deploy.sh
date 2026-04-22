@@ -29,6 +29,7 @@ cmd_recreate() {
 
 cmd_migrate() {
   docker compose exec "$SERVICE" npx prisma migrate deploy
+  docker compose exec "$SERVICE" npx prisma migrate deploy --schema=prisma/aiusce/schema.prisma
 }
 
 cmd_logs() {

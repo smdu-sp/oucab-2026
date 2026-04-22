@@ -30,10 +30,10 @@ async function UsuariosAiusce({
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) redirect("/aiusce/login");
 
   let { pagina = 1, limite = 10, total = 0 } = await searchParams;
-  const { busca = "", status = "", permissao = "" } = await searchParams;
+  const { busca = "", status = "", permissao = "", tipo = "" } = await searchParams;
   let dados: Usuario[] = [];
 
-  const response = await buscarUsuariosAiusce(+pagina, +limite, busca as string, status as string, permissao as string);
+  const response = await buscarUsuariosAiusce(+pagina, +limite, busca as string, status as string, permissao as string, tipo as string);
   if (response) {
     const paginado = response as IUsuarioAiuscePaginado;
     pagina = paginado.pagina || 1;
@@ -49,6 +49,13 @@ async function UsuariosAiusce({
         <Filtros
           camposFiltraveis={[
             { nome: "Busca", tag: "busca", tipo: 0, placeholder: "Nome, e-mail ou login" },
+            {
+              nome: "Tipo",
+              tag: "tipo",
+              tipo: 2,
+              valores: [{ label: "Interno", value: "INTERNO" }, { label: "Externo", value: "EXTERNO" }],
+              default: "INTERNO",
+            },
             {
               nome: "Status",
               tag: "status",

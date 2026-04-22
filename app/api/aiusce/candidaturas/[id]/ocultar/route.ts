@@ -1,0 +1,14 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { toggleOcultarCandidaturaAiusce } from '@/services/candidaturas-aiusce';
+
+export async function PATCH(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const resultado = await toggleOcultarCandidaturaAiusce(id);
+  if (!resultado) {
+    return NextResponse.json({ error: 'Não foi possível atualizar' }, { status: 403 });
+  }
+  return NextResponse.json(resultado);
+}

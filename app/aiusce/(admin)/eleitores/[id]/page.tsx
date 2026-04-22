@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { buscarEleitorAiuscePorId } from "@/services/candidaturas-aiusce";
 import { validaUsuarioAiusce } from "@/services/usuario-aiusce";
+import { EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusActions } from "./_components/status-actions";
@@ -49,6 +50,7 @@ export default async function EleitorAiusceDetalhe({
   const usuario = await validaUsuarioAiusce();
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) redirect("/aiusce/login");
 
+  const isDev = usuario.permissao === "DEV";
   const { id } = await params;
   const eleitor = await buscarEleitorAiuscePorId(id);
   if (!eleitor) notFound();
@@ -76,7 +78,14 @@ export default async function EleitorAiusceDetalhe({
         </Badge>
       </div>
 
-      <StatusActions id={eleitor.id} statusAtual={eleitor.status} />
+      {isDev && eleitor.oculto && (
+        <div className="flex items-center gap-2 rounded-md border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <EyeOff className="h-4 w-4 shrink-0" />
+          Esta inscrição eleitoral está <strong>oculta</strong> para outros usuários.
+        </div>
+      )}
+
+      <StatusActions id={eleitor.id} statusAtual={eleitor.status} isDev={isDev} oculto={eleitor.oculto} />
 
       {cand && (
         <Card>

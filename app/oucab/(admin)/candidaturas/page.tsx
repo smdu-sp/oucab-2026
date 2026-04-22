@@ -1,11 +1,11 @@
 /** @format */
 
-import DataTable, { TableSkeleton } from '@/components/data-table';
+import { TableSkeleton } from '@/components/data-table';
 import { Filtros } from '@/components/filtros';
 import Pagination from '@/components/pagination';
 import { auth } from '@/auth';
 import { Suspense } from 'react';
-import { columns } from './_components/columns';
+import { CandidaturasTable } from './_components/candidaturas-table';
 import { buscarCandidaturas, ICandidaturaPaginada, ICandidatura } from '@/services/candidaturas';
 import { validaUsuario } from '@/services/usuario';
 import { redirect } from 'next/navigation';
@@ -33,6 +33,8 @@ async function Candidaturas({
 
 	const usuario = await validaUsuario();
 	if (!usuario?.permissao || !['DEV', 'ADM'].includes(usuario.permissao)) redirect('/oucab/login');
+
+	const isDev = usuario.permissao === 'DEV';
 
 	const session = await auth();
 	if (session) {
@@ -94,7 +96,7 @@ async function Candidaturas({
 					]}
 				/>
 				<div className='w-full'>
-					<DataTable columns={columns} data={dados || []} />
+					<CandidaturasTable dados={dados} isDev={isDev} />
 				</div>
 				{dados && dados.length > 0 && (
 					<Pagination total={+total} pagina={+pagina} limite={+limite} />

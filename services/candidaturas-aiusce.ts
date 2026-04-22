@@ -6,6 +6,13 @@ import type {
   OrganizacaoEleitora, Procurador, Status, TipoInscricao, Usuario,
 } from "@/lib/generated/aiusce";
 
+async function isDevSession(): Promise<boolean> {
+  const session = await auth();
+  if (!session?.user?.id) return false;
+  const usuario = await db.usuario.findUnique({ where: { id: session.user.id } });
+  return usuario?.permissao === "DEV";
+}
+
 // ---------------------------------------------------------------------------
 // Candidaturas (tipoInscricao = CANDIDATO)
 // ---------------------------------------------------------------------------
@@ -38,9 +45,11 @@ export async function buscarCandidaturasAiusce(
   status?: string,
 ) {
   [pagina, limite] = verificaPagina(pagina, limite);
+  const isDev = await isDevSession();
 
   const where = {
     tipoInscricao: "CANDIDATO" as TipoInscricao,
+    ...(!isDev && { oculto: false }),
     ...(busca && {
       OR: [
         { usuario: { nome: { contains: busca } } },
@@ -73,6 +82,7 @@ export async function buscarCandidaturasAiusce(
 }
 
 export async function buscarCandidaturaAiuscePorId(id: string): Promise<IAiusceCandidaturaDetalhe | null> {
+  const isDev = await isDevSession();
   const candidatura = await db.candidatura.findUnique({
     where: { id },
     include: {
@@ -82,7 +92,9 @@ export async function buscarCandidaturaAiuscePorId(id: string): Promise<IAiusceC
       arquivos: true,
     },
   });
-  return candidatura as IAiusceCandidaturaDetalhe | null;
+  if (!candidatura) return null;
+  if (candidatura.oculto && !isDev) return null;
+  return candidatura as IAiusceCandidaturaDetalhe;
 }
 
 export async function atualizarStatusCandidaturaAiusce(id: string, novoStatus: Status) {
@@ -91,6 +103,16 @@ export async function atualizarStatusCandidaturaAiusce(id: string, novoStatus: S
   const usuario = await db.usuario.findUnique({ where: { id: session.user.id } });
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) return null;
   return db.candidatura.update({ where: { id }, data: { status: novoStatus } });
+}
+
+export async function toggleOcultarCandidaturaAiusce(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+  const usuario = await db.usuario.findUnique({ where: { id: session.user.id } });
+  if (!usuario?.permissao || usuario.permissao !== "DEV") return null;
+  const existe = await db.candidatura.findUnique({ where: { id } });
+  if (!existe) return null;
+  return db.candidatura.update({ where: { id }, data: { oculto: !existe.oculto } });
 }
 
 // ---------------------------------------------------------------------------
@@ -129,9 +151,11 @@ export async function buscarEleitoresAiusce(
   status?: string,
 ) {
   [pagina, limite] = verificaPagina(pagina, limite);
+  const isDev = await isDevSession();
 
   const where = {
-    eleitorPaiId: null, // exclui titular/suplente de candidatas (aparecem dentro da org eleitora)
+    eleitorPaiId: null,
+    ...(!isDev && { oculto: false }),
     ...(busca && {
       OR: [
         { usuario: { nome: { contains: busca } } },
@@ -165,6 +189,7 @@ export async function buscarEleitoresAiusce(
 }
 
 export async function buscarEleitorAiuscePorId(id: string): Promise<IAiusceEleitorDetalhe | null> {
+  const isDev = await isDevSession();
   const eleitor = await db.eleitor.findUnique({
     where: { id },
     include: {
@@ -177,7 +202,9 @@ export async function buscarEleitorAiuscePorId(id: string): Promise<IAiusceEleit
       arquivos: true,
     },
   });
-  return eleitor as IAiusceEleitorDetalhe | null;
+  if (!eleitor) return null;
+  if (eleitor.oculto && !isDev) return null;
+  return eleitor as IAiusceEleitorDetalhe;
 }
 
 export async function atualizarStatusEleitorAiusce(id: string, novoStatus: Status) {
@@ -186,4 +213,14 @@ export async function atualizarStatusEleitorAiusce(id: string, novoStatus: Statu
   const usuario = await db.usuario.findUnique({ where: { id: session.user.id } });
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) return null;
   return db.eleitor.update({ where: { id }, data: { status: novoStatus } });
+}
+
+export async function toggleOcultarEleitorAiusce(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+  const usuario = await db.usuario.findUnique({ where: { id: session.user.id } });
+  if (!usuario?.permissao || usuario.permissao !== "DEV") return null;
+  const existe = await db.eleitor.findUnique({ where: { id } });
+  if (!existe) return null;
+  return db.eleitor.update({ where: { id }, data: { oculto: !existe.oculto } });
 }

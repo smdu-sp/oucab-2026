@@ -1,4 +1,5 @@
 import { db } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { verificaLimite, verificaPagina } from "@/lib/utils";
 import { retornaPermissao } from "./usuario";
 import type {
@@ -29,6 +30,13 @@ export interface ICandidaturaDetalhe extends Candidatura {
   arquivos: Arquivo[];
 }
 
+async function isDevSession(): Promise<boolean> {
+  const session = await auth();
+  if (!session?.user?.id) return false;
+  const permissao = await retornaPermissao(session.user.id);
+  return permissao === "DEV";
+}
+
 export async function buscarCandidaturas(
   pagina: number,
   limite: number,
@@ -37,8 +45,10 @@ export async function buscarCandidaturas(
   status?: string,
 ) {
   [pagina, limite] = verificaPagina(pagina, limite);
+  const isDev = await isDevSession();
 
   const where = {
+    ...(!isDev && { oculto: false }),
     ...(busca && {
       OR: [
         { usuario: { nome: { contains: busca } } },
@@ -74,6 +84,7 @@ export async function buscarCandidaturas(
 }
 
 export async function buscarCandidaturaPorId(id: string): Promise<ICandidaturaDetalhe | null> {
+  const isDev = await isDevSession();
   const candidatura = await db.candidatura.findUnique({
     where: { id },
     include: {
@@ -84,7 +95,9 @@ export async function buscarCandidaturaPorId(id: string): Promise<ICandidaturaDe
       arquivos: true,
     },
   });
-  return candidatura as ICandidaturaDetalhe | null;
+  if (!candidatura) return null;
+  if (candidatura.oculto && !isDev) return null;
+  return candidatura as ICandidaturaDetalhe;
 }
 
 export async function atualizarStatusCandidatura(
@@ -97,4 +110,12 @@ export async function atualizarStatusCandidatura(
   const existe = await db.candidatura.findUnique({ where: { id } });
   if (!existe) return null;
   return db.candidatura.update({ where: { id }, data: { status: novoStatus } });
+}
+
+export async function toggleOcultarCandidatura(id: string, usuarioId: string) {
+  const permissao = await retornaPermissao(usuarioId);
+  if (!permissao || permissao !== "DEV") return null;
+  const existe = await db.candidatura.findUnique({ where: { id } });
+  if (!existe) return null;
+  return db.candidatura.update({ where: { id }, data: { oculto: !existe.oculto } });
 }

@@ -1,9 +1,9 @@
-import DataTable, { TableSkeleton } from "@/components/data-table";
+import { TableSkeleton } from "@/components/data-table";
 import { Filtros } from "@/components/filtros";
 import Pagination from "@/components/pagination";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { columns } from "./_components/columns";
+import { CandidaturasTable } from "./_components/candidaturas-table";
 import { buscarCandidaturasAiusce, IAiusceCandidatura, IAiusceCandidaturaPaginada } from "@/services/candidaturas-aiusce";
 import { validaUsuarioAiusce } from "@/services/usuario-aiusce";
 
@@ -26,6 +26,8 @@ async function CandidaturasAiusce({
 }) {
   const usuario = await validaUsuarioAiusce();
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) redirect("/aiusce/login");
+
+  const isDev = usuario.permissao === "DEV";
 
   let { pagina = 1, limite = 10, total = 0 } = await searchParams;
   const { busca = "", status = "" } = await searchParams;
@@ -67,7 +69,7 @@ async function CandidaturasAiusce({
           ]}
         />
         <div className="w-full">
-          <DataTable columns={columns} data={dados} />
+          <CandidaturasTable dados={dados} isDev={isDev} />
         </div>
         {dados.length > 0 && (
           <Pagination total={+total} pagina={+pagina} limite={+limite} />

@@ -22,10 +22,14 @@ export async function buscarUsuariosAiusce(
   busca?: string,
   status?: string,
   permissao?: string,
+  tipo?: string,
 ) {
   [pagina, limite] = verificaPagina(pagina, limite);
+  const tipoWhere = tipo === "all"
+    ? {}
+    : { tipo: (tipo as "INTERNO" | "EXTERNO") || "INTERNO" };
   const where = {
-    tipo: "INTERNO" as const,
+    ...tipoWhere,
     ...(busca && {
       OR: [
         { nome: { contains: busca } },

@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "../../lib/generated/aiusce"
-  binaryTargets = ["native", "rhel-openssl-1.0.x", "linux-musl-openssl-3.0.x"]
+  binaryTargets = ["native"]
 }
 
 datasource db {
@@ -96,6 +96,7 @@ model Candidatura {
   id            String        @id @default(uuid())
   tipoInscricao TipoInscricao
   status        Status        @default(EM_ANALISE)
+  oculto        Boolean       @default(false)
   usuarioId     String        @unique
   criadoEm      DateTime      @default(now())
   atualizadoEm  DateTime      @default(now()) @updatedAt
@@ -158,6 +159,7 @@ model Candidato {
 model Eleitor {
   id           String   @id @default(uuid())
   status       Status   @default(EM_ANALISE)
+  oculto       Boolean  @default(false)
   usuarioId    String?  @unique
   candidatoId  String?  @unique
   eleitorPaiId String?
