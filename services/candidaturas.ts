@@ -104,12 +104,19 @@ export async function atualizarStatusCandidatura(
   id: string,
   novoStatus: Status,
   usuarioId: string,
+  motivo?: string,
 ) {
   const permissao = await retornaPermissao(usuarioId);
   if (!permissao || !["DEV", "ADM"].includes(permissao)) return null;
   const existe = await db.candidatura.findUnique({ where: { id } });
   if (!existe) return null;
-  return db.candidatura.update({ where: { id }, data: { status: novoStatus } });
+  return db.candidatura.update({
+    where: { id },
+    data: {
+      status: novoStatus,
+      motivoIndeferimento: novoStatus === "INDEFERIDO" ? (motivo ?? null) : null,
+    },
+  });
 }
 
 export async function toggleOcultarCandidatura(id: string, usuarioId: string) {

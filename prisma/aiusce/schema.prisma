@@ -94,10 +94,11 @@ model Usuario {
 
 model Candidatura {
     id            String        @id @default(uuid())
-    tipoInscricao TipoInscricao
-    status        Status        @default(EM_ANALISE)
-    oculto        Boolean       @default(false)
-    usuarioId     String        @unique
+    tipoInscricao       TipoInscricao
+    status              Status        @default(EM_ANALISE)
+    oculto              Boolean       @default(false)
+    motivoIndeferimento String?       @db.Text
+    usuarioId           String        @unique
     criadoEm     DateTime      @default(now())
     atualizadoEm DateTime      @default(now()) @updatedAt
 

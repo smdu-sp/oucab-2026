@@ -17,12 +17,13 @@ export async function PATCH(
 	const { id } = await params;
 	const body = await request.json();
 	const novoStatus = body.status as Status;
+	const motivo = body.motivo as string | undefined;
 
 	if (!['EM_ANALISE', 'DEFERIDO', 'INDEFERIDO'].includes(novoStatus)) {
 		return NextResponse.json({ error: 'Status inválido' }, { status: 400 });
 	}
 
-	const resultado = await atualizarStatusCandidatura(id, novoStatus, session.user.id);
+	const resultado = await atualizarStatusCandidatura(id, novoStatus, session.user.id, motivo);
 	if (!resultado) {
 		return NextResponse.json({ error: 'Não foi possível atualizar o status' }, { status: 403 });
 	}

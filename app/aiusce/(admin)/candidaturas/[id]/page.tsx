@@ -90,6 +90,13 @@ export default async function CandidaturaAiusceDetalhe({
         </Badge>
       </div>
 
+      {candidatura.status === "INDEFERIDO" && candidatura.motivoIndeferimento && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive space-y-0.5">
+          <p className="font-semibold">Motivo do indeferimento</p>
+          <p className="whitespace-pre-wrap">{candidatura.motivoIndeferimento}</p>
+        </div>
+      )}
+
       {isDev && candidatura.oculto && (
         <div className="flex items-center gap-2 rounded-md border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           <EyeOff className="h-4 w-4 shrink-0" />

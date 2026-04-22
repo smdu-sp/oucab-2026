@@ -105,6 +105,7 @@ model Candidatura {
     usuarioId              String                 @unique
     status                 Status                 @default(EM_ANALISE)
     oculto                 Boolean                @default(false)
+    motivoIndeferimento    String?                @db.Text
 
     criadoEm               DateTime               @default(now())
     atualizadoEm           DateTime               @default(now()) @updatedAt

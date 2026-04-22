@@ -2783,6 +2783,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao | null
     status: $Enums.Status | null
     oculto: boolean | null
+    motivoIndeferimento: string | null
     usuarioId: string | null
     criadoEm: Date | null
     atualizadoEm: Date | null
@@ -2793,6 +2794,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao | null
     status: $Enums.Status | null
     oculto: boolean | null
+    motivoIndeferimento: string | null
     usuarioId: string | null
     criadoEm: Date | null
     atualizadoEm: Date | null
@@ -2803,6 +2805,7 @@ export namespace Prisma {
     tipoInscricao: number
     status: number
     oculto: number
+    motivoIndeferimento: number
     usuarioId: number
     criadoEm: number
     atualizadoEm: number
@@ -2815,6 +2818,7 @@ export namespace Prisma {
     tipoInscricao?: true
     status?: true
     oculto?: true
+    motivoIndeferimento?: true
     usuarioId?: true
     criadoEm?: true
     atualizadoEm?: true
@@ -2825,6 +2829,7 @@ export namespace Prisma {
     tipoInscricao?: true
     status?: true
     oculto?: true
+    motivoIndeferimento?: true
     usuarioId?: true
     criadoEm?: true
     atualizadoEm?: true
@@ -2835,6 +2840,7 @@ export namespace Prisma {
     tipoInscricao?: true
     status?: true
     oculto?: true
+    motivoIndeferimento?: true
     usuarioId?: true
     criadoEm?: true
     atualizadoEm?: true
@@ -2918,6 +2924,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status: $Enums.Status
     oculto: boolean
+    motivoIndeferimento: string | null
     usuarioId: string
     criadoEm: Date
     atualizadoEm: Date
@@ -2945,6 +2952,7 @@ export namespace Prisma {
     tipoInscricao?: boolean
     status?: boolean
     oculto?: boolean
+    motivoIndeferimento?: boolean
     usuarioId?: boolean
     criadoEm?: boolean
     atualizadoEm?: boolean
@@ -2962,12 +2970,13 @@ export namespace Prisma {
     tipoInscricao?: boolean
     status?: boolean
     oculto?: boolean
+    motivoIndeferimento?: boolean
     usuarioId?: boolean
     criadoEm?: boolean
     atualizadoEm?: boolean
   }
 
-  export type CandidaturaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tipoInscricao" | "status" | "oculto" | "usuarioId" | "criadoEm" | "atualizadoEm", ExtArgs["result"]["candidatura"]>
+  export type CandidaturaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tipoInscricao" | "status" | "oculto" | "motivoIndeferimento" | "usuarioId" | "criadoEm" | "atualizadoEm", ExtArgs["result"]["candidatura"]>
   export type CandidaturaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     usuario?: boolean | UsuarioDefaultArgs<ExtArgs>
     organizacao?: boolean | Candidatura$organizacaoArgs<ExtArgs>
@@ -2989,6 +2998,7 @@ export namespace Prisma {
       tipoInscricao: $Enums.TipoInscricao
       status: $Enums.Status
       oculto: boolean
+      motivoIndeferimento: string | null
       usuarioId: string
       criadoEm: Date
       atualizadoEm: Date
@@ -3369,6 +3379,7 @@ export namespace Prisma {
     readonly tipoInscricao: FieldRef<"Candidatura", 'TipoInscricao'>
     readonly status: FieldRef<"Candidatura", 'Status'>
     readonly oculto: FieldRef<"Candidatura", 'Boolean'>
+    readonly motivoIndeferimento: FieldRef<"Candidatura", 'String'>
     readonly usuarioId: FieldRef<"Candidatura", 'String'>
     readonly criadoEm: FieldRef<"Candidatura", 'DateTime'>
     readonly atualizadoEm: FieldRef<"Candidatura", 'DateTime'>
@@ -10310,6 +10321,7 @@ export namespace Prisma {
     tipoInscricao: 'tipoInscricao',
     status: 'status',
     oculto: 'oculto',
+    motivoIndeferimento: 'motivoIndeferimento',
     usuarioId: 'usuarioId',
     criadoEm: 'criadoEm',
     atualizadoEm: 'atualizadoEm'
@@ -10456,6 +10468,7 @@ export namespace Prisma {
 
   export const CandidaturaOrderByRelevanceFieldEnum: {
     id: 'id',
+    motivoIndeferimento: 'motivoIndeferimento',
     usuarioId: 'usuarioId'
   };
 
@@ -10743,6 +10756,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFilter<"Candidatura"> | $Enums.TipoInscricao
     status?: EnumStatusFilter<"Candidatura"> | $Enums.Status
     oculto?: BoolFilter<"Candidatura"> | boolean
+    motivoIndeferimento?: StringNullableFilter<"Candidatura"> | string | null
     usuarioId?: StringFilter<"Candidatura"> | string
     criadoEm?: DateTimeFilter<"Candidatura"> | Date | string
     atualizadoEm?: DateTimeFilter<"Candidatura"> | Date | string
@@ -10757,6 +10771,7 @@ export namespace Prisma {
     tipoInscricao?: SortOrder
     status?: SortOrder
     oculto?: SortOrder
+    motivoIndeferimento?: SortOrderInput | SortOrder
     usuarioId?: SortOrder
     criadoEm?: SortOrder
     atualizadoEm?: SortOrder
@@ -10776,6 +10791,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFilter<"Candidatura"> | $Enums.TipoInscricao
     status?: EnumStatusFilter<"Candidatura"> | $Enums.Status
     oculto?: BoolFilter<"Candidatura"> | boolean
+    motivoIndeferimento?: StringNullableFilter<"Candidatura"> | string | null
     criadoEm?: DateTimeFilter<"Candidatura"> | Date | string
     atualizadoEm?: DateTimeFilter<"Candidatura"> | Date | string
     usuario?: XOR<UsuarioScalarRelationFilter, UsuarioWhereInput>
@@ -10789,6 +10805,7 @@ export namespace Prisma {
     tipoInscricao?: SortOrder
     status?: SortOrder
     oculto?: SortOrder
+    motivoIndeferimento?: SortOrderInput | SortOrder
     usuarioId?: SortOrder
     criadoEm?: SortOrder
     atualizadoEm?: SortOrder
@@ -10805,6 +10822,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoWithAggregatesFilter<"Candidatura"> | $Enums.TipoInscricao
     status?: EnumStatusWithAggregatesFilter<"Candidatura"> | $Enums.Status
     oculto?: BoolWithAggregatesFilter<"Candidatura"> | boolean
+    motivoIndeferimento?: StringNullableWithAggregatesFilter<"Candidatura"> | string | null
     usuarioId?: StringWithAggregatesFilter<"Candidatura"> | string
     criadoEm?: DateTimeWithAggregatesFilter<"Candidatura"> | Date | string
     atualizadoEm?: DateTimeWithAggregatesFilter<"Candidatura"> | Date | string
@@ -11516,6 +11534,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     criadoEm?: Date | string
     atualizadoEm?: Date | string
     usuario: UsuarioCreateNestedOneWithoutCandidaturaInput
@@ -11529,6 +11548,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     usuarioId: string
     criadoEm?: Date | string
     atualizadoEm?: Date | string
@@ -11542,6 +11562,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     usuario?: UsuarioUpdateOneRequiredWithoutCandidaturaNestedInput
@@ -11555,6 +11576,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     usuarioId?: StringFieldUpdateOperationsInput | string
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11568,6 +11590,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     usuarioId: string
     criadoEm?: Date | string
     atualizadoEm?: Date | string
@@ -11578,6 +11601,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -11587,6 +11611,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     usuarioId?: StringFieldUpdateOperationsInput | string
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12505,6 +12530,7 @@ export namespace Prisma {
     tipoInscricao?: SortOrder
     status?: SortOrder
     oculto?: SortOrder
+    motivoIndeferimento?: SortOrder
     usuarioId?: SortOrder
     criadoEm?: SortOrder
     atualizadoEm?: SortOrder
@@ -12515,6 +12541,7 @@ export namespace Prisma {
     tipoInscricao?: SortOrder
     status?: SortOrder
     oculto?: SortOrder
+    motivoIndeferimento?: SortOrder
     usuarioId?: SortOrder
     criadoEm?: SortOrder
     atualizadoEm?: SortOrder
@@ -12525,6 +12552,7 @@ export namespace Prisma {
     tipoInscricao?: SortOrder
     status?: SortOrder
     oculto?: SortOrder
+    motivoIndeferimento?: SortOrder
     usuarioId?: SortOrder
     criadoEm?: SortOrder
     atualizadoEm?: SortOrder
@@ -14036,6 +14064,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     criadoEm?: Date | string
     atualizadoEm?: Date | string
     organizacao?: OrganizacaoCandidataCreateNestedOneWithoutCandidaturaInput
@@ -14048,6 +14077,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     criadoEm?: Date | string
     atualizadoEm?: Date | string
     organizacao?: OrganizacaoCandidataUncheckedCreateNestedOneWithoutCandidaturaInput
@@ -14109,6 +14139,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     organizacao?: OrganizacaoCandidataUpdateOneWithoutCandidaturaNestedInput
@@ -14121,6 +14152,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     organizacao?: OrganizacaoCandidataUncheckedUpdateOneWithoutCandidaturaNestedInput
@@ -14496,6 +14528,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     criadoEm?: Date | string
     atualizadoEm?: Date | string
     usuario: UsuarioCreateNestedOneWithoutCandidaturaInput
@@ -14508,6 +14541,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     usuarioId: string
     criadoEm?: Date | string
     atualizadoEm?: Date | string
@@ -14576,6 +14610,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     usuario?: UsuarioUpdateOneRequiredWithoutCandidaturaNestedInput
@@ -14588,6 +14623,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     usuarioId?: StringFieldUpdateOperationsInput | string
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14616,6 +14652,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     criadoEm?: Date | string
     atualizadoEm?: Date | string
     usuario: UsuarioCreateNestedOneWithoutCandidaturaInput
@@ -14628,6 +14665,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     usuarioId: string
     criadoEm?: Date | string
     atualizadoEm?: Date | string
@@ -14729,6 +14767,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     usuario?: UsuarioUpdateOneRequiredWithoutCandidaturaNestedInput
@@ -14741,6 +14780,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     usuarioId?: StringFieldUpdateOperationsInput | string
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15512,6 +15552,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     criadoEm?: Date | string
     atualizadoEm?: Date | string
     usuario: UsuarioCreateNestedOneWithoutCandidaturaInput
@@ -15524,6 +15565,7 @@ export namespace Prisma {
     tipoInscricao: $Enums.TipoInscricao
     status?: $Enums.Status
     oculto?: boolean
+    motivoIndeferimento?: string | null
     usuarioId: string
     criadoEm?: Date | string
     atualizadoEm?: Date | string
@@ -15710,6 +15752,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     usuario?: UsuarioUpdateOneRequiredWithoutCandidaturaNestedInput
@@ -15722,6 +15765,7 @@ export namespace Prisma {
     tipoInscricao?: EnumTipoInscricaoFieldUpdateOperationsInput | $Enums.TipoInscricao
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     oculto?: BoolFieldUpdateOperationsInput | boolean
+    motivoIndeferimento?: NullableStringFieldUpdateOperationsInput | string | null
     usuarioId?: StringFieldUpdateOperationsInput | string
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     atualizadoEm?: DateTimeFieldUpdateOperationsInput | Date | string

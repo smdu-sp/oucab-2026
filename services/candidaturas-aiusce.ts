@@ -97,12 +97,18 @@ export async function buscarCandidaturaAiuscePorId(id: string): Promise<IAiusceC
   return candidatura as IAiusceCandidaturaDetalhe;
 }
 
-export async function atualizarStatusCandidaturaAiusce(id: string, novoStatus: Status) {
+export async function atualizarStatusCandidaturaAiusce(id: string, novoStatus: Status, motivo?: string) {
   const session = await auth();
   if (!session?.user?.id) return null;
   const usuario = await db.usuario.findUnique({ where: { id: session.user.id } });
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) return null;
-  return db.candidatura.update({ where: { id }, data: { status: novoStatus } });
+  return db.candidatura.update({
+    where: { id },
+    data: {
+      status: novoStatus,
+      motivoIndeferimento: novoStatus === "INDEFERIDO" ? (motivo ?? null) : null,
+    },
+  });
 }
 
 export async function toggleOcultarCandidaturaAiusce(id: string) {
