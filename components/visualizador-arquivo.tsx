@@ -22,14 +22,25 @@ export default function VisualizadorArquivo({ nome, tipo, label, url }: Props) {
 
   return (
     <>
-      <button
-        onClick={podeVisualizar ? () => setAberto(true) : undefined}
-        className="text-sm px-3 py-2 rounded border hover:bg-muted transition-colors text-left flex items-center gap-1.5"
-      >
-        <FileText className="w-3.5 h-3.5 shrink-0" />
-        <span className="truncate max-w-[200px]">{label}</span>
-        {!podeVisualizar && <Download className="w-3 h-3 shrink-0 ml-auto" />}
-      </button>
+      {podeVisualizar ? (
+        <button
+          onClick={() => setAberto(true)}
+          className="text-sm px-3 py-2 rounded border hover:bg-muted transition-colors text-left flex items-center gap-1.5"
+        >
+          <FileText className="w-3.5 h-3.5 shrink-0" />
+          <span className="truncate max-w-[200px]">{label}</span>
+        </button>
+      ) : (
+        <a
+          href={url}
+          download={nome}
+          className="text-sm px-3 py-2 rounded border hover:bg-muted transition-colors text-left flex items-center gap-1.5"
+        >
+          <FileText className="w-3.5 h-3.5 shrink-0" />
+          <span className="truncate max-w-[200px]">{label}</span>
+          <Download className="w-3 h-3 shrink-0 ml-auto" />
+        </a>
+      )}
 
       {podeVisualizar && (
         <Dialog open={aberto} onOpenChange={setAberto}>
