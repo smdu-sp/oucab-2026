@@ -45,6 +45,7 @@ enum Status {
   EM_ANALISE
   DEFERIDO
   INDEFERIDO
+  AGUARDANDO_DOCUMENTACAO
 }
 
 enum CategoriaArquivo {
@@ -71,6 +72,7 @@ enum CategoriaArquivo {
   ELEIT_REP_CPF
   ELEIT_PROC_PROCURACAO
   ELEIT_PROC_REQUERIMENTO
+  COMPLEMENTAR
 }
 
 model Usuario {

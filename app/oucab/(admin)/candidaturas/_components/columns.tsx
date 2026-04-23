@@ -9,18 +9,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BASE_PATH } from "@/lib/config";
 import type { ICandidatura } from "@/services/candidaturas";
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
-  EM_ANALISE: "secondary",
-  DEFERIDO: "default",
-  INDEFERIDO: "destructive",
-};
-
-const statusLabel: Record<string, string> = {
-  EM_ANALISE: "Em Análise",
-  DEFERIDO: "Deferido",
-  INDEFERIDO: "Indeferido",
-};
+import { EnumBadge } from "@/components/enum-badge";
+import { STATUS_INFO, TIPO_INSCRICAO_INFO, getInfo } from "@/lib/labels";
 
 function OcultarButton({ id, oculto }: { id: string; oculto: boolean }) {
   const router = useRouter();
@@ -71,20 +61,18 @@ export function createColumns(isDev: boolean): ColumnDef<ICandidatura>[] {
     {
       accessorKey: "tipoInscricao",
       header: "Tipo",
+      cell: ({ row }) => (
+        <EnumBadge info={getInfo(TIPO_INSCRICAO_INFO, row.original.tipoInscricao)} />
+      ),
     },
     {
       accessorKey: "status",
       header: () => <p className="text-center">Status</p>,
-      cell: ({ row }) => {
-        const status = row.original.status;
-        return (
-          <div className="flex justify-center">
-            <Badge variant={statusVariant[status] ?? "secondary"}>
-              {statusLabel[status] ?? status}
-            </Badge>
-          </div>
-        );
-      },
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <EnumBadge info={getInfo(STATUS_INFO, row.original.status)} />
+        </div>
+      ),
     },
     {
       id: "actions",

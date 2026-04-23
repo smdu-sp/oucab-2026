@@ -1,0 +1,21 @@
+import { cn } from "@/lib/utils";
+import type { LabelInfo } from "@/lib/labels";
+
+interface EnumBadgeProps {
+  info: LabelInfo;
+  className?: string;
+}
+
+export function EnumBadge({ info, className }: EnumBadgeProps) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+        info.className,
+        className,
+      )}
+    >
+      {info.label}
+    </span>
+  );
+}

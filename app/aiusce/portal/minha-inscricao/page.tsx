@@ -6,17 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
-
-const statusLabel: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
-  EM_ANALISE: { label: "Em Análise", variant: "secondary" },
-  DEFERIDO: { label: "Deferido", variant: "default" },
-  INDEFERIDO: { label: "Indeferido", variant: "destructive" },
-};
-
-const segmentoLabel: Record<string, string> = {
-  ONG_CULTURAL: "ONG Cultural",
-  ENTIDADE_URB_AMB: "Entidade profissional, acadêmica ou de pesquisa",
-};
+import DocComplementarSection from "@/components/doc-complementar-section";
+import { EnumBadge } from "@/components/enum-badge";
+import { STATUS_INFO, SEGMENTO_INFO, TIPO_INSCRICAO_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
 
 function cnpjFormatado(cnpj: string) {
   return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
@@ -57,9 +49,7 @@ export default async function MinhaInscricaoPage() {
   if (!candidatura && !eleitor) redirect("/aiusce/login");
 
   const isCandidato = !!candidatura;
-  const { label: statusLbl, variant } = statusLabel[
-    (candidatura?.status ?? eleitor?.status ?? "EM_ANALISE")
-  ] ?? { label: "Em Análise", variant: "secondary" };
+  const statusAtual = candidatura?.status ?? eleitor?.status ?? "EM_ANALISE";
 
   return (
     <div className="space-y-6">
@@ -75,10 +65,8 @@ export default async function MinhaInscricaoPage() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Badge variant="outline">
-            {isCandidato ? "Candidato" : "Eleitor"}
-          </Badge>
-          <Badge variant={variant}>{statusLbl}</Badge>
+          <EnumBadge info={getInfo(TIPO_INSCRICAO_INFO, isCandidato ? "CANDIDATO" : "ELEITOR")} />
+          <EnumBadge info={getInfo(STATUS_INFO, statusAtual)} />
         </div>
       </div>
 
@@ -91,7 +79,7 @@ export default async function MinhaInscricaoPage() {
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Razão Social:</span> <span className="font-medium">{candidatura.organizacao.razaoSocial}</span></div>
                 <div><span className="text-muted-foreground">CNPJ:</span> <span className="font-medium">{cnpjFormatado(candidatura.organizacao.cnpj)}</span></div>
-                <div><span className="text-muted-foreground">Segmento:</span> <span className="font-medium">{segmentoLabel[candidatura.organizacao.segmento]}</span></div>
+                <div><span className="text-muted-foreground">Segmento:</span> <EnumBadge info={getInfo(SEGMENTO_INFO, candidatura.organizacao.segmento)} /></div>
                 <div><span className="text-muted-foreground">Sede:</span> <span className="font-medium">{candidatura.organizacao.sede}</span></div>
                 <div><span className="text-muted-foreground">E-mail:</span> <span className="font-medium">{candidatura.organizacao.emailEntidade}</span></div>
                 {candidatura.organizacao.telefone && (
@@ -137,6 +125,11 @@ export default async function MinhaInscricaoPage() {
             </Card>
           ))}
 
+          <DocComplementarSection
+            apiBase="/api/aiusce/portal/doc-complementar"
+            linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUSCE}
+          />
+
           <Card>
             <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
             <CardContent>
@@ -178,7 +171,7 @@ export default async function MinhaInscricaoPage() {
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Razão Social:</span> <span className="font-medium">{eleitor.organizacao.razaoSocial}</span></div>
                 <div><span className="text-muted-foreground">CNPJ:</span> <span className="font-medium">{cnpjFormatado(eleitor.organizacao.cnpj)}</span></div>
-                <div><span className="text-muted-foreground">Segmento:</span> <span className="font-medium">{segmentoLabel[eleitor.organizacao.segmento]}</span></div>
+                <div><span className="text-muted-foreground">Segmento:</span> <EnumBadge info={getInfo(SEGMENTO_INFO, eleitor.organizacao.segmento)} /></div>
                 <div><span className="text-muted-foreground">Sede:</span> <span className="font-medium">{eleitor.organizacao.sede}</span></div>
                 <div><span className="text-muted-foreground">E-mail:</span> <span className="font-medium">{eleitor.organizacao.emailEntidade}</span></div>
                 {eleitor.organizacao.telefone && (

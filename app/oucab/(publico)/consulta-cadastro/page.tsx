@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { BASE_PATH } from "@/lib/config";
+import { EnumBadge } from "@/components/enum-badge";
+import { STATUS_INFO, getInfo } from "@/lib/labels";
 
 type ConsultaResposta = {
   found: boolean;
   cpf?: string;
   nome?: string | null;
-  status?: "EM_ANALISE" | "DEFERIDO" | "INDEFERIDO" | null;
+  status?: "EM_ANALISE" | "DEFERIDO" | "INDEFERIDO" | "AGUARDANDO_DOCUMENTACAO" | null;
   criadoEm?: string;
   atualizadoEm?: string;
 };
@@ -46,18 +48,6 @@ function validarCPF(valor: string) {
   return resto === parseInt(cpf[10]);
 }
 
-function statusLabel(s?: ConsultaResposta["status"]) {
-  switch (s) {
-    case "EM_ANALISE":
-      return { texto: "Em análise", estilo: "bg-yellow-500" };
-    case "DEFERIDO":
-      return { texto: "Deferido", estilo: "bg-green-600" };
-    case "INDEFERIDO":
-      return { texto: "Indeferido", estilo: "bg-red-600" };
-    default:
-      return { texto: "Não encontrado", estilo: "bg-gray-500" };
-  }
-}
 
 export default function ConsultaCadastroPage() {
   const [cpfEntrada, setCpfEntrada] = useState("");
@@ -87,8 +77,6 @@ export default function ConsultaCadastroPage() {
       setCarregando(false);
     }
   }
-
-  const badge = statusLabel(resultado?.status ?? null);
 
   return (
     <div className="space-y-8">
@@ -125,7 +113,10 @@ export default function ConsultaCadastroPage() {
                 {resultado.nome && (
                   <div className="text-sm text-muted-foreground">{resultado.nome}</div>
                 )}
-                <Badge className={`${badge.estilo} text-white`}>{badge.texto}</Badge>
+                {resultado.status
+                  ? <EnumBadge info={getInfo(STATUS_INFO, resultado.status)} />
+                  : <EnumBadge info={{ label: "Não encontrado", className: "bg-gray-100 text-gray-700 border-gray-300" }} />
+                }
               </div>
             )}
           </CardContent>

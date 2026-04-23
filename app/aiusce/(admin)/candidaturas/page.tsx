@@ -46,6 +46,7 @@ async function CandidaturasAiusce({
     { label: "Em Análise", value: "EM_ANALISE" },
     { label: "Deferido", value: "DEFERIDO" },
     { label: "Indeferido", value: "INDEFERIDO" },
+    { label: "Aguardando Documentação", value: "AGUARDANDO_DOCUMENTACAO" },
   ];
 
   return (

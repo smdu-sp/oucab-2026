@@ -13,23 +13,8 @@ import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
 import { BASE_PATH } from "@/lib/config";
 import VisualizadorArquivo from "@/components/visualizador-arquivo";
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
-  EM_ANALISE: "secondary",
-  DEFERIDO: "default",
-  INDEFERIDO: "destructive",
-};
-
-const statusLabel: Record<string, string> = {
-  EM_ANALISE: "Em Análise",
-  DEFERIDO: "Deferido",
-  INDEFERIDO: "Indeferido",
-};
-
-const segmentoLabel: Record<string, string> = {
-  ONG_CULTURAL: "ONG Cultural",
-  ENTIDADE_URB_AMB: "Entidade Urbana / Ambiental",
-};
+import { EnumBadge } from "@/components/enum-badge";
+import { STATUS_INFO, SEGMENTO_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
 
 const categoriaLabel: Record<string, string> = {
   ELET_ENT_REQUERIMENTO: "Requerimento (Entidade)",
@@ -73,9 +58,7 @@ export default async function EleitorAiusceDetalhe({
           <h1 className="text-xl md:text-4xl font-bold">Eleitor AIUSCE</h1>
           <p className="text-muted-foreground text-sm mt-1">Criado em {fmt(eleitor.criadoEm)}</p>
         </div>
-        <Badge variant={statusVariant[eleitor.status] ?? "secondary"} className="text-sm px-3 py-1">
-          {statusLabel[eleitor.status] ?? eleitor.status}
-        </Badge>
+        <EnumBadge info={getInfo(STATUS_INFO, eleitor.status)} className="text-sm px-3 py-1" />
       </div>
 
       {isDev && eleitor.oculto && (
@@ -90,8 +73,9 @@ export default async function EleitorAiusceDetalhe({
       {cand && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              {cand.tipoCandidato === "TITULAR" ? "Titular" : "Suplente"} (Candidato)
+            <CardTitle className="flex items-center gap-2">
+              <EnumBadge info={getInfo(TIPO_CANDIDATO_INFO, cand.tipoCandidato)} />
+              Candidato
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -151,7 +135,7 @@ export default async function EleitorAiusceDetalhe({
             </div>
             <div>
               <p className="text-muted-foreground">Segmento</p>
-              <p className="font-medium">{segmentoLabel[org.segmento] ?? org.segmento}</p>
+              <EnumBadge info={getInfo(SEGMENTO_INFO, org.segmento)} />
             </div>
             <div>
               <p className="text-muted-foreground">Data de Abertura</p>
@@ -212,9 +196,7 @@ export default async function EleitorAiusceDetalhe({
                     <div key={m.id} className="rounded-lg border p-3 space-y-1 text-sm">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{m.candidato.nomeSocial ?? m.candidato.nome}</span>
-                        <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
-                          {m.candidato.tipoCandidato === "TITULAR" ? "Titular" : "Suplente"}
-                        </span>
+                        <EnumBadge info={getInfo(TIPO_CANDIDATO_INFO, m.candidato.tipoCandidato)} />
                       </div>
                       <p className="text-muted-foreground">CPF: {m.candidato.cpf}</p>
                       {m.candidato.tituloEleitor && (

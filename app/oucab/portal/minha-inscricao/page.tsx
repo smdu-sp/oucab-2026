@@ -6,21 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
-
-const statusLabel: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
-  EM_ANALISE: { label: "Em Análise", variant: "secondary" },
-  DEFERIDO: { label: "Deferido", variant: "default" },
-  INDEFERIDO: { label: "Indeferido", variant: "destructive" },
-};
-
-const tipoInscricaoLabel: Record<string, string> = {
-  MORADOR: "Morador(a)",
-  TRABALHADOR: "Trabalhador(a)",
-  REP_MORADIA: "Rep. Movimento de Moradia",
-  REP_ONGS: "Rep. ONG",
-  REP_PROFISSIONAIS: "Rep. Entidade Profissional",
-  REP_EMPRESARIAIS: "Rep. Entidade Empresarial",
-};
+import DocComplementarSection from "@/components/doc-complementar-section";
+import { EnumBadge } from "@/components/enum-badge";
+import { STATUS_INFO, TIPO_INSCRICAO_INFO, TIPO_CADASTRO_INFO, getInfo } from "@/lib/labels";
 
 export default async function MinhaInscricaoPage() {
   const session = await auth();
@@ -47,9 +35,6 @@ export default async function MinhaInscricaoPage() {
     cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   const cepFormatado = candidatura.endereco?.cep.replace(/(\d{5})(\d{3})/, "$1-$2") ?? "";
 
-  const { label: statusLbl, variant } =
-    statusLabel[candidatura.status] ?? { label: candidatura.status, variant: "secondary" };
-
   const isRep = ["REP_MORADIA", "REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(
     candidatura.tipoInscricao
   );
@@ -64,9 +49,9 @@ export default async function MinhaInscricaoPage() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Badge variant="outline">Candidato(a)</Badge>
-          <Badge variant="outline">{tipoInscricaoLabel[candidatura.tipoInscricao] ?? candidatura.tipoInscricao}</Badge>
-          <Badge variant={variant}>{statusLbl}</Badge>
+          <EnumBadge info={getInfo(TIPO_CADASTRO_INFO, candidatura.tipoCadastro)} />
+          <EnumBadge info={getInfo(TIPO_INSCRICAO_INFO, candidatura.tipoInscricao)} />
+          <EnumBadge info={getInfo(STATUS_INFO, candidatura.status)} />
         </div>
       </div>
 
@@ -184,6 +169,11 @@ export default async function MinhaInscricaoPage() {
           </CardContent>
         </Card>
       )}
+
+      <DocComplementarSection
+        apiBase="/api/portal/doc-complementar"
+        linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB}
+      />
 
       <Card>
         <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>

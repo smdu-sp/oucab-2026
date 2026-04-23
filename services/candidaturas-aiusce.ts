@@ -1,6 +1,8 @@
 import { dbAiusce as db } from "@/lib/prisma-aiusce";
 import { verificaLimite, verificaPagina } from "@/lib/utils";
 import { auth } from "@/auth/aiusce";
+import { sendEmail, emailAtualizacaoStatus } from "@/lib/email";
+import { DOC_COMPLEMENTAR_FIM_AIUSCE } from "@/lib/config";
 import type {
   Arquivo, Candidato, Candidatura, Eleitor, OrganizacaoCandidata,
   OrganizacaoEleitora, Procurador, Status, TipoInscricao, Usuario,
@@ -102,13 +104,31 @@ export async function atualizarStatusCandidaturaAiusce(id: string, novoStatus: S
   if (!session?.user?.id) return null;
   const usuario = await db.usuario.findUnique({ where: { id: session.user.id } });
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) return null;
-  return db.candidatura.update({
+  const existe = await db.candidatura.findUnique({ where: { id }, include: { usuario: true } });
+  if (!existe) return null;
+  const resultado = await db.candidatura.update({
     where: { id },
     data: {
       status: novoStatus,
       motivoIndeferimento: novoStatus === "INDEFERIDO" ? (motivo ?? null) : null,
     },
   });
+
+  if (["DEFERIDO", "INDEFERIDO", "AGUARDANDO_DOCUMENTACAO"].includes(novoStatus)) {
+    const portalUrl = `${process.env.AUTH_URL?.replace("/api/auth", "") ?? ""}/aiusce/portal/minha-inscricao`;
+    const { html, text } = emailAtualizacaoStatus({
+      nome: existe.usuario.nome,
+      novoStatus: novoStatus as "DEFERIDO" | "INDEFERIDO" | "AGUARDANDO_DOCUMENTACAO",
+      motivo,
+      portalUrl,
+      sistemaLabel: "AIUSCE 2026",
+      prazoDocFim: novoStatus === "AGUARDANDO_DOCUMENTACAO" ? DOC_COMPLEMENTAR_FIM_AIUSCE : undefined,
+      linkOrientacaoDoc: process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUSCE || undefined,
+    });
+    sendEmail({ to: existe.usuario.email, subject: `AIUSCE 2026 — Atualização da sua inscrição`, html, text }).catch(console.error);
+  }
+
+  return resultado;
 }
 
 export async function toggleOcultarCandidaturaAiusce(id: string) {

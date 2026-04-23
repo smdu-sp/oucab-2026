@@ -19,3 +19,27 @@ export const PRAZO_INSCRICAO_AIUSCE = new Date(
 export function prazoAiusceEncerrado(): boolean {
   return new Date() > PRAZO_INSCRICAO_AIUSCE;
 }
+
+export const DOC_COMPLEMENTAR_INICIO = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_INICIO ?? "2026-06-01T00:00:00.000Z"
+);
+export const DOC_COMPLEMENTAR_FIM = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_FIM ?? "2026-06-15T23:59:59.999Z"
+);
+
+export function periodoDocComplementarAberto(): boolean {
+  const agora = new Date();
+  return agora >= DOC_COMPLEMENTAR_INICIO && agora <= DOC_COMPLEMENTAR_FIM;
+}
+
+export const DOC_COMPLEMENTAR_INICIO_AIUSCE = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_INICIO_AIUSCE ?? "2026-06-01T00:00:00.000Z"
+);
+export const DOC_COMPLEMENTAR_FIM_AIUSCE = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_FIM_AIUSCE ?? "2026-06-15T23:59:59.999Z"
+);
+
+export function periodoDocComplementarAbertoAiusce(): boolean {
+  const agora = new Date();
+  return agora >= DOC_COMPLEMENTAR_INICIO_AIUSCE && agora <= DOC_COMPLEMENTAR_FIM_AIUSCE;
+}

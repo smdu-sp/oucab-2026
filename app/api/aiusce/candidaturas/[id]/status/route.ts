@@ -11,7 +11,7 @@ export async function PATCH(
   const novoStatus = body.status as Status;
   const motivo = body.motivo as string | undefined;
 
-  if (!["EM_ANALISE", "DEFERIDO", "INDEFERIDO"].includes(novoStatus)) {
+  if (!["EM_ANALISE", "DEFERIDO", "INDEFERIDO", "AGUARDANDO_DOCUMENTACAO"].includes(novoStatus)) {
     return NextResponse.json({ error: "Status inválido" }, { status: 400 });
   }
 

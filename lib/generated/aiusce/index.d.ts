@@ -111,7 +111,8 @@ export type Genero = (typeof Genero)[keyof typeof Genero]
 export const Status: {
   EM_ANALISE: 'EM_ANALISE',
   DEFERIDO: 'DEFERIDO',
-  INDEFERIDO: 'INDEFERIDO'
+  INDEFERIDO: 'INDEFERIDO',
+  AGUARDANDO_DOCUMENTACAO: 'AGUARDANDO_DOCUMENTACAO'
 };
 
 export type Status = (typeof Status)[keyof typeof Status]
@@ -140,7 +141,8 @@ export const CategoriaArquivo: {
   ELEIT_REP_TITULO_ELEITOR: 'ELEIT_REP_TITULO_ELEITOR',
   ELEIT_REP_CPF: 'ELEIT_REP_CPF',
   ELEIT_PROC_PROCURACAO: 'ELEIT_PROC_PROCURACAO',
-  ELEIT_PROC_REQUERIMENTO: 'ELEIT_PROC_REQUERIMENTO'
+  ELEIT_PROC_REQUERIMENTO: 'ELEIT_PROC_REQUERIMENTO',
+  COMPLEMENTAR: 'COMPLEMENTAR'
 };
 
 export type CategoriaArquivo = (typeof CategoriaArquivo)[keyof typeof CategoriaArquivo]

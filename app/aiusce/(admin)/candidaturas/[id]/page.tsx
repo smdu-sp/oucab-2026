@@ -13,28 +13,8 @@ import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
 import { BASE_PATH } from "@/lib/config";
 import VisualizadorArquivo from "@/components/visualizador-arquivo";
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
-  EM_ANALISE: "secondary",
-  DEFERIDO: "default",
-  INDEFERIDO: "destructive",
-};
-
-const statusLabel: Record<string, string> = {
-  EM_ANALISE: "Em Análise",
-  DEFERIDO: "Deferido",
-  INDEFERIDO: "Indeferido",
-};
-
-const segmentoLabel: Record<string, string> = {
-  ONG_CULTURAL: "ONG Cultural",
-  ENTIDADE_URB_AMB: "Entidade Urbana / Ambiental",
-};
-
-const tipoCandidatoLabel: Record<string, string> = {
-  TITULAR: "Titular",
-  SUPLENTE: "Suplente",
-};
+import { EnumBadge } from "@/components/enum-badge";
+import { STATUS_INFO, SEGMENTO_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
 
 const generoLabel: Record<string, string> = {
   MASCULINO: "Masculino",
@@ -85,9 +65,7 @@ export default async function CandidaturaAiusceDetalhe({
           <h1 className="text-xl md:text-4xl font-bold">Candidatura AIUSCE</h1>
           <p className="text-muted-foreground text-sm mt-1">Criada em {fmt(candidatura.criadoEm)}</p>
         </div>
-        <Badge variant={statusVariant[candidatura.status] ?? "secondary"} className="text-sm px-3 py-1">
-          {statusLabel[candidatura.status] ?? candidatura.status}
-        </Badge>
+        <EnumBadge info={getInfo(STATUS_INFO, candidatura.status)} className="text-sm px-3 py-1" />
       </div>
 
       {candidatura.status === "INDEFERIDO" && candidatura.motivoIndeferimento && (
@@ -120,7 +98,7 @@ export default async function CandidaturaAiusceDetalhe({
             </div>
             <div>
               <p className="text-muted-foreground">Segmento</p>
-              <p className="font-medium">{segmentoLabel[org.segmento] ?? org.segmento}</p>
+              <EnumBadge info={getInfo(SEGMENTO_INFO, org.segmento)} />
             </div>
             <div>
               <p className="text-muted-foreground">Data de Abertura</p>
@@ -160,7 +138,7 @@ export default async function CandidaturaAiusceDetalhe({
           <CardContent className="space-y-6">
             {candidatura.candidatos.map((c) => (
               <div key={c.id} className="border rounded-lg p-4 space-y-3">
-                <Badge variant="outline">{tipoCandidatoLabel[c.tipoCandidato] ?? c.tipoCandidato}</Badge>
+                <EnumBadge info={getInfo(TIPO_CANDIDATO_INFO, c.tipoCandidato)} />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Nome</p>

@@ -2,6 +2,8 @@ import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { verificaLimite, verificaPagina } from "@/lib/utils";
 import { retornaPermissao } from "./usuario";
+import { sendEmail, emailAtualizacaoStatus } from "@/lib/email";
+import { DOC_COMPLEMENTAR_FIM } from "@/lib/config";
 import type {
   Arquivo, Candidato, Candidatura, Eleitor, Endereco,
   Organizacao, Status, TipoCandidato, TipoInscricao, Usuario,
@@ -108,15 +110,31 @@ export async function atualizarStatusCandidatura(
 ) {
   const permissao = await retornaPermissao(usuarioId);
   if (!permissao || !["DEV", "ADM"].includes(permissao)) return null;
-  const existe = await db.candidatura.findUnique({ where: { id } });
+  const existe = await db.candidatura.findUnique({ where: { id }, include: { usuario: true } });
   if (!existe) return null;
-  return db.candidatura.update({
+  const resultado = await db.candidatura.update({
     where: { id },
     data: {
       status: novoStatus,
       motivoIndeferimento: novoStatus === "INDEFERIDO" ? (motivo ?? null) : null,
     },
   });
+
+  if (["DEFERIDO", "INDEFERIDO", "AGUARDANDO_DOCUMENTACAO"].includes(novoStatus)) {
+    const portalUrl = `${process.env.AUTH_URL?.replace("/api/auth", "") ?? ""}/oucab/portal/minha-inscricao`;
+    const { html, text } = emailAtualizacaoStatus({
+      nome: existe.usuario.nome,
+      novoStatus: novoStatus as "DEFERIDO" | "INDEFERIDO" | "AGUARDANDO_DOCUMENTACAO",
+      motivo,
+      portalUrl,
+      sistemaLabel: "OUCAB 2026",
+      prazoDocFim: novoStatus === "AGUARDANDO_DOCUMENTACAO" ? DOC_COMPLEMENTAR_FIM : undefined,
+      linkOrientacaoDoc: process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB || undefined,
+    });
+    sendEmail({ to: existe.usuario.email, subject: `OUCAB 2026 — Atualização da sua inscrição`, html, text }).catch(console.error);
+  }
+
+  return resultado;
 }
 
 export async function toggleOcultarCandidatura(id: string, usuarioId: string) {

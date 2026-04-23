@@ -9,28 +9,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BASE_PATH } from "@/lib/config";
 import type { IAiusceEleitor } from "@/services/candidaturas-aiusce";
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
-  EM_ANALISE: "secondary",
-  DEFERIDO: "default",
-  INDEFERIDO: "destructive",
-};
-
-const statusLabel: Record<string, string> = {
-  EM_ANALISE: "Em Análise",
-  DEFERIDO: "Deferido",
-  INDEFERIDO: "Indeferido",
-};
-
-const segmentoLabel: Record<string, string> = {
-  ONG_CULTURAL: "ONG Cultural",
-  ENTIDADE_URB_AMB: "Entidade Urb./Amb.",
-};
-
-const tipoCandidatoLabel: Record<string, string> = {
-  TITULAR: "Titular",
-  SUPLENTE: "Suplente",
-};
+import { EnumBadge } from "@/components/enum-badge";
+import { STATUS_INFO, SEGMENTO_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
 
 function OcultarButton({ id, oculto }: { id: string; oculto: boolean }) {
   const router = useRouter();
@@ -72,7 +52,7 @@ export function createColumns(isDev: boolean): ColumnDef<IAiusceEleitor>[] {
             ? (
               <span className="flex items-center gap-2">
                 {candidato.nome}
-                <Badge variant="outline" className="text-xs">{tipoCandidatoLabel[candidato.tipoCandidato] ?? candidato.tipoCandidato}</Badge>
+                <EnumBadge info={getInfo(TIPO_CANDIDATO_INFO, candidato.tipoCandidato)} />
               </span>
             )
             : "—";
@@ -95,21 +75,18 @@ export function createColumns(isDev: boolean): ColumnDef<IAiusceEleitor>[] {
     {
       accessorKey: "organizacao.segmento",
       header: "Segmento",
-      cell: ({ row }) => segmentoLabel[row.original.organizacao?.segmento ?? ""] ?? "—",
+      cell: ({ row }) => row.original.organizacao?.segmento
+        ? <EnumBadge info={getInfo(SEGMENTO_INFO, row.original.organizacao.segmento)} />
+        : "—",
     },
     {
       accessorKey: "status",
       header: () => <p className="text-center">Status</p>,
-      cell: ({ row }) => {
-        const status = row.original.status;
-        return (
-          <div className="flex justify-center">
-            <Badge variant={statusVariant[status] ?? "secondary"}>
-              {statusLabel[status] ?? status}
-            </Badge>
-          </div>
-        );
-      },
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <EnumBadge info={getInfo(STATUS_INFO, row.original.status)} />
+        </div>
+      ),
     },
     {
       accessorKey: "arquivos",

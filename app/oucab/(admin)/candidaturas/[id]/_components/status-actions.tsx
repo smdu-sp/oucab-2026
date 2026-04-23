@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, EyeOff, Eye } from 'lucide-react';
+import { CheckCircle, XCircle, EyeOff, Eye, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { BASE_PATH } from '@/lib/config';
 import {
@@ -76,6 +76,14 @@ export function StatusActions({ id, statusAtual, isDev, oculto }: StatusActionsP
           onClick={() => setDialogAberto(true)}>
           <XCircle className='mr-2 h-4 w-4' />
           Indeferir
+        </Button>
+        <Button
+          variant='outline'
+          disabled={loading || statusAtual === 'AGUARDANDO_DOCUMENTACAO'}
+          onClick={() => atualizar('AGUARDANDO_DOCUMENTACAO')}
+          className='border-amber-500 text-amber-600 hover:bg-amber-50'>
+          <Clock className='mr-2 h-4 w-4' />
+          Aguardar Doc. Complementar
         </Button>
         {statusAtual !== 'EM_ANALISE' && (
           <Button variant='outline' disabled={loading} onClick={() => atualizar('EM_ANALISE')}>

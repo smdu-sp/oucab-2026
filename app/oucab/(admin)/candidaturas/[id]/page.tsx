@@ -15,27 +15,8 @@ import { ptBR } from 'date-fns/locale';
 import { formatDateBR } from '@/lib/utils';
 import { BASE_PATH } from '@/lib/config';
 import VisualizadorArquivo from '@/components/visualizador-arquivo';
-
-const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
-	EM_ANALISE: 'secondary',
-	DEFERIDO: 'default',
-	INDEFERIDO: 'destructive',
-};
-
-const statusLabel: Record<string, string> = {
-	EM_ANALISE: 'Em Análise',
-	DEFERIDO: 'Deferido',
-	INDEFERIDO: 'Indeferido',
-};
-
-const tipoLabel: Record<string, string> = {
-	MORADOR: 'Morador',
-	TRABALHADOR: 'Trabalhador',
-	REP_MORADIA: 'Representante de Moradia',
-	REP_ONGS: 'Representante de ONGs',
-	REP_PROFISSIONAIS: 'Representante de Profissionais',
-	REP_EMPRESARIAIS: 'Representante Empresarial',
-};
+import { EnumBadge } from '@/components/enum-badge';
+import { STATUS_INFO, TIPO_INSCRICAO_INFO, TIPO_CADASTRO_INFO, TIPO_CANDIDATO_INFO, getInfo } from '@/lib/labels';
 
 const categoriaLabel: Record<string, string> = {
 	REQUERIMENTO: 'Requerimento',
@@ -94,9 +75,7 @@ export default async function CandidaturaDetalhe({
 						Criada em {formatDate(candidatura.criadoEm)}
 					</p>
 				</div>
-				<Badge variant={statusVariant[candidatura.status] ?? 'secondary'} className='text-sm px-3 py-1'>
-					{statusLabel[candidatura.status] ?? candidatura.status}
-				</Badge>
+				<EnumBadge info={getInfo(STATUS_INFO, candidatura.status)} className='text-sm px-3 py-1' />
 			</div>
 
 			{candidatura.status === 'INDEFERIDO' && candidatura.motivoIndeferimento && (
@@ -130,11 +109,11 @@ export default async function CandidaturaDetalhe({
 					</div>
 					<div>
 						<p className='text-muted-foreground'>Tipo de Inscrição</p>
-						<p className='font-medium'>{tipoLabel[candidatura.tipoInscricao] ?? candidatura.tipoInscricao}</p>
+						<EnumBadge info={getInfo(TIPO_INSCRICAO_INFO, candidatura.tipoInscricao)} />
 					</div>
 					<div>
 						<p className='text-muted-foreground'>Tipo de Cadastro</p>
-						<p className='font-medium'>{candidatura.tipoCadastro === 'CANDIDATO' ? 'Candidato' : 'Eleitor'}</p>
+						<EnumBadge info={getInfo(TIPO_CADASTRO_INFO, candidatura.tipoCadastro)} />
 					</div>
 				</CardContent>
 			</Card>
@@ -268,7 +247,7 @@ export default async function CandidaturaDetalhe({
 						{candidatura.candidatos.map((candidato) => (
 							<div key={candidato.id} className='border rounded-lg p-4 space-y-3'>
 								<div className='flex items-center gap-2'>
-									<Badge variant='outline'>{candidato.tipoCandidato}</Badge>
+									<EnumBadge info={getInfo(TIPO_CANDIDATO_INFO, candidato.tipoCandidato)} />
 								</div>
 								<div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-sm'>
 									<div>
