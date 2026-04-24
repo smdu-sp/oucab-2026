@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { verificaLimite, verificaPagina } from "@/lib/utils";
 import { retornaPermissao } from "./usuario";
 import { sendEmail, emailAtualizacaoStatus } from "@/lib/email";
-import { DOC_COMPLEMENTAR_FIM } from "@/lib/config";
+import { APP_URL, DOC_COMPLEMENTAR_FIM } from "@/lib/config";
 import type {
   Arquivo, Candidato, Candidatura, Eleitor, Endereco,
   Organizacao, Status, TipoCandidato, TipoInscricao, Usuario,
@@ -121,7 +121,7 @@ export async function atualizarStatusCandidatura(
   });
 
   if (["DEFERIDO", "INDEFERIDO", "AGUARDANDO_DOCUMENTACAO"].includes(novoStatus)) {
-    const portalUrl = `${process.env.AUTH_URL?.replace("/api/auth", "") ?? ""}/oucab/portal/minha-inscricao`;
+    const portalUrl = `${APP_URL}/oucab/portal/minha-inscricao`;
     const { html, text } = emailAtualizacaoStatus({
       nome: existe.usuario.nome,
       novoStatus: novoStatus as "DEFERIDO" | "INDEFERIDO" | "AGUARDANDO_DOCUMENTACAO",

@@ -37,7 +37,7 @@ export interface SistemaIdentidade {
 }
 
 export function identidadeOucab(): SistemaIdentidade {
-  const base = process.env.AUTH_URL?.replace("/api/auth", "") ?? process.env.NEXTAUTH_URL ?? "";
+  const base = process.env.APP_URL ?? "";
   return {
     label: "OUCAB 2026",
     nomeCompleto: "Operação Urbana Consorciada Água Branca",
@@ -48,7 +48,7 @@ export function identidadeOucab(): SistemaIdentidade {
 }
 
 export function identidadeAiusce(): SistemaIdentidade {
-  const base = process.env.AUTH_URL?.replace("/api/auth", "") ?? process.env.NEXTAUTH_URL ?? "";
+  const base = process.env.APP_URL ?? "";
   return {
     label: "AIUSCE 2026",
     nomeCompleto: "Associação de Interessados na Urbanização e Saneamento do Centro Expandido",

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       data: { senha: hash, primeiroAcesso: true },
     });
 
-    const portalUrl = `${process.env.NEXTAUTH_URL ?? ""}/oucab/login`;
+    const portalUrl = `${process.env.APP_URL ?? ""}/oucab/login`;
     const { html, text } = emailRecuperacaoSenha({
       nome: usuario.nome,
       senha: novaSenha,

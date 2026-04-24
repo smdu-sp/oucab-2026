@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       data: { senha: hash, primeiroAcesso: true },
     });
 
-    const portalUrl = `${process.env.NEXTAUTH_URL ?? ""}/aiusce/login`;
+    const portalUrl = `${process.env.APP_URL ?? ""}/aiusce/login`;
     const { html, text } = emailRecuperacaoSenha({
       nome: usuario.nome,
       senha: novaSenha,

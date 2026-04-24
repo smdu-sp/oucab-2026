@@ -504,6 +504,7 @@ export async function POST(request: NextRequest) {
         cpf,
         senha: senhaPlana,
         tipoCadastro,
+        portalUrl: `${process.env.APP_URL ?? ""}/oucab/login`,
       });
       await sendEmail({ to: email, subject: "OUCAB 2026 — Cadastro realizado", html, text }).catch(console.error);
     } else {
