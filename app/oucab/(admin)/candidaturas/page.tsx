@@ -28,7 +28,7 @@ async function Candidaturas({
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	let { pagina = 1, limite = 10, total = 0 } = await searchParams;
-	const { busca = '', tipoInscricao = '', status = '' } = await searchParams;
+	const { busca = '', tipoInscricao = '', status = '', areaPerimetro = '' } = await searchParams;
 	let dados: ICandidatura[] = [];
 
 	const usuario = await validaUsuario();
@@ -44,6 +44,7 @@ async function Candidaturas({
 			busca as string,
 			tipoInscricao as string,
 			status as string,
+			areaPerimetro as string,
 		);
 		if (response) {
 			const paginado = response as ICandidaturaPaginada;
@@ -70,6 +71,11 @@ async function Candidaturas({
 		{ label: 'Aguardando Documentação', value: 'AGUARDANDO_DOCUMENTACAO' },
 	];
 
+	const areaPerimetroSelect = [
+		{ label: 'Adesão', value: 'ADESAO' },
+		{ label: 'Expandido', value: 'EXPANDIDO' },
+	];
+
 	return (
 		<div className='px-0 md:px-8 relative pb-20 md:pb-14 h-full container mx-auto'>
 			<h1 className='text-xl md:text-4xl font-bold'>Candidaturas</h1>
@@ -93,6 +99,12 @@ async function Candidaturas({
 							tag: 'status',
 							tipo: 2,
 							valores: statusSelect,
+						},
+						{
+							nome: 'Perímetro',
+							tag: 'areaPerimetro',
+							tipo: 2,
+							valores: areaPerimetroSelect,
 						},
 					]}
 				/>

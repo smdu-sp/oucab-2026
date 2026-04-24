@@ -6,7 +6,7 @@ import { sendEmail, emailAtualizacaoStatus } from "@/lib/email";
 import { APP_URL, DOC_COMPLEMENTAR_FIM } from "@/lib/config";
 import type {
   Arquivo, Candidato, Candidatura, Eleitor, Endereco,
-  Organizacao, Status, TipoCandidato, TipoInscricao, Usuario,
+  Organizacao, Status, TipoCandidato, TipoInscricao, Usuario, AreaPerimetro,
 } from "@prisma/client";
 
 export interface ICandidaturaPaginada {
@@ -45,6 +45,7 @@ export async function buscarCandidaturas(
   busca?: string,
   tipoInscricao?: string,
   status?: string,
+  areaPerimetro?: string,
 ) {
   [pagina, limite] = verificaPagina(pagina, limite);
   const isDev = await isDevSession();
@@ -62,6 +63,9 @@ export async function buscarCandidaturas(
       tipoInscricao: tipoInscricao as TipoInscricao,
     }),
     ...(status && status !== "all" && { status: status as Status }),
+    ...(areaPerimetro && areaPerimetro !== "all" && {
+      endereco: { areaPerimetro: areaPerimetro as AreaPerimetro },
+    }),
   };
 
   const total = await db.candidatura.count({ where });

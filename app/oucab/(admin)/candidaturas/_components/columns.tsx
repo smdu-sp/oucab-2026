@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { BASE_PATH } from "@/lib/config";
 import type { ICandidatura } from "@/services/candidaturas";
 import { EnumBadge } from "@/components/enum-badge";
-import { STATUS_INFO, TIPO_INSCRICAO_INFO, getInfo } from "@/lib/labels";
+import { STATUS_INFO, TIPO_INSCRICAO_INFO, AREA_PERIMETRO_INFO, getInfo } from "@/lib/labels";
 
 function OcultarButton({ id, oculto }: { id: string; oculto: boolean }) {
   const router = useRouter();
@@ -64,6 +64,17 @@ export function createColumns(isDev: boolean): ColumnDef<ICandidatura>[] {
       cell: ({ row }) => (
         <EnumBadge info={getInfo(TIPO_INSCRICAO_INFO, row.original.tipoInscricao)} />
       ),
+    },
+    {
+      id: "areaPerimetro",
+      header: "Perímetro",
+      cell: ({ row }) => {
+        const tipo = row.original.tipoInscricao;
+        if (tipo !== "MORADOR" && tipo !== "TRABALHADOR") return <span className="text-muted-foreground text-xs">—</span>;
+        const area = row.original.endereco?.areaPerimetro;
+        if (!area || area === "NAO_APLICA") return <span className="text-muted-foreground text-xs">—</span>;
+        return <EnumBadge info={getInfo(AREA_PERIMETRO_INFO, area)} />;
+      },
     },
     {
       accessorKey: "status",

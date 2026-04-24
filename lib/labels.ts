@@ -39,6 +39,12 @@ export const TIPO_CADASTRO_INFO: Record<string, LabelInfo> = {
   ELEITOR:   { label: "Eleitor",    className: "bg-teal-100 text-teal-800 border-teal-300" },
 };
 
+export const AREA_PERIMETRO_INFO: Record<string, LabelInfo> = {
+  ADESAO:    { label: "Adesão",    className: "bg-cyan-100 text-cyan-800 border-cyan-300" },
+  EXPANDIDO: { label: "Expandido", className: "bg-teal-100 text-teal-800 border-teal-300" },
+  NAO_APLICA: { label: "N/A",      className: "bg-gray-100 text-gray-500 border-gray-200" },
+};
+
 export const PERMISSAO_INFO: Record<string, LabelInfo> = {
   DEV: { label: "Desenvolvedor",  className: "bg-rose-100 text-rose-800 border-rose-300" },
   ADM: { label: "Administrador",  className: "bg-orange-100 text-orange-800 border-orange-300" },
