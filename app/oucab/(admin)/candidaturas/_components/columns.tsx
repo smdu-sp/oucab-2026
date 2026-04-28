@@ -86,6 +86,13 @@ export function createColumns(isDev: boolean): ColumnDef<ICandidatura>[] {
       ),
     },
     {
+      id: "docComplementar",
+      header: () => <p className="text-center">Doc. Comp.</p>,
+      cell: ({ row }) => (
+        <p className="text-center text-muted-foreground">{row.original._count.arquivos}</p>
+      ),
+    },
+    {
       id: "actions",
       header: () => <p className="text-center">Ações</p>,
       cell: ({ row }) => (

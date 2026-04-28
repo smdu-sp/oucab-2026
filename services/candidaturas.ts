@@ -22,6 +22,7 @@ export interface ICandidatura extends Candidatura {
   organizacao?: Organizacao | null;
   candidatos: Candidato[];
   arquivos: { id: string }[];
+  _count: { arquivos: number };
 }
 
 export interface ICandidaturaDetalhe extends Candidatura {
@@ -83,6 +84,7 @@ export async function buscarCandidaturas(
       organizacao: true,
       candidatos: true,
       arquivos: { select: { id: true } },
+      _count: { select: { arquivos: { where: { categoria: "COMPLEMENTAR" } } } },
     },
   });
 

@@ -1,23 +1,24 @@
 "use client";
 
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { signOutAiusce } from "@/app/aiusce/actions/auth";
 import { useTransition } from "react";
 
-export default function BtnSignOutAiusce() {
+export function SignOutBtn() {
   const [pending, startTransition] = useTransition();
   return (
     <Button
-      type="button"
       variant="ghost"
+      size="sm"
       disabled={pending}
       onClick={() => startTransition(async () => {
         await signOutAiusce();
         window.location.href = "/aiusce/login";
       })}
-      className="w-full dark:bg-destructive hover:bg-destructive/10 dark:text-foreground dark:hover:bg-destructive/80 hover:text-destructive text-destructive flex items-center justify-center">
-      <LogOut className="text-destructive dark:text-foreground" /> Sair
+    >
+      <LogOut className="w-4 h-4 mr-1" />
+      Sair
     </Button>
   );
 }

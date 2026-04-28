@@ -24,6 +24,7 @@ export interface IAiusceCandidatura extends Candidatura {
   organizacao: OrganizacaoCandidata | null;
   candidatos: Candidato[];
   arquivos: { id: string }[];
+  _count: { arquivos: number };
 }
 
 export interface IAiusceCandidaturaDetalhe extends Candidatura {
@@ -77,6 +78,7 @@ export async function buscarCandidaturasAiusce(
       organizacao: true,
       candidatos: true,
       arquivos: { select: { id: true } },
+      _count: { select: { arquivos: { where: { categoria: "COMPLEMENTAR" } } } },
     },
   });
 
@@ -151,6 +153,7 @@ export interface IAiusceEleitor extends Eleitor {
   organizacao: OrganizacaoEleitora | null;
   procurador: Procurador | null;
   arquivos: { id: string }[];
+  _count: { arquivos: number };
 }
 
 export interface IAiusceEleitorDetalhe extends Eleitor {
@@ -208,6 +211,7 @@ export async function buscarEleitoresAiusce(
       organizacao: true,
       procurador: true,
       arquivos: { select: { id: true } },
+      _count: { select: { arquivos: { where: { categoria: "COMPLEMENTAR" } } } },
     },
   });
 

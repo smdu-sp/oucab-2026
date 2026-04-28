@@ -1,9 +1,9 @@
 import { auth } from "@/auth/aiusce";
 import { redirect } from "next/navigation";
 import { AuthProviderAiusce } from "@/providers/AuthProviderAiusce";
-import { signOutAiusce } from "@/app/aiusce/actions/auth";
+import { SignOutBtn } from "./_components/sign-out-btn";
 import Link from "next/link";
-import { LogOut, FileText, Upload, KeyRound } from "lucide-react";
+import { FileText, Upload, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -31,12 +31,7 @@ export default async function PortalLayout({ children }: { children: React.React
             <span className="text-sm text-muted-foreground hidden sm:block">
               {nome} · <span className="capitalize">{tipoCadastro?.toLowerCase()}</span>
             </span>
-            <form action={signOutAiusce}>
-              <Button type="submit" variant="ghost" size="sm">
-                <LogOut className="w-4 h-4 mr-1" />
-                Sair
-              </Button>
-            </form>
+            <SignOutBtn />
           </div>
         </div>
       </header>
