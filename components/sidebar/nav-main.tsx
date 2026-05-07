@@ -1,6 +1,6 @@
 /** @format */
 
-import { ChevronRight, ClipboardList, House, LucideProps, Users } from 'lucide-react';
+import { ChevronRight, ClipboardList, House, LucideProps, Mail, Users } from 'lucide-react';
 
 import {
 	Collapsible,
@@ -63,6 +63,8 @@ export async function NavMain() {
 			url: '/oucab/candidaturas',
 		},
 	];
+
+	const isDev = usuario.permissao?.toString() === 'DEV';
 
 	return (
 		<SidebarContent>
@@ -166,6 +168,14 @@ export async function NavMain() {
 											</Link>
 										</SidebarMenuItem>
 									),
+								)}
+								{isDev && (
+									<SidebarMenuItem className='z-50'>
+										<Link href='/oucab/dev/emails'>
+											<Mail />
+											<span>Modelos de E-mail</span>
+										</Link>
+									</SidebarMenuItem>
 								)}
 							</SidebarMenu>
 						</>

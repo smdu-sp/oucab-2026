@@ -1,4 +1,4 @@
-import { FileCheck, UserCheck, Users } from "lucide-react";
+import { FileCheck, Mail, UserCheck, Users } from "lucide-react";
 import {
   SidebarContent,
   SidebarGroup,
@@ -15,6 +15,7 @@ export async function NavMainAiusce() {
 
   const isAdmin =
     usuario.permissao && ["DEV", "ADM"].includes(usuario.permissao.toString());
+  const isDev = usuario.permissao?.toString() === "DEV";
 
   return (
     <SidebarContent>
@@ -41,6 +42,14 @@ export async function NavMainAiusce() {
                   <span>Usuários</span>
                 </Link>
               </SidebarMenuItem>
+              {isDev && (
+                <SidebarMenuItem className="z-50">
+                  <Link href="/aiusce/dev/emails">
+                    <Mail />
+                    <span>Modelos de E-mail</span>
+                  </Link>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </>
         )}

@@ -43,7 +43,7 @@ export async function NavMainAiuvl() {
               </SidebarMenuItem>
               {isDev && (
                 <SidebarMenuItem className="z-50">
-                  <Link href="/emails">
+                  <Link href="/aiuvl/dev/emails">
                     <Mail />
                     <span>Modelos de E-mail</span>
                   </Link>
