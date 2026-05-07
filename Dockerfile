@@ -15,7 +15,7 @@ RUN apk add --no-cache openssl libc6-compat
 COPY --from=deps /app/node_modules ./node_modules
 COPY prisma ./prisma
 # Gera os Prisma Clients dentro do Alpine (garante binário musl correto)
-RUN npx prisma generate && npx prisma generate --schema=prisma/aiusce/schema.prisma
+RUN npx prisma generate && npx prisma generate --schema=prisma/aiusce/schema.prisma && npx prisma generate --schema=prisma/aiuvl/schema.prisma
 COPY . .
 ENV NODE_ENV=production
 RUN npm run build
