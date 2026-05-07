@@ -16,7 +16,10 @@
     "oucab:generate": "npx prisma generate",
     "oucab:migrate": "npx prisma migrate dev",
     "aiusce:generate": "npx prisma generate --schema=prisma/aiusce/schema.prisma",
-    "aiusce:migrate": "npx prisma migrate dev --schema=prisma/aiusce/schema.prisma"
+    "aiusce:migrate": "npx prisma migrate dev --schema=prisma/aiusce/schema.prisma",
+    "aiuvl:generate": "npx prisma generate --schema=prisma/aiuvl/schema.prisma",
+    "aiuvl:migrate": "npx prisma migrate dev --schema=prisma/aiuvl/schema.prisma",
+    "aiuvl:seed": "npx tsx prisma/seed-aiuvl.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.2",
@@ -64,6 +67,7 @@
     "next-auth": "^5.0.0-beta.27",
     "next-themes": "^0.4.4",
     "ol": "^10.6.1",
+    "radix-ui": "^1.4.3",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -74,6 +78,7 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "prisma": {

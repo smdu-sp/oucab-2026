@@ -4,7 +4,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import { gerarSenha, hashSenha } from "@/lib/password";
-import { sendEmail, emailBoasVindas } from "@/lib/email";
+import { sendEmail, emailBoasVindas, emailBoasVindasEntidade } from "@/lib/email";
 import { PRAZO_INSCRICAO } from "@/lib/config";
 import type { CategoriaArquivo } from "@prisma/client";
 
@@ -355,12 +355,7 @@ export async function POST(request: NextRequest) {
       await sendEmail({
         to: emailOrg,
         subject: "OUCAB 2026 — Inscrição recebida",
-        html: `<p>Olá, <strong>${razaoSocial}</strong>!</p>
-               <p>Sua inscrição foi recebida com sucesso e será analisada pela equipe da SMUL.</p>
-               <p>CNPJ: <strong>${cnpj}</strong><br>
-               Acesso ao portal — E-mail: <strong>${emailOrg}</strong> | Senha: <strong>${senhaPlana}</strong></p>
-               <p>Guarde a senha com segurança. Você poderá acompanhar o status da inscrição pelo portal.</p>`,
-        text: `Inscrição recebida. CNPJ: ${cnpj}. Email: ${emailOrg}. Senha: ${senhaPlana}`,
+        ...emailBoasVindasEntidade({ razaoSocial, cnpj, emailEntidade: emailOrg, senha: senhaPlana, tipoInscricao: "CANDIDATO", sistemaLabel: "OUCAB 2026" }),
       }).catch(console.error);
 
       return NextResponse.json({

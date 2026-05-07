@@ -72,6 +72,7 @@ export function LoginForm() {
 				}
 			}
 		} catch (e) {
+			if (e instanceof Error && 'digest' in e && String((e as any).digest).startsWith('NEXT_REDIRECT')) return;
 			toast.error('Não foi possível realizar o login.');
 		}
 	}

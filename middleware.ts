@@ -1,5 +1,6 @@
 import { auth as oucabAuth } from "@/auth/middleware-oucab";
 import { auth as aiusceAuth } from "@/auth/middleware-aiusce";
+import { auth as aiuvlAuth } from "@/auth/middleware-aiuvl";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -91,6 +92,53 @@ const aiusceMiddleware = aiusceAuth((req: NextRequest & { auth: any }) => {
   return NextResponse.next();
 });
 
+// Middleware AIUVL — protege /aiuvl/portal/*, /aiuvl/candidaturas/*, /aiuvl/eleitores/*
+const aiuvlMiddleware = aiuvlAuth((req: NextRequest & { auth: any }) => {
+  const { pathname } = req.nextUrl;
+  const session = req.auth;
+
+  if (pathname.startsWith("/aiuvl/portal")) {
+    if (!session || session.user?.tipo !== "externo") {
+      return NextResponse.redirect(new URL("/aiuvl/login", req.url));
+    }
+    if (session.user?.primeiroAcesso && pathname !== "/aiuvl/portal/alterar-senha") {
+      return NextResponse.redirect(new URL("/aiuvl/portal/alterar-senha", req.url));
+    }
+  }
+
+  if (
+    pathname.startsWith("/aiuvl/candidaturas") ||
+    pathname.startsWith("/aiuvl/eleitores") ||
+    pathname.startsWith("/aiuvl/usuarios")
+  ) {
+    if (!session) {
+      return NextResponse.redirect(new URL("/aiuvl/login", req.url));
+    }
+    const permissao = session.user?.permissao;
+    if (!permissao || !["DEV", "ADM"].includes(permissao.toString())) {
+      return NextResponse.redirect(new URL("/aiuvl/login", req.url));
+    }
+  }
+
+  if (pathname === "/aiuvl/login" && session) {
+    const permissao = session.user?.permissao;
+    if (permissao && ["DEV", "ADM"].includes(permissao.toString())) {
+      return NextResponse.redirect(new URL("/aiuvl/candidaturas", req.url));
+    }
+    if (session.user?.tipo === "externo") {
+      if (session.user?.primeiroAcesso) {
+        return NextResponse.redirect(new URL("/aiuvl/portal/alterar-senha", req.url));
+      }
+      return NextResponse.redirect(new URL("/aiuvl/portal/minha-inscricao", req.url));
+    }
+    const res = NextResponse.redirect(new URL("/aiuvl/login", req.url));
+    res.cookies.delete("aiuvl.session-token");
+    return res;
+  }
+
+  return NextResponse.next();
+});
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (
@@ -101,6 +149,15 @@ export function middleware(req: NextRequest) {
     pathname === "/aiusce/login"
   ) {
     return (aiusceMiddleware as any)(req);
+  }
+  if (
+    pathname.startsWith("/aiuvl/portal") ||
+    pathname.startsWith("/aiuvl/candidaturas") ||
+    pathname.startsWith("/aiuvl/eleitores") ||
+    pathname.startsWith("/aiuvl/usuarios") ||
+    pathname === "/aiuvl/login"
+  ) {
+    return (aiuvlMiddleware as any)(req);
   }
   return (oucabMiddleware as any)(req);
 }
@@ -117,5 +174,10 @@ export const config = {
     "/aiusce/eleitores/:path*",
     "/aiusce/usuarios/:path*",
     "/aiusce/login",
+    "/aiuvl/portal/:path*",
+    "/aiuvl/candidaturas/:path*",
+    "/aiuvl/eleitores/:path*",
+    "/aiuvl/usuarios/:path*",
+    "/aiuvl/login",
   ],
 };

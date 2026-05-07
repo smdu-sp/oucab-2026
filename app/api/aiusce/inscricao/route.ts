@@ -4,7 +4,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import { gerarSenha, hashSenha } from "@/lib/password";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, emailBoasVindasEntidade } from "@/lib/email";
 import { PRAZO_INSCRICAO_AIUSCE } from "@/lib/config";
 import type { CategoriaArquivo, Segmento, Genero } from "@/lib/generated/aiusce";
 
@@ -279,12 +279,7 @@ export async function POST(request: NextRequest) {
       await sendEmail({
         to: emailEntidade,
         subject: "AIUSCE 2026 — Inscrição de Candidato recebida",
-        html: `<p>Olá, <strong>${razaoSocial}</strong>!</p>
-               <p>A inscrição de candidato da sua entidade foi recebida com sucesso e será analisada pela comissão eleitoral.</p>
-               <p><strong>CNPJ:</strong> ${cnpj}</p>
-               <p><strong>Acesso ao portal</strong> — E-mail: <strong>${emailEntidade}</strong> | Senha: <strong>${senhaPlana}</strong></p>
-               <p>Guarde a senha com segurança. Você poderá acompanhar o status da inscrição pelo portal.</p>`,
-        text: `Inscrição de candidatura recebida. CNPJ: ${cnpj}. Email: ${emailEntidade}. Senha: ${senhaPlana}`,
+        ...emailBoasVindasEntidade({ razaoSocial, cnpj, emailEntidade, senha: senhaPlana, tipoInscricao: "CANDIDATO", sistemaLabel: "AIUSCE 2026" }),
       }).catch(console.error);
 
       return NextResponse.json({
@@ -404,12 +399,7 @@ export async function POST(request: NextRequest) {
       await sendEmail({
         to: emailEntidade,
         subject: "AIUSCE 2026 — Inscrição de Eleitor recebida",
-        html: `<p>Olá, <strong>${razaoSocial}</strong>!</p>
-               <p>A inscrição de habilitação como eleitor da sua entidade foi recebida com sucesso e será analisada pela comissão eleitoral.</p>
-               <p><strong>CNPJ:</strong> ${cnpj}</p>
-               <p><strong>Acesso ao portal</strong> — E-mail: <strong>${emailEntidade}</strong> | Senha: <strong>${senhaPlana}</strong></p>
-               <p>Guarde a senha com segurança. Você poderá acompanhar o status da inscrição pelo portal.</p>`,
-        text: `Inscrição de eleitor recebida. CNPJ: ${cnpj}. Email: ${emailEntidade}. Senha: ${senhaPlana}`,
+        ...emailBoasVindasEntidade({ razaoSocial, cnpj, emailEntidade, senha: senhaPlana, tipoInscricao: "ELEITOR", sistemaLabel: "AIUSCE 2026" }),
       }).catch(console.error);
 
       return NextResponse.json({

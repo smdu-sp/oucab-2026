@@ -17,6 +17,13 @@ const eleicoes = [
     href: "/aiusce",
     ativa: true,
   },
+  {
+    sigla: "AIUVL",
+    nome: "Área de Intervenção Urbana da Vila Leopoldina-Villa Lobos",
+    descricao: "Eleição para o Conselho Gestor da AIUVL",
+    href: "/aiuvl",
+    ativa: true,
+  },
 ];
 
 export default function Home() {
@@ -29,7 +36,6 @@ export default function Home() {
             Selecione a eleição para acessar as inscrições e informações.
           </p>
         </div>
-
         <div className="grid gap-4">
           {eleicoes.map((e) => (
             <Link key={e.sigla} href={e.href}>
@@ -48,7 +54,6 @@ export default function Home() {
             </Link>
           ))}
         </div>
-
         <p className="text-center text-xs text-muted-foreground">
           © {new Date().getFullYear()} Prefeitura de São Paulo
         </p>

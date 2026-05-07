@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:ns2="http://www.google.com/kml/ext/2.2" xmlns:ns3="http://www.w3.org/2005/Atom" xmlns:ns4="urn:oasis:names:tc:ciq:xsdschema:xAL:2.0">
+    <Document>
+        <Schema name="aiu_vl_perimetro_adesao_1" id="aiu_vl_perimetro_adesao_1">
+            <SimpleField type="int" name="cd_identificador"/>
+            <SimpleField type="string" name="cd_numero_lei"/>
+            <SimpleField type="string" name="nm_lei"/>
+            <SimpleField type="string" name="cd_anexo_lei"/>
+            <SimpleField type="string" name="tx_tipo_camada"/>
+            <SimpleField type="string" name="nm_aiu"/>
+            <SimpleField type="string" name="dt_atualizacao"/>
+        </Schema>
+        <Folder>
+            <name>aiu_vl_perimetro_adesao</name>
+            <Placemark id="aiu_vl_perimetro_adesao.101">
+                <ExtendedData>
+                    <SchemaData schemaUrl="#aiu_vl_perimetro_adesao_1">
+                        <SimpleData name="cd_identificador">101</SimpleData>
+                        <SimpleData name="cd_numero_lei">17968/23</SimpleData>
+                        <SimpleData name="nm_lei">AIU-VL</SimpleData>
+                        <SimpleData name="cd_anexo_lei">1</SimpleData>
+                        <SimpleData name="tx_tipo_camada">Perímetro de Adesão</SimpleData>
+                        <SimpleData name="nm_aiu">Perímetro de Adesão AIU-VL</SimpleData>
+                        <SimpleData name="dt_atualizacao">2023-09-11Z</SimpleData>
+                    </SchemaData>
+                </ExtendedData>
+                <Polygon>
+                    <outerBoundaryIs>
+                        <LinearRing>
+                            <tessellate>1</tessellate>
+                            <coordinates>-46.73727135550118,-23.541231868529323 -46.73425495797852,-23.53885097899811 -46.734346921715826,-23.538759065482438 -46.73430841625586,-23.53872891967861 -46.734115620386746,-23.538573206495236 -46.733996859622536,-23.538476366074473 -46.73381121276532,-23.538333693381382 -46.73370402440809,-23.5382554754401 -46.733631465171456,-23.53820371319561 -46.73293169614851,-23.537653373402936 -46.732517126266835,-23.53789385413674 -46.731872609064574,-23.53857239550192 -46.731220048494585,-23.538074960905742 -46.73115039689549,-23.53802825910395 -46.730603088560215,-23.538638404800636 -46.73033325999095,-23.538973468706924 -46.730237670439564,-23.539487719095735 -46.73020390182204,-23.539722047650635 -46.72997160092262,-23.54073591184188 -46.72992166027877,-23.540985513939557 -46.72995223452489,-23.541127347923346 -46.72996020874575,-23.54114562550496 -46.72998301901789,-23.541181065896257 -46.7300329981939,-23.541236794573432 -46.73073198811509,-23.541919857972687 -46.73105079527923,-23.542199317664977 -46.73240221336998,-23.543493686615477 -46.73244259328105,-23.54352371963564 -46.73302359064165,-23.543821701869316 -46.73371680303783,-23.544173088720616 -46.733752123238474,-23.544183177518143 -46.73382153692487,-23.544191712845137 -46.73386655905917,-23.54418721771494 -46.73391054432981,-23.544178791066237 -46.73395802393123,-23.544161526779295 -46.734069607518926,-23.544097686172982 -46.734456442994194,-23.543787478955057 -46.73727135550118,-23.541231868529323</coordinates>
+                        </LinearRing>
+                    </outerBoundaryIs>
+                </Polygon>
+            </Placemark>
+        </Folder>
+    </Document>
+</kml>

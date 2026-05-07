@@ -306,15 +306,6 @@ const DragDropInput = forwardRef<DragDropInputRef, DragDropInputProps>(
 							<h4 className='text-xs font-medium'>
 								Arquivos selecionados ({files.length}/{maxFiles})
 							</h4>
-							{maxSize && (
-								<span className='text-xs text-gray-500'>
-									{formatFileSize(
-										files.reduce((total, file) => total + file.size, 0),
-									)}
-									{' / '}
-									{formatFileSize(maxSize)}
-								</span>
-							)}
 						</div>
 						<ul className='space-y-2'>
 							{files.map((file, index) => (

@@ -58,6 +58,24 @@ export function identidadeAiusce(): SistemaIdentidade {
   };
 }
 
+export function identidadeAiuvl(): SistemaIdentidade {
+  const base = process.env.APP_URL ?? "";
+  return {
+    label: "AIU-VL 2026",
+    nomeCompleto: "Área de Intervenção Urbana Vila Leopoldina-Villa Lobos",
+    logoUrl: `${base}/aiuvl/logo_escuro.png`,
+    portalUrl: `${base}/aiuvl/login`,
+    cor: "#7c3aed",
+  };
+}
+
+function resolveIdentidade(sistemaLabel: string): SistemaIdentidade {
+  const label = sistemaLabel.toUpperCase();
+  if (label.includes("AIUSCE")) return identidadeAiusce();
+  if (label.includes("AIU-VL") || label.includes("AIUVL")) return identidadeAiuvl();
+  return identidadeOucab();
+}
+
 // ---------------------------------------------------------------------------
 // Layout base — replica o portal
 // ---------------------------------------------------------------------------
@@ -196,9 +214,7 @@ export function emailBoasVindas({
   sistemaLabel?: string;
   portalUrl?: string;
 }) {
-  const id = sistemaLabel.toUpperCase().includes("AIUSCE")
-    ? identidadeAiusce()
-    : identidadeOucab();
+  const id = resolveIdentidade(sistemaLabel);
 
   const cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   const tipoLabel = tipoCadastro === "CANDIDATO" ? "Candidato(a)" : "Eleitor(a)";
@@ -242,9 +258,7 @@ export function emailBoasVindasEleitor({
   nome: string;
   sistemaLabel?: string;
 }) {
-  const id = sistemaLabel.toUpperCase().includes("AIUSCE")
-    ? identidadeAiusce()
-    : identidadeOucab();
+  const id = resolveIdentidade(sistemaLabel);
 
   const primeiroNome = nome.split(" ")[0];
 
@@ -282,9 +296,7 @@ export function emailAtualizacaoStatus({
   prazoDocFim?: Date;
   linkOrientacaoDoc?: string;
 }) {
-  const id = sistemaLabel.toUpperCase().includes("AIUSCE")
-    ? identidadeAiusce()
-    : identidadeOucab();
+  const id = resolveIdentidade(sistemaLabel);
 
   const primeiroNome = nome.split(" ")[0];
 
@@ -412,9 +424,7 @@ export function emailRecuperacaoSenha({
   portalUrl: string;
   sistemaLabel: string;
 }) {
-  const id = sistemaLabel.toUpperCase().includes("AIUSCE")
-    ? identidadeAiusce()
-    : identidadeOucab();
+  const id = resolveIdentidade(sistemaLabel);
 
   const primeiroNome = nome.split(" ")[0];
 
@@ -441,6 +451,59 @@ export function emailRecuperacaoSenha({
   const html = baseLayout({ id, body });
 
   const text = `Olá, ${primeiroNome}!\n\nSua senha temporária para o ${id.label} é: ${senha}\n\nTroque-a imediatamente após o login.\n\nPortal: ${portalUrl}\n\nSe não foi você, ignore este e-mail.`;
+
+  return { html, text };
+}
+
+// ---------------------------------------------------------------------------
+// 5. Boas-vindas — entidade (com credenciais de acesso)
+// ---------------------------------------------------------------------------
+
+export function emailBoasVindasEntidade({
+  razaoSocial,
+  cnpj,
+  emailEntidade,
+  senha,
+  tipoInscricao,
+  sistemaLabel,
+  portalUrl,
+}: {
+  razaoSocial: string;
+  cnpj: string;
+  emailEntidade: string;
+  senha: string;
+  tipoInscricao: "CANDIDATO" | "ELEITOR";
+  sistemaLabel: string;
+  portalUrl?: string;
+}) {
+  const id = resolveIdentidade(sistemaLabel);
+  const loginUrl = portalUrl ?? id.portalUrl;
+  const tipoLabel = tipoInscricao === "CANDIDATO" ? "candidatura" : "eleitor";
+  const tipoTitulo = tipoInscricao === "CANDIDATO" ? "Candidatura" : "Eleitor";
+  const cnpjFormatado = cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+
+  const body = `
+    ${titulo(`Inscrição de ${tipoTitulo} recebida!`)}
+    ${paragrafo(`Olá, <strong>${razaoSocial}</strong>! A inscrição de ${tipoLabel} da sua entidade foi recebida com sucesso e será analisada pela Comissão Eleitoral. Você receberá um e-mail com o resultado da análise.`)}
+
+    <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:${id.cor};text-transform:uppercase;letter-spacing:0.6px;">Credenciais de acesso ao portal</p>
+    ${credenciaisBox([
+      { label: "CNPJ", valor: cnpjFormatado },
+      { label: "E-mail (login)", valor: emailEntidade },
+      { label: "Senha provisória", valor: senha },
+    ])}
+
+    ${alertaBox(
+      `<strong>Atenção:</strong> Ao acessar o portal pela primeira vez, você será solicitado(a) a criar uma nova senha pessoal. Guarde suas credenciais com segurança.`,
+      "#fffbeb",
+      "#f59e0b",
+    )}
+
+    ${btnCTA(loginUrl, "Acessar o Portal", id.cor)}
+  `;
+
+  const html = baseLayout({ id, body });
+  const text = `Olá, ${razaoSocial}!\n\nInscrição de ${tipoLabel} recebida com sucesso.\n\nCNPJ: ${cnpjFormatado}\nE-mail: ${emailEntidade}\nSenha provisória: ${senha}\n\nTroque sua senha no primeiro acesso.\n\nPortal: ${loginUrl}`;
 
   return { html, text };
 }

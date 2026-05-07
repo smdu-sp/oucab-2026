@@ -45,3 +45,48 @@ export function periodoDocComplementarAbertoAiusce(): boolean {
   const agora = new Date();
   return agora >= DOC_COMPLEMENTAR_INICIO_AIUSCE && agora <= DOC_COMPLEMENTAR_FIM_AIUSCE;
 }
+
+// --- AIUVL ---
+export const INICIO_INSCRICAO_AIUVL_CANDIDATOS = new Date(
+  process.env.INICIO_INSCRICAO_AIUVL_CANDIDATOS ?? "2026-05-07T00:00:00.000Z"
+);
+export const PRAZO_INSCRICAO_AIUVL_CANDIDATOS = new Date(
+  process.env.PRAZO_INSCRICAO_AIUVL_CANDIDATOS ?? "2026-05-21T23:59:59.999Z"
+);
+
+export const INICIO_INSCRICAO_AIUVL_ELEITORES = new Date(
+  process.env.INICIO_INSCRICAO_AIUVL_ELEITORES ?? "2026-06-15T00:00:00.000Z"
+);
+export const PRAZO_INSCRICAO_AIUVL_ELEITORES = new Date(
+  process.env.PRAZO_INSCRICAO_AIUVL_ELEITORES ?? "2026-06-24T23:59:59.999Z"
+);
+
+export function prazoCandidatosAiuvlEncerrado(): boolean {
+  return new Date() > PRAZO_INSCRICAO_AIUVL_CANDIDATOS;
+}
+
+export function prazoEleitoresAiuvlEncerrado(): boolean {
+  return new Date() > PRAZO_INSCRICAO_AIUVL_ELEITORES;
+}
+
+export function periodoInscricaoCandidatosAiuvlAberto(): boolean {
+  const agora = new Date();
+  return agora >= INICIO_INSCRICAO_AIUVL_CANDIDATOS && agora <= PRAZO_INSCRICAO_AIUVL_CANDIDATOS;
+}
+
+export function periodoInscricaoEleitoresAiuvlAberto(): boolean {
+  const agora = new Date();
+  return agora >= INICIO_INSCRICAO_AIUVL_ELEITORES && agora <= PRAZO_INSCRICAO_AIUVL_ELEITORES;
+}
+
+export const DOC_COMPLEMENTAR_INICIO_AIUVL = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_INICIO_AIUVL ?? "2026-06-01T00:00:00.000Z"
+);
+export const DOC_COMPLEMENTAR_FIM_AIUVL = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_FIM_AIUVL ?? "2026-06-15T23:59:59.999Z"
+);
+
+export function periodoDocComplementarAbertoAiuvl(): boolean {
+  const agora = new Date();
+  return agora >= DOC_COMPLEMENTAR_INICIO_AIUVL && agora <= DOC_COMPLEMENTAR_FIM_AIUVL;
+}

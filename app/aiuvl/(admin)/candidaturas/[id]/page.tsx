@@ -1,0 +1,252 @@
+import { notFound, redirect } from "next/navigation";
+import { buscarCandidaturaAiuvlPorId } from "@/services/candidaturas-aiuvl";
+import { validaUsuarioAiuvl } from "@/services/usuario-aiuvl";
+import { EyeOff } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusActions } from "./_components/status-actions";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { formatDateBR } from "@/lib/utils";
+import { BASE_PATH } from "@/lib/config";
+import VisualizadorArquivo from "@/components/visualizador-arquivo";
+import { EnumBadge } from "@/components/enum-badge";
+import { STATUS_INFO, SEGMENTO_AIUVL_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
+
+const generoLabel: Record<string, string> = {
+  MASCULINO: "Masculino",
+  FEMININO: "Feminino",
+  OUTRO: "Outro / Autodeclarado",
+};
+
+const categoriaLabel: Record<string, string> = {
+  CAND_ENT_REQUERIMENTO:          "Requerimento (Entidade)",
+  CAND_ENT_DECLARACAO_ATUACAO:    "Declaração de Atuação",
+  CAND_ENT_ESTATUTO:              "Estatuto Social",
+  CAND_ENT_ATA_ELEICAO:           "Ata de Eleição",
+  CAND_ENT_CNPJ:                  "Comprovante CNPJ",
+  CAND_ENT_DECLARACAO_IDONEIDADE: "Declaração de Idoneidade",
+  CAND_REP_IDENTIDADE:            "RG/Doc. de Identidade (Rep. Legal)",
+  CAND_REP_CPF:                   "CPF (Rep. Legal)",
+  CAND_REP_TITULO_ELEITOR:        "Título de Eleitor (Rep. Legal)",
+  CAND_REP_COMPROVANTE_RESIDENCIA:"Comprovante de Residência (Rep. Legal)",
+  CAND_CAN_IDENTIDADE:            "RG/Doc. de Identidade",
+  CAND_CAN_CPF:                   "CPF",
+  CAND_CAN_FOTO:                  "Foto 3×4",
+  CAND_CAN_TITULO_ELEITOR:        "Título de Eleitor",
+  CAND_CAN_COMPROVANTE_RESIDENCIA:"Comprovante de Residência",
+  CAND_CAN_DECLARACAO:            "Declaração",
+};
+
+export default async function CandidaturaAiuvlDetalhe({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const usuario = await validaUsuarioAiuvl();
+  if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) redirect("/aiuvl/login");
+
+  const isDev = usuario.permissao === "DEV";
+  const { id } = await params;
+  const candidatura = await buscarCandidaturaAiuvlPorId(id);
+  if (!candidatura) notFound();
+
+  const org = candidatura.organizacao;
+  const fmt = (d: Date) => format(new Date(d), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+
+  return (
+    <div className="px-0 md:px-8 pb-20 container mx-auto space-y-6">
+      <div className="flex items-center gap-4">
+        <Button asChild variant="ghost" size="icon">
+          <Link href="/aiuvl/candidaturas">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-xl md:text-4xl font-bold">Candidatura AIU-VL</h1>
+          <p className="text-muted-foreground text-sm mt-1">Criada em {fmt(candidatura.criadoEm)}</p>
+        </div>
+        <EnumBadge info={getInfo(STATUS_INFO, candidatura.status)} className="text-sm px-3 py-1" />
+      </div>
+
+      {candidatura.status === "INDEFERIDO" && candidatura.motivoIndeferimento && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive space-y-0.5">
+          <p className="font-semibold">Motivo do indeferimento</p>
+          <p className="whitespace-pre-wrap">{candidatura.motivoIndeferimento}</p>
+        </div>
+      )}
+
+      {isDev && candidatura.oculto && (
+        <div className="flex items-center gap-2 rounded-md border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <EyeOff className="h-4 w-4 shrink-0" />
+          Esta candidatura está <strong>oculta</strong> para outros usuários.
+        </div>
+      )}
+
+      <StatusActions id={candidatura.id} statusAtual={candidatura.status} isDev={isDev} oculto={candidatura.oculto} />
+
+      {org && (
+        <Card>
+          <CardHeader><CardTitle>Entidade Candidata</CardTitle></CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="md:col-span-2">
+              <p className="text-muted-foreground">Razão Social</p>
+              <p className="font-medium">{org.razaoSocial}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">CNPJ</p>
+              <p className="font-medium">{org.cnpj}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Segmento</p>
+              <EnumBadge info={getInfo(SEGMENTO_AIUVL_INFO, org.segmento)} />
+            </div>
+            <div>
+              <p className="text-muted-foreground">Data de Abertura</p>
+              <p className="font-medium">{formatDateBR(org.dataAbertura)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Sede</p>
+              <p className="font-medium">{org.sede}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">E-mail</p>
+              <p className="font-medium">{org.emailEntidade}</p>
+            </div>
+            {org.telefone && (
+              <div>
+                <p className="text-muted-foreground">Telefone</p>
+                <p className="font-medium">{org.telefone}</p>
+              </div>
+            )}
+            <div className="md:col-span-2">
+              <p className="text-muted-foreground">Representante Legal</p>
+              <p className="font-medium">{org.repNome} — CPF: {org.repCpf}</p>
+            </div>
+            {org.repTituloEleitor && (
+              <div>
+                <p className="text-muted-foreground">Título de Eleitor (Rep.)</p>
+                <p className="font-medium">{org.repTituloEleitor}</p>
+              </div>
+            )}
+            {org.repDomicilio && (
+              <div>
+                <p className="text-muted-foreground">Domicílio Eleitoral (Rep.)</p>
+                <p className="font-medium">{org.repDomicilio}</p>
+              </div>
+            )}
+            {org.arquivos.length > 0 && (
+              <div className="md:col-span-3">
+                <p className="text-muted-foreground mb-2">Documentos da Entidade</p>
+                <div className="flex flex-wrap gap-2">
+                  {org.arquivos.map((arq) => (
+                    <VisualizadorArquivo
+                      key={arq.id}
+                      id={arq.id}
+                      nome={arq.nome}
+                      tipo={arq.tipo}
+                      label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                      url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {candidatura.arquivos.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>Documentos do Representante Legal</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {candidatura.arquivos.map((arq) => (
+                <VisualizadorArquivo
+                  key={arq.id}
+                  id={arq.id}
+                  nome={arq.nome}
+                  tipo={arq.tipo}
+                  label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                  url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {candidatura.candidatos.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>Candidatos</CardTitle></CardHeader>
+          <CardContent className="space-y-6">
+            {candidatura.candidatos.map((c) => (
+              <div key={c.id} className="border rounded-lg p-4 space-y-3">
+                <EnumBadge info={getInfo(TIPO_CANDIDATO_INFO, c.tipoCandidato)} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Nome</p>
+                    <p className="font-medium">{c.nome}{c.nomeSocial ? ` (${c.nomeSocial})` : ""}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">CPF</p>
+                    <p className="font-medium">{c.cpf}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">E-mail</p>
+                    <p className="font-medium">{c.email}</p>
+                  </div>
+                  {c.telefone && (
+                    <div>
+                      <p className="text-muted-foreground">Telefone</p>
+                      <p className="font-medium">{c.telefone}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-muted-foreground">Nascimento</p>
+                    <p className="font-medium">{formatDateBR(c.dataNascimento)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Gênero</p>
+                    <p className="font-medium">{generoLabel[c.genero] ?? c.genero}</p>
+                  </div>
+                  {c.tituloEleitor && (
+                    <div>
+                      <p className="text-muted-foreground">Título de Eleitor</p>
+                      <p className="font-medium">{c.tituloEleitor}</p>
+                    </div>
+                  )}
+                  {c.domicilioEleitoral && (
+                    <div>
+                      <p className="text-muted-foreground">Domicílio Eleitoral</p>
+                      <p className="font-medium">{c.domicilioEleitoral}</p>
+                    </div>
+                  )}
+                </div>
+                {c.arquivos.length > 0 && (
+                  <div>
+                    <p className="text-muted-foreground text-sm mb-2">Documentos</p>
+                    <div className="flex flex-wrap gap-2">
+                      {c.arquivos.map((arq) => (
+                        <VisualizadorArquivo
+                          key={arq.id}
+                          id={arq.id}
+                          nome={arq.nome}
+                          tipo={arq.tipo}
+                          label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                          url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

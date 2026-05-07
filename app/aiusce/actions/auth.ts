@@ -1,7 +1,7 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { signOut } from "@/auth/aiusce";
 
 export async function signOutAiusce() {
-  (await cookies()).delete("aiusce.session-token");
+  await signOut({ redirectTo: "/aiusce/login" });
 }

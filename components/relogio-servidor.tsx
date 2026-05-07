@@ -8,6 +8,10 @@ interface Props {
   serverTzOffsetMinutes: number;
   prazoISO: string;
   prazoAiusceISO: string;
+  inicioAiuvlCandidatosISO?: string;
+  prazoAiuvlCandidatosISO?: string;
+  inicioAiuvlEleitoresISO?: string;
+  prazoAiuvlEleitoresISO?: string;
 }
 
 function formatComOffset(date: Date, offsetMinutes: number): string {
@@ -30,6 +34,10 @@ export default function RelogioServidor({
   serverTzOffsetMinutes,
   prazoISO,
   prazoAiusceISO,
+  inicioAiuvlCandidatosISO,
+  prazoAiuvlCandidatosISO,
+  inicioAiuvlEleitoresISO,
+  prazoAiuvlEleitoresISO,
 }: Props) {
   const [delta] = useState(() => new Date(serverTimeISO).getTime() - Date.now());
   const [agora, setAgora] = useState(() => new Date(Date.now() + delta));
@@ -71,8 +79,14 @@ export default function RelogioServidor({
 
   const prazo = new Date(prazoISO);
   const prazoAiusce = new Date(prazoAiusceISO);
+  const inicioAiuvlCand = inicioAiuvlCandidatosISO ? new Date(inicioAiuvlCandidatosISO) : null;
+  const prazoAiuvlCand = prazoAiuvlCandidatosISO ? new Date(prazoAiuvlCandidatosISO) : null;
+  const inicioAiuvlEleit = inicioAiuvlEleitoresISO ? new Date(inicioAiuvlEleitoresISO) : null;
+  const prazoAiuvlEleit = prazoAiuvlEleitoresISO ? new Date(prazoAiuvlEleitoresISO) : null;
   const inscricoesAbertas = agora < prazo;
   const aiusceAberta = agora < prazoAiusce;
+  const aiuvlCandAberta = inicioAiuvlCand && prazoAiuvlCand ? agora >= inicioAiuvlCand && agora <= prazoAiuvlCand : false;
+  const aiuvlEleitAberta = inicioAiuvlEleit && prazoAiuvlEleit ? agora >= inicioAiuvlEleit && agora <= prazoAiuvlEleit : false;
 
   const posStyle = pos
     ? { top: pos.y, left: pos.x, bottom: "auto", right: "auto" }
@@ -128,6 +142,46 @@ export default function RelogioServidor({
             <div className="font-mono text-[10px]">
               {formatComOffset(prazoAiusce, serverTzOffsetMinutes)}
             </div>
+            {(inicioAiuvlCand || prazoAiuvlCand) && (
+              <>
+                <div className="flex justify-between gap-3 pt-0.5">
+                  <span>AIU-VL Candidatos:</span>
+                  <span className={aiuvlCandAberta ? "text-green-600 font-medium" : agora < (inicioAiuvlCand ?? prazoAiuvlCand!) ? "text-yellow-500 font-medium" : "text-red-500 font-medium"}>
+                    {aiuvlCandAberta ? "aberto" : agora < (inicioAiuvlCand ?? prazoAiuvlCand!) ? "em breve" : "encerrado"}
+                  </span>
+                </div>
+                {inicioAiuvlCand && (
+                  <div className="font-mono text-[10px]">
+                    início: {formatComOffset(inicioAiuvlCand, serverTzOffsetMinutes)}
+                  </div>
+                )}
+                {prazoAiuvlCand && (
+                  <div className="font-mono text-[10px]">
+                    fim: {formatComOffset(prazoAiuvlCand, serverTzOffsetMinutes)}
+                  </div>
+                )}
+              </>
+            )}
+            {(inicioAiuvlEleit || prazoAiuvlEleit) && (
+              <>
+                <div className="flex justify-between gap-3 pt-0.5">
+                  <span>AIU-VL Eleitores:</span>
+                  <span className={aiuvlEleitAberta ? "text-green-600 font-medium" : agora < (inicioAiuvlEleit ?? prazoAiuvlEleit!) ? "text-yellow-500 font-medium" : "text-red-500 font-medium"}>
+                    {aiuvlEleitAberta ? "aberto" : agora < (inicioAiuvlEleit ?? prazoAiuvlEleit!) ? "em breve" : "encerrado"}
+                  </span>
+                </div>
+                {inicioAiuvlEleit && (
+                  <div className="font-mono text-[10px]">
+                    início: {formatComOffset(inicioAiuvlEleit, serverTzOffsetMinutes)}
+                  </div>
+                )}
+                {prazoAiuvlEleit && (
+                  <div className="font-mono text-[10px]">
+                    fim: {formatComOffset(prazoAiuvlEleit, serverTzOffsetMinutes)}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}

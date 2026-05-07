@@ -1,0 +1,116 @@
+'use client';
+
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { loginAiuvl } from '../actions';
+
+const formSchema = z.object({
+  login: z.string().min(3, { message: 'Informe o e-mail ou login.' }),
+  senha: z.string().min(2, { message: 'Campo senha não pode ser vazio.' }),
+});
+
+export function LoginForm() {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { login: '', senha: '' },
+  });
+
+  async function onSubmit({ login, senha }: z.infer<typeof formSchema>) {
+    try {
+      const result = await loginAiuvl(login, senha);
+      if (result?.error) {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      if (error instanceof Error && 'digest' in error && String((error as any).digest).startsWith('NEXT_REDIRECT')) return;
+      toast.error('Não foi possível realizar o login.');
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form
+        className='p-6 md:p-8 dark:bg-muted bg-background'
+        onSubmit={form.handleSubmit(onSubmit)}>
+        <div className='flex flex-col gap-6'>
+          <div className='flex flex-col items-center text-center gap-1'>
+            <h1 className='text-2xl font-bold'>AIU-VL 2026</h1>
+            <p className='text-muted-foreground text-sm'>Área de Intervenção Urbana<br />Vila Leopoldina-Villa Lobos</p>
+          </div>
+          <div className='grid gap-2'>
+            <FormField
+              control={form.control}
+              name='login'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail / Login</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder='seu@email.com'
+                      className='dark:bg-background bg-muted'
+                    />
+                  </FormControl>
+                  <FormDescription />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className='grid gap-2'>
+            <FormField
+              control={form.control}
+              name='senha'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type='password'
+                      className='dark:bg-background bg-muted'
+                    />
+                  </FormControl>
+                  <FormDescription />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className='text-right text-sm'>
+            <Link
+              href='/aiuvl/esqueci-senha'
+              className='text-muted-foreground hover:underline'>
+              Esqueci minha senha
+            </Link>
+          </div>
+          <Button
+            disabled={form.formState.isSubmitting || form.formState.isLoading}
+            type='submit'
+            className='w-full disabled:opacity-50'>
+            {form.formState.isSubmitting || form.formState.isLoading ? (
+              <>Entrar <Loader2 className='animate-spin' /></>
+            ) : (
+              'Entrar'
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}

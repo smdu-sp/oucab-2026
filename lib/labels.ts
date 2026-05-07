@@ -28,6 +28,13 @@ export const SEGMENTO_INFO: Record<string, LabelInfo> = {
   ENTIDADE_URB_AMB:  { label: "Entidade Urbana / Ambiental",         className: "bg-emerald-100 text-emerald-800 border-emerald-300" },
 };
 
+export const SEGMENTO_AIUVL_INFO: Record<string, LabelInfo> = {
+  ONG:                { label: "Organização Não Governamental",       className: "bg-pink-100 text-pink-800 border-pink-300" },
+  ASSOCIACAO_BAIRRO:  { label: "Associação de Bairro",                className: "bg-blue-100 text-blue-800 border-blue-300" },
+  ENTIDADE_ACADEMICA: { label: "Entidade Acadêmica / Pesquisa",       className: "bg-violet-100 text-violet-800 border-violet-300" },
+  REP_EMPRESARIAL:    { label: "Setor Empresarial",                   className: "bg-amber-100 text-amber-800 border-amber-300" },
+};
+
 export const TIPO_CANDIDATO_INFO: Record<string, LabelInfo> = {
   INDIVIDUAL: { label: "Individual",  className: "bg-blue-100 text-blue-800 border-blue-300" },
   TITULAR:    { label: "Titular",     className: "bg-green-100 text-green-800 border-green-300" },
