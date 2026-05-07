@@ -17,8 +17,6 @@ const MOTIVO =
   "A documentação apresentada está incompleta. O estatuto social não comprova a atuação da entidade na área de abrangência do projeto.";
 
 export default async function AiuvlDevEmailsPage() {
-  if (process.env.NODE_ENV === "production") notFound();
-
   const usuario = await validaUsuarioAiuvl();
   if (!usuario?.permissao || usuario.permissao !== "DEV") redirect("/aiuvl/login");
 
