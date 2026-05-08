@@ -128,6 +128,23 @@ export default async function CandidaturaAiusceDetalhe({
                 <p className="font-medium">Sim{org.cnpjChapa ? ` — CNPJ: ${org.cnpjChapa}` : ""}</p>
               </div>
             )}
+            {org.arquivos.length > 0 && (
+              <div className="md:col-span-3">
+                <p className="text-muted-foreground mb-2">Documentos da Entidade</p>
+                <div className="flex flex-wrap gap-2">
+                  {org.arquivos.map((arq) => (
+                    <VisualizadorArquivo
+                      key={arq.id}
+                      id={arq.id}
+                      nome={arq.nome}
+                      tipo={arq.tipo}
+                      label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                      url={`${BASE_PATH}/api/aiusce/arquivos/${arq.id}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

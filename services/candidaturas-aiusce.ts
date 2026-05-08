@@ -29,7 +29,7 @@ export interface IAiusceCandidatura extends Candidatura {
 
 export interface IAiusceCandidaturaDetalhe extends Candidatura {
   usuario: Usuario;
-  organizacao: OrganizacaoCandidata | null;
+  organizacao: (OrganizacaoCandidata & { arquivos: Arquivo[] }) | null;
   candidatos: (Candidato & { arquivos: Arquivo[] })[];
   arquivos: Arquivo[];
 }
@@ -91,7 +91,7 @@ export async function buscarCandidaturaAiuscePorId(id: string): Promise<IAiusceC
     where: { id },
     include: {
       usuario: true,
-      organizacao: true,
+      organizacao: { include: { arquivos: true } },
       candidatos: { include: { arquivos: true } },
       arquivos: true,
     },
