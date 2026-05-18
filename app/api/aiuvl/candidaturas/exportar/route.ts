@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { exportarCandidaturasAiuvl } from "@/services/candidaturas-aiuvl";
 import { validaUsuarioAiuvl } from "@/services/usuario-aiuvl";
 
@@ -36,11 +36,13 @@ export async function GET(request: NextRequest) {
     };
   });
 
-  const ws = XLSX.utils.json_to_sheet(linhas);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Candidaturas");
-
-  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Candidaturas");
+  if (linhas.length > 0) {
+    ws.columns = Object.keys(linhas[0]).map((key) => ({ header: key, key }));
+    linhas.forEach((linha) => ws.addRow(linha));
+  }
+  const buf = Buffer.from(await wb.xlsx.writeBuffer());
 
   return new NextResponse(buf, {
     headers: {
