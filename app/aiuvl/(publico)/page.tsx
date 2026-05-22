@@ -2,8 +2,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Info, Download } from "lucide-react";
-import { periodoInscricaoCandidatosAiuvlAberto, periodoInscricaoEleitoresAiuvlAberto } from "@/lib/config";
+import { ArrowRight, Info, Download, AlertTriangle } from "lucide-react";
+import { periodoInscricaoCandidatosAiuvlAberto, periodoInscricaoEleitoresAiuvlAberto, prazoCandidatosAiuvlEncerrado, INICIO_INSCRICAO_AIUVL_ELEITORES } from "@/lib/config";
 
 const MapaVisualizacao = dynamic(() => import("./_components/mapa-visualizacao"));
 
@@ -20,9 +20,31 @@ const ANEXOS = [
 export default function AiuvlHome() {
   const candidatosAberto = periodoInscricaoCandidatosAiuvlAberto();
   const eleitoresAberto = periodoInscricaoEleitoresAiuvlAberto();
+  const candidatosEncerrado = prazoCandidatosAiuvlEncerrado();
+
+  const inicioEleitores = INICIO_INSCRICAO_AIUVL_ELEITORES.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "America/Sao_Paulo",
+  });
 
   return (
     <div className="space-y-4">
+      {candidatosEncerrado && !eleitoresAberto && (
+        <div className="rounded-none md:rounded-md border border-amber-400 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-600 px-6 py-5 flex gap-4 items-start">
+          <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-lg font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wide">
+              Inscrições para candidatos encerradas
+            </p>
+            {/* <p className="text-sm text-amber-700 dark:text-amber-400">
+              O próximo período de inscrição — <strong>Inscrição de Eleitores</strong> — terá início em <strong>{inicioEleitores}</strong>.
+            </p> */}
+          </div>
+        </div>
+      )}
+
       <section className="space-y-6">
         <div className="text-center space-y-2 flex flex-col items-center gap-2">
           <h2 className="text-3xl font-bold">Eleição do Conselho Gestor AIU-VL</h2>
