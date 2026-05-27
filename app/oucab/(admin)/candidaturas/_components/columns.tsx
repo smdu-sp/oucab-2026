@@ -11,6 +11,7 @@ import { BASE_PATH } from "@/lib/config";
 import type { ICandidatura } from "@/services/candidaturas";
 import { EnumBadge } from "@/components/enum-badge";
 import { STATUS_INFO, TIPO_INSCRICAO_INFO, AREA_PERIMETRO_INFO, getInfo } from "@/lib/labels";
+import BtnDownloadArquivos from "@/components/btn-download-arquivos";
 
 function OcultarButton({ id, oculto }: { id: string; oculto: boolean }) {
   const router = useRouter();
@@ -98,6 +99,7 @@ export function createColumns(isDev: boolean): ColumnDef<ICandidatura>[] {
       cell: ({ row }) => (
         <div className="flex justify-center gap-1">
           {isDev && <OcultarButton id={row.original.id} oculto={row.original.oculto} />}
+          <BtnDownloadArquivos url={`${BASE_PATH}/api/candidaturas/${row.original.id}/arquivos-zip`} variant="icon" />
           <Button asChild size="icon" variant="ghost">
             <Link href={`/oucab/candidaturas/${row.original.id}`}>
               <Eye className="h-4 w-4" />

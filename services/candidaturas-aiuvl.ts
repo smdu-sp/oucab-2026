@@ -88,11 +88,9 @@ export async function buscarCandidaturasAiuvl(
 }
 
 export async function exportarCandidaturasAiuvl(busca?: string, status?: string, segmento?: string) {
-  const isDev = await isDevSession();
-
   const where = {
     tipoInscricao: "CANDIDATO" as TipoInscricao,
-    ...(!isDev && { oculto: false }),
+    oculto: false,
     ...(busca && {
       OR: [
         { usuario: { nome: { contains: busca } } },
@@ -109,8 +107,9 @@ export async function exportarCandidaturasAiuvl(busca?: string, status?: string,
     orderBy: { criadoEm: "desc" },
     where,
     include: {
+      usuario: true,
       organizacao: true,
-      candidatos: { select: { nome: true, tipoCandidato: true } },
+      candidatos: true,
     },
   });
 }

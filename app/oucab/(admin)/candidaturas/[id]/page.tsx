@@ -17,6 +17,7 @@ import { BASE_PATH } from '@/lib/config';
 import VisualizadorArquivo from '@/components/visualizador-arquivo';
 import { EnumBadge } from '@/components/enum-badge';
 import { STATUS_INFO, TIPO_INSCRICAO_INFO, TIPO_CADASTRO_INFO, TIPO_CANDIDATO_INFO, getInfo } from '@/lib/labels';
+import BtnDownloadArquivos from '@/components/btn-download-arquivos';
 
 const categoriaLabel: Record<string, string> = {
 	REQUERIMENTO: 'Requerimento',
@@ -75,6 +76,10 @@ export default async function CandidaturaDetalhe({
 						Criada em {formatDate(candidatura.criadoEm)}
 					</p>
 				</div>
+				<BtnDownloadArquivos
+					url={`${BASE_PATH}/api/candidaturas/${candidatura.id}/arquivos-zip`}
+					filename={`arquivos-${candidatura.usuario.nome ?? candidatura.id}.zip`}
+				/>
 				<EnumBadge info={getInfo(STATUS_INFO, candidatura.status)} className='text-sm px-3 py-1' />
 			</div>
 

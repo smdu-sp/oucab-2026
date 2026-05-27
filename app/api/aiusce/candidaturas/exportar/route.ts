@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { exportarCandidaturasAiuvl } from "@/services/candidaturas-aiuvl";
-import { validaUsuarioAiuvl } from "@/services/usuario-aiuvl";
+import { exportarCandidaturasAiusce } from "@/services/candidaturas-aiusce";
+import { validaUsuarioAiusce } from "@/services/usuario-aiusce";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
@@ -10,13 +10,12 @@ const statusLabel: Record<string, string> = {
   EM_ANALISE: "Em Análise",
   DEFERIDO: "Deferido",
   INDEFERIDO: "Indeferido",
+  AGUARDANDO_DOCUMENTACAO: "Aguardando Documentação",
 };
 
 const segmentoLabel: Record<string, string> = {
-  ONG: "ONG",
-  ASSOCIACAO_BAIRRO: "Associação de Bairro",
-  ENTIDADE_ACADEMICA: "Entidade Acadêmica",
-  REP_EMPRESARIAL: "Setor Empresarial",
+  ONG_CULTURAL: "ONG Cultural",
+  ENTIDADE_URB_AMB: "Entidade Urb. e Amb.",
 };
 
 const generoLabel: Record<string, string> = {
@@ -26,7 +25,7 @@ const generoLabel: Record<string, string> = {
 };
 
 export async function GET(request: NextRequest) {
-  const usuario = await validaUsuarioAiuvl();
+  const usuario = await validaUsuarioAiusce();
   if (!usuario?.permissao || !["DEV", "ADM"].includes(usuario.permissao)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
@@ -34,10 +33,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const busca = searchParams.get("busca") ?? undefined;
   const status = searchParams.get("status") ?? undefined;
-  const segmento = searchParams.get("segmento") ?? undefined;
   const grupos = (searchParams.get("grupos") ?? "inscricao,entidade,representante,titular,suplente").split(",");
 
-  const candidaturas = await exportarCandidaturasAiuvl(busca, status, segmento);
+  const candidaturas = await exportarCandidaturasAiusce(busca, status);
 
   const linhas = candidaturas.map((c) => {
     const row: Record<string, unknown> = {};
@@ -55,13 +53,13 @@ export async function GET(request: NextRequest) {
       row["Telefone"] = c.organizacao.telefone ?? "";
       row["Sede"] = c.organizacao.sede;
       row["Data de Abertura"] = formatDateBR(c.organizacao.dataAbertura);
+      row["Forma Chapa"] = c.organizacao.formaChapa ? "Sim" : "Não";
+      row["CNPJ Chapa"] = c.organizacao.cnpjChapa ?? "";
     }
 
     if (grupos.includes("representante") && c.organizacao) {
       row["Nome do Representante"] = c.organizacao.repNome;
       row["CPF do Representante"] = c.organizacao.repCpf;
-      row["Título de Eleitor (Rep.)"] = c.organizacao.repTituloEleitor ?? "";
-      row["Domicílio Eleitoral (Rep.)"] = c.organizacao.repDomicilio ?? "";
     }
 
     const titular = c.candidatos.find((cd) => cd.tipoCandidato === "TITULAR");
@@ -105,7 +103,7 @@ export async function GET(request: NextRequest) {
   return new NextResponse(buf, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="candidaturas-aiuvl.xlsx"`,
+      "Content-Disposition": `attachment; filename="candidaturas-aiusce.xlsx"`,
     },
   });
 }

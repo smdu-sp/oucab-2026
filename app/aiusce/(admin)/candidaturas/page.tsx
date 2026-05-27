@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { CandidaturasTable } from "./_components/candidaturas-table";
 import { buscarCandidaturasAiusce, IAiusceCandidatura, IAiusceCandidaturaPaginada } from "@/services/candidaturas-aiusce";
 import { validaUsuarioAiusce } from "@/services/usuario-aiusce";
+import DialogExportar from "@/components/dialog-exportar";
 
 export default async function CandidaturasAiusceSuspense({
   searchParams,
@@ -51,7 +52,20 @@ async function CandidaturasAiusce({
 
   return (
     <div className="px-0 md:px-8 relative pb-20 md:pb-14 h-full container mx-auto">
-      <h1 className="text-xl md:text-4xl font-bold">Candidaturas AIUSCE</h1>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h1 className="text-xl md:text-4xl font-bold">Candidaturas AIUSCE</h1>
+        <DialogExportar
+          url="/api/aiusce/candidaturas/exportar"
+          filtros={{ busca: busca as string, status: status as string }}
+          grupos={[
+            { id: "inscricao", label: "Dados da Inscrição", descricao: "Status e data de criação" },
+            { id: "entidade", label: "Entidade", descricao: "Razão social, CNPJ, segmento, e-mail, telefone, sede" },
+            { id: "representante", label: "Representante Legal", descricao: "Nome e CPF do representante" },
+            { id: "titular", label: "Candidato Titular", descricao: "Nome, CPF, e-mail e dados pessoais do titular" },
+            { id: "suplente", label: "Candidato Suplente", descricao: "Nome, CPF, e-mail e dados pessoais do suplente" },
+          ]}
+        />
+      </div>
       <div className="grid grid-cols-1 gap-y-3 my-5">
         <Filtros
           camposFiltraveis={[

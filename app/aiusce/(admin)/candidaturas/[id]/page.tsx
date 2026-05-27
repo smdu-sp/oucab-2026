@@ -15,6 +15,7 @@ import { BASE_PATH } from "@/lib/config";
 import VisualizadorArquivo from "@/components/visualizador-arquivo";
 import { EnumBadge } from "@/components/enum-badge";
 import { STATUS_INFO, SEGMENTO_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
+import BtnDownloadArquivos from "@/components/btn-download-arquivos";
 
 const generoLabel: Record<string, string> = {
   MASCULINO: "Masculino",
@@ -65,6 +66,10 @@ export default async function CandidaturaAiusceDetalhe({
           <h1 className="text-xl md:text-4xl font-bold">Candidatura AIUSCE</h1>
           <p className="text-muted-foreground text-sm mt-1">Criada em {fmt(candidatura.criadoEm)}</p>
         </div>
+        <BtnDownloadArquivos
+          url={`${BASE_PATH}/api/aiusce/candidaturas/${candidatura.id}/arquivos-zip`}
+          filename={`arquivos-${candidatura.organizacao?.razaoSocial ?? candidatura.id}.zip`}
+        />
         <EnumBadge info={getInfo(STATUS_INFO, candidatura.status)} className="text-sm px-3 py-1" />
       </div>
 

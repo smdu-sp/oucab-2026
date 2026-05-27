@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { CandidaturasTable } from "./_components/candidaturas-table";
 import { buscarCandidaturasAiuvl, IAiuvlCandidatura, IAiuvlCandidaturaPaginada } from "@/services/candidaturas-aiuvl";
 import { validaUsuarioAiuvl } from "@/services/usuario-aiuvl";
-import BtnExportarCandidaturasAiuvl from "@/components/btn-exportar-candidaturas-aiuvl";
+import DialogExportar from "@/components/dialog-exportar";
 
 export default async function CandidaturasAiuvlSuspense({
   searchParams,
@@ -60,7 +60,17 @@ async function CandidaturasAiuvl({
     <div className="px-0 md:px-8 relative pb-20 md:pb-14 h-full container mx-auto">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-xl md:text-4xl font-bold">Candidaturas AIU-VL</h1>
-        <BtnExportarCandidaturasAiuvl busca={busca as string} status={status as string} segmento={segmento as string} />
+        <DialogExportar
+          url="/api/aiuvl/candidaturas/exportar"
+          filtros={{ busca: busca as string, status: status as string, segmento: segmento as string }}
+          grupos={[
+            { id: "inscricao", label: "Dados da Inscrição", descricao: "Status e data de criação" },
+            { id: "entidade", label: "Entidade", descricao: "Razão social, CNPJ, segmento, e-mail, telefone, sede" },
+            { id: "representante", label: "Representante Legal", descricao: "Nome, CPF e título de eleitor do representante" },
+            { id: "titular", label: "Candidato Titular", descricao: "Nome, CPF, e-mail e dados pessoais do titular" },
+            { id: "suplente", label: "Candidato Suplente", descricao: "Nome, CPF, e-mail e dados pessoais do suplente" },
+          ]}
+        />
       </div>
       <div className="grid grid-cols-1 gap-y-3 my-5">
         <Filtros

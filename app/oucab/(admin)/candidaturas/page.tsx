@@ -9,6 +9,7 @@ import { CandidaturasTable } from './_components/candidaturas-table';
 import { buscarCandidaturas, ICandidaturaPaginada, ICandidatura } from '@/services/candidaturas';
 import { validaUsuario } from '@/services/usuario';
 import { redirect } from 'next/navigation';
+import DialogExportar from '@/components/dialog-exportar';
 
 export default async function CandidaturasSuspense({
 	searchParams,
@@ -78,7 +79,21 @@ async function Candidaturas({
 
 	return (
 		<div className='px-0 md:px-8 relative pb-20 md:pb-14 h-full container mx-auto'>
-			<h1 className='text-xl md:text-4xl font-bold'>Candidaturas</h1>
+			<div className='flex items-center justify-between gap-4 flex-wrap'>
+				<h1 className='text-xl md:text-4xl font-bold'>Candidaturas</h1>
+				<DialogExportar
+					url='/api/candidaturas/exportar'
+					filtros={{ busca: busca as string, tipoInscricao: tipoInscricao as string, status: status as string, areaPerimetro: areaPerimetro as string }}
+					grupos={[
+						{ id: 'inscricao', label: 'Dados da Inscrição', descricao: 'Status, tipo de inscrição, tipo de cadastro e data de criação' },
+						{ id: 'usuario', label: 'Dados do Usuário', descricao: 'Nome e e-mail do usuário' },
+						{ id: 'endereco', label: 'Endereço', descricao: 'Logradouro, número, bairro, cidade, CEP e perímetro' },
+						{ id: 'organizacao', label: 'Organização / Chapa', descricao: 'Razão social, CNPJ e dados de chapa' },
+						{ id: 'candidato', label: 'Candidato / Titular', descricao: 'Dados do candidato individual ou titular' },
+						{ id: 'suplente', label: 'Candidato Suplente', descricao: 'Dados do suplente' },
+					]}
+				/>
+			</div>
 			<div className='grid grid-cols-1 gap-y-3 my-5'>
 				<Filtros
 					camposFiltraveis={[

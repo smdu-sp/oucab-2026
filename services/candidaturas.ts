@@ -91,6 +91,40 @@ export async function buscarCandidaturas(
   return { data: dados as ICandidatura[], total, pagina, limite };
 }
 
+export async function exportarCandidaturas(
+  busca?: string,
+  tipoInscricao?: string,
+  status?: string,
+  areaPerimetro?: string,
+) {
+  const where = {
+    oculto: false,
+    ...(busca && {
+      OR: [
+        { usuario: { nome: { contains: busca } } },
+        { usuario: { email: { contains: busca } } },
+        { organizacao: { razaoSocial: { contains: busca } } },
+      ],
+    }),
+    ...(tipoInscricao && tipoInscricao !== "all" && { tipoInscricao: tipoInscricao as TipoInscricao }),
+    ...(status && status !== "all" && { status: status as Status }),
+    ...(areaPerimetro && areaPerimetro !== "all" && {
+      endereco: { areaPerimetro: areaPerimetro as AreaPerimetro },
+    }),
+  };
+
+  return db.candidatura.findMany({
+    orderBy: { criadoEm: "desc" },
+    where,
+    include: {
+      usuario: true,
+      endereco: true,
+      organizacao: true,
+      candidatos: true,
+    },
+  });
+}
+
 export async function buscarCandidaturaPorId(id: string): Promise<ICandidaturaDetalhe | null> {
   const isDev = await isDevSession();
   const candidatura = await db.candidatura.findUnique({

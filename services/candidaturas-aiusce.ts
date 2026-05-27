@@ -85,6 +85,32 @@ export async function buscarCandidaturasAiusce(
   return { data: dados as IAiusceCandidatura[], total, pagina, limite };
 }
 
+export async function exportarCandidaturasAiusce(busca?: string, status?: string) {
+  const where = {
+    tipoInscricao: "CANDIDATO" as TipoInscricao,
+    oculto: false,
+    ...(busca && {
+      OR: [
+        { usuario: { nome: { contains: busca } } },
+        { usuario: { email: { contains: busca } } },
+        { organizacao: { razaoSocial: { contains: busca } } },
+        { organizacao: { cnpj: { contains: busca } } },
+      ],
+    }),
+    ...(status && status !== "all" && { status: status as Status }),
+  };
+
+  return db.candidatura.findMany({
+    orderBy: { criadoEm: "desc" },
+    where,
+    include: {
+      usuario: true,
+      organizacao: true,
+      candidatos: true,
+    },
+  });
+}
+
 export async function buscarCandidaturaAiuscePorId(id: string): Promise<IAiusceCandidaturaDetalhe | null> {
   const isDev = await isDevSession();
   const candidatura = await db.candidatura.findUnique({
