@@ -62,12 +62,14 @@ export async function GET(
   }
 
   const zipBuffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
-  const nomeBase = (candidatura.usuario.nome ?? id).replace(/[^a-zA-Z0-9À-ÿ\s-]/g, "").trim();
+  const razaoSocial = (candidatura.organizacao?.razaoSocial ?? candidatura.usuario.nome ?? id).replace(/[^a-zA-Z0-9À-ÿ\s-]/g, "").trim();
+  const cnpj = (candidatura.organizacao?.cnpj ?? "").replace(/\D/g, "");
+  const nomeArquivo = cnpj ? `${razaoSocial} - ${cnpj}` : razaoSocial;
 
   return new NextResponse(zipBuffer, {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="${encodeURIComponent(`arquivos-${nomeBase}.zip`)}"`,
+      "Content-Disposition": `attachment; filename="${encodeURIComponent(`${nomeArquivo}.zip`)}"`,
     },
   });
 }

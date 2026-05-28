@@ -22,10 +22,13 @@ export default function BtnDownloadArquivos({ url, filename = "arquivos.zip", va
         toast.error("Erro ao baixar arquivos. Tente novamente.");
         return;
       }
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const match = disposition.match(/filename="([^"]+)"/);
+      const resolvedFilename = match ? decodeURIComponent(match[1]) : filename;
       const blob = await res.blob();
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = filename;
+      a.download = resolvedFilename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
