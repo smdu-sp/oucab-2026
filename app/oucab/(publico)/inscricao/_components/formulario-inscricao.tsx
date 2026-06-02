@@ -211,9 +211,9 @@ const DOCS_ORG_ELEITOR = {
   ),
   orgDocAnexoV: criarEtapaDocumento(
     "orgDocAnexoV",
-    "Declaração de Idoneidade perante o Município de São Paulo (Anexo IV)",
-    "Declaração de idoneidade perante o Município de São Paulo, conforme Anexo IV do Edital.",
-    ["O modelo do Anexo IV está disponível no site da SMUL", "Deve ser assinada pelo/a representante legal"],
+    "Declaração de Idoneidade perante o Município de São Paulo (Anexo V)",
+    "Declaração de idoneidade perante o Município de São Paulo, conforme Anexo V do Edital.",
+    ["O modelo do Anexo V está disponível no site da SMUL", "Deve ser assinada pelo/a representante legal"],
   ),
 };
 
@@ -725,7 +725,7 @@ function buildEtapas(tipoCadastro: string, tipoInscricao: string, formaChapa = f
       etapaDoc(orgDocs.orgDocEstatutoSocial, "Estatuto Social", "orgDocEstatutoSocial"),
       etapaDoc(orgDocs.orgDocAtaEleicao, "Ata da Última Eleição", "orgDocAtaEleicao"),
       etapaDoc(orgDocs.orgDocCertidaoCNPJ, "Certidão de Regularidade do CNPJ", "orgDocCertidaoCNPJ"),
-      etapaDoc(orgDocs.orgDocAnexoV, "Declaração de Idoneidade (Anexo IV)", "orgDocAnexoV"),
+      etapaDoc(orgDocs.orgDocAnexoV, "Declaração de Idoneidade (Anexo V)", "orgDocAnexoV"),
       // ── Documentos do/a representante ─────────────────────────────────────
       etapaDoc(repDocs.titularDocIdentidade, "Documento de Identificação", "titularDocIdentidade"),
       etapaDoc(repDocs.titularDocCPF, "CPF (opcional)", "titularDocCPF", false),
