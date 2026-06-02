@@ -31,7 +31,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
       "font-src 'self'",
-      "connect-src 'self'",
+      "connect-src 'self' https://nominatim.openstreetmap.org",
       "frame-ancestors 'self'",
       "form-action 'self'",
       "base-uri 'self'",
