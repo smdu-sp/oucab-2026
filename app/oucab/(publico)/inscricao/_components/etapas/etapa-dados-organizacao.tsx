@@ -232,6 +232,7 @@ export default function EtapaDadosOrganizacao() {
   const { register, setValue, watch, formState: { errors } } = useFormContext<FormularioInscricaoData>();
   const errosOrg = (errors as any).organizacao || {};
   const formaChapa = watch("organizacao.formaChapa" as any) as boolean | undefined;
+  const tipoCadastro = watch("tipoCadastro");
 
   return (
     <div className="space-y-6">
@@ -280,8 +281,8 @@ export default function EtapaDadosOrganizacao() {
         <p className="text-xs text-muted-foreground">As credenciais de acesso ao portal serão enviadas para este e-mail.</p>
       </div>
 
-      {/* Inscrição de Chapa */}
-      <div className="border rounded-lg p-4 space-y-4">
+      {/* Inscrição de Chapa — apenas para candidaturas */}
+      {tipoCadastro !== "ELEITOR" && <div className="border rounded-lg p-4 space-y-4">
         <div className="flex items-center gap-3">
           <input
             id="formaChapa"
@@ -328,7 +329,7 @@ export default function EtapaDadosOrganizacao() {
             </div>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
