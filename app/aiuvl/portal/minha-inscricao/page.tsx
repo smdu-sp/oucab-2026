@@ -2,11 +2,14 @@ import { auth } from "@/auth/aiuvl";
 import { dbAiuvl as db } from "@/lib/prisma-aiuvl";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
 import { EnumBadge } from "@/components/enum-badge";
 import { STATUS_INFO, SEGMENTO_AIUVL_INFO, TIPO_INSCRICAO_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
+import { FolderOpen } from "lucide-react";
+import Link from "next/link";
 
 function cnpjFormatado(cnpj: string) {
   return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
@@ -61,9 +64,15 @@ export default async function MinhaInscricaoAiuvlPage() {
             )}
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <EnumBadge info={getInfo(TIPO_INSCRICAO_INFO, isCandidato ? "CANDIDATO" : "ELEITOR")} />
           <EnumBadge info={getInfo(STATUS_INFO, statusAtual)} />
+          <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+            <Link href="/aiuvl/portal/meus-arquivos">
+              <FolderOpen className="w-4 h-4 mr-1.5" />
+              Meus Arquivos
+            </Link>
+          </Button>
         </div>
       </div>
 
