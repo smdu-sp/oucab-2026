@@ -14,6 +14,26 @@ export function prazoEncerrado(): boolean {
   return new Date() > PRAZO_INSCRICAO;
 }
 
+export const PRAZO_INSCRICAO_REP_MORADIA = new Date(
+  process.env.PRAZO_INSCRICAO_REP_MORADIA ?? "2026-06-16T23:59:59.000Z"
+);
+
+export function prazoRepMoradiaEncerrado(): boolean {
+  return new Date() > PRAZO_INSCRICAO_REP_MORADIA;
+}
+
+export const INICIO_INSCRICAO_ELEITORES = new Date(
+  process.env.INICIO_INSCRICAO_ELEITORES ?? "2026-06-02T00:00:00.000Z"
+);
+export const PRAZO_INSCRICAO_ELEITORES = new Date(
+  process.env.PRAZO_INSCRICAO_ELEITORES ?? "2026-06-07T23:59:59.000Z"
+);
+
+export function periodoInscricaoEleitoresAberto(): boolean {
+  const agora = new Date();
+  return agora >= INICIO_INSCRICAO_ELEITORES && agora <= PRAZO_INSCRICAO_ELEITORES;
+}
+
 export const PRAZO_INSCRICAO_AIUSCE = new Date(
   process.env.PRAZO_INSCRICAO_AIUSCE ?? "2026-05-08T23:59:59.999Z"
 );

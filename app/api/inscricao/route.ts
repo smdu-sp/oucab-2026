@@ -5,7 +5,11 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { gerarSenha, hashSenha } from "@/lib/password";
 import { sendEmail, emailBoasVindas, emailBoasVindasEntidade } from "@/lib/email";
-import { PRAZO_INSCRICAO } from "@/lib/config";
+import {
+  prazoEncerrado,
+  prazoRepMoradiaEncerrado,
+  periodoInscricaoEleitoresAberto,
+} from "@/lib/config";
 import type { CategoriaArquivo } from "@prisma/client";
 
 // ---------------------------------------------------------------------------
@@ -110,10 +114,6 @@ const CAMPOS_ARQUIVO_SUPLENTE = [
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
-  if (new Date() > PRAZO_INSCRICAO) {
-    return NextResponse.json({ error: "Não é possível se inscrever fora do prazo." }, { status: 400 });
-  }
-
   try {
     const formData = await request.formData();
 
@@ -125,6 +125,26 @@ export async function POST(request: NextRequest) {
 
     const isRep = ["REP_MORADIA", "REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
     const isRepMoradia = tipoInscricao === "REP_MORADIA";
+    const isEleitoreEntidade = tipoCadastro === "ELEITOR" && isRep;
+    const isRepMoradiaCandidate = tipoCadastro === "CANDIDATO" && isRepMoradia;
+
+    // Verificação de prazo por tipo de inscrição
+    if (isEleitoreEntidade) {
+      if (!periodoInscricaoEleitoresAberto()) {
+        return NextResponse.json(
+          { error: "O período de inscrição de entidades eleitoras não está aberto (02/06 a 07/06/2026)." },
+          { status: 400 },
+        );
+      }
+    } else if (isRepMoradiaCandidate) {
+      if (prazoRepMoradiaEncerrado()) {
+        return NextResponse.json({ error: "Não é possível se inscrever fora do prazo." }, { status: 400 });
+      }
+    } else {
+      if (prazoEncerrado()) {
+        return NextResponse.json({ error: "Não é possível se inscrever fora do prazo." }, { status: 400 });
+      }
+    }
 
     const areaPerimetroRaw = formData.get("endereco.areaPerimetro") as "ADESAO" | "EXPANDIDO" | null;
     const endereco = {
@@ -144,7 +164,119 @@ export async function POST(request: NextRequest) {
     await garantirDiretorio(uploadsBase);
 
     // -----------------------------------------------------------------------
-    // Fluxo REP_* (organização)
+    // Fluxo ELEITOR entidade (Art. 11 do Edital)
+    // -----------------------------------------------------------------------
+    if (isEleitoreEntidade) {
+      const cnpjRaw = formData.get("organizacao.cnpj") as string;
+      const cnpj = cnpjRaw.replace(/[^\d]/g, "");
+      const razaoSocial = formData.get("organizacao.razaoSocial") as string;
+      const emailOrg = (formData.get("organizacao.email") as string).toLowerCase();
+
+      const orgExistente = await db.organizacao.findUnique({ where: { cnpj } });
+      if (orgExistente) {
+        return NextResponse.json(
+          { error: "CNPJ já cadastrado. Para atualizar a inscrição, acesse o portal com suas credenciais." },
+          { status: 400 },
+        );
+      }
+
+      const representante = {
+        nome: formData.get("titular.nome") as string,
+        nomeSocial: (formData.get("titular.nomeSocial") as string) || null,
+        cpf: (formData.get("titular.cpf") as string).replace(/[^\d]/g, ""),
+        dataNascimento: formData.get("titular.dataNascimento") as string,
+        telefone: formData.get("titular.telefone") as string,
+        genero: formData.get("titular.genero") as "MASCULINO" | "FEMININO" | "OUTRO",
+        email: formData.get("titular.email") as string,
+        tituloEleitor: (formData.get("titular.tituloEleitor") as string) || null,
+      };
+
+      const senhaPlana = gerarSenha();
+      const senhaHash = await hashSenha(senhaPlana);
+
+      const resultado = await db.$transaction(async (tx) => {
+        const usuario = await tx.usuario.create({
+          data: { tipo: "EXTERNO", nome: razaoSocial, email: emailOrg, senha: senhaHash, primeiroAcesso: true },
+        });
+
+        const candidatura = await tx.candidatura.create({
+          data: { tipoCadastro: "ELEITOR", tipoInscricao, usuarioId: usuario.id },
+        });
+
+        const org = await tx.organizacao.create({
+          data: { cnpj, razaoSocial, formaChapa: false, candidaturaId: candidatura.id },
+        });
+
+        await tx.endereco.create({ data: { ...endereco, candidaturaId: candidatura.id } });
+
+        const orgDir = join(uploadsBase, `candidatura-${candidatura.id}`);
+        await garantirDiretorio(orgDir);
+
+        // Documentos da entidade
+        for (const campo of CAMPOS_ARQUIVO_ORG) {
+          const arquivo = formData.get(campo) as File | null;
+          if (arquivo && arquivo.size > 0) {
+            const salvo = await salvarArquivo(arquivo, orgDir);
+            await tx.arquivo.create({
+              data: { ...salvo, organizacaoId: org.id, categoria: CATEGORIA_MAP[campo] ?? "OUTRO" },
+            });
+          }
+        }
+
+        // Eleitor — representante legal da entidade
+        const eleitor = await tx.eleitor.create({
+          data: {
+            nome: representante.nome,
+            email: representante.email,
+            telefone: representante.telefone,
+            cpf: representante.cpf,
+            dataNascimento: parseDateBR(representante.dataNascimento),
+            genero: representante.genero,
+            tituloEleitor: representante.tituloEleitor || null,
+            organizacaoId: org.id,
+          },
+        });
+
+        // Documentos do/a representante
+        const CAMPOS_REP_ELEITOR = [
+          "titularDocIdentidade", "titularDocCPF",
+          "titularDocTituloEleitor", "titularDocComprovante", "titularDocDeclaracao",
+        ] as const;
+        for (const campo of CAMPOS_REP_ELEITOR) {
+          const arquivo = formData.get(campo) as File | null;
+          if (arquivo && arquivo.size > 0) {
+            const salvo = await salvarArquivo(arquivo, orgDir);
+            await tx.arquivo.create({
+              data: { ...salvo, eleitorId: eleitor.id, categoria: CATEGORIA_MAP[campo] ?? "OUTRO" },
+            });
+          }
+        }
+
+        return { candidatura, org, eleitor };
+      });
+
+      await sendEmail({
+        to: emailOrg,
+        subject: "OUCAB 2026 — Inscrição de Entidade Eleitora recebida",
+        ...emailBoasVindasEntidade({
+          razaoSocial,
+          cnpj,
+          emailEntidade: emailOrg,
+          senha: senhaPlana,
+          tipoInscricao: "ELEITOR",
+          sistemaLabel: "OUCAB 2026",
+        }),
+      }).catch(console.error);
+
+      return NextResponse.json({
+        success: true,
+        message: "Inscrição da entidade eleitora realizada com sucesso! Verifique o e-mail cadastrado para as credenciais de acesso ao portal.",
+        candidaturaId: resultado.candidatura.id,
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // Fluxo REP_* candidato (organização)
     // -----------------------------------------------------------------------
     if (isRep) {
       const cnpjRaw = formData.get("organizacao.cnpj") as string;
@@ -298,8 +430,8 @@ export async function POST(request: NextRequest) {
         // Documentos do titular
         for (const campo of CAMPOS_ARQUIVO_TITULAR) {
           const arquivo = formData.get(campo) as File | null;
-          // Pular campos exclusivos do REP_MORADIA para outros tipos
-          if (!isRepMoradia && (campo === "titularDocRequerimento" || campo === "titularDocComprovante")) continue;
+          if (campo === "titularDocRequerimento" && !isRepMoradia) continue;
+          if (campo === "titularDocComprovante" && !isRepMoradia) continue;
           if (arquivo && arquivo.size > 0) {
             const salvo = await salvarArquivo(arquivo, orgDir);
             await tx.arquivo.create({
@@ -339,8 +471,8 @@ export async function POST(request: NextRequest) {
         // Documentos do suplente
         for (const campo of CAMPOS_ARQUIVO_SUPLENTE) {
           const arquivo = formData.get(campo) as File | null;
-          // Pular campos exclusivos do REP_MORADIA para outros tipos
-          if (!isRepMoradia && (campo === "suplenteDocRequerimento" || campo === "suplenteDocComprovante")) continue;
+          if (campo === "suplenteDocRequerimento" && !isRepMoradia) continue;
+          if (campo === "suplenteDocComprovante" && !isRepMoradia) continue;
           if (arquivo && arquivo.size > 0) {
             const salvo = await salvarArquivo(arquivo, orgDir);
             await tx.arquivo.create({

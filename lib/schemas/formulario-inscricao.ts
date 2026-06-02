@@ -306,12 +306,15 @@ export const formularioInscricaoSchema = z
       if (!data.organizacao?.cnpj) ctx.addIssue({ code: "custom", path: ["organizacao", "cnpj"], message: "CNPJ é obrigatório" });
       if (!data.organizacao?.razaoSocial) ctx.addIssue({ code: "custom", path: ["organizacao", "razaoSocial"], message: "Razão social é obrigatória" });
       if (!data.organizacao?.email) ctx.addIssue({ code: "custom", path: ["organizacao", "email"], message: "E-mail da organização é obrigatório" });
-      if (!data.titular?.nome) ctx.addIssue({ code: "custom", path: ["titular", "nome"], message: "Nome do titular é obrigatório" });
-      if (!data.titular?.cpf) ctx.addIssue({ code: "custom", path: ["titular", "cpf"], message: "CPF do titular é obrigatório" });
-      if (!data.titular?.email) ctx.addIssue({ code: "custom", path: ["titular", "email"], message: "E-mail do titular é obrigatório" });
-      if (!data.suplente?.nome) ctx.addIssue({ code: "custom", path: ["suplente", "nome"], message: "Nome do suplente é obrigatório" });
-      if (!data.suplente?.cpf) ctx.addIssue({ code: "custom", path: ["suplente", "cpf"], message: "CPF do suplente é obrigatório" });
-      if (!data.suplente?.email) ctx.addIssue({ code: "custom", path: ["suplente", "email"], message: "E-mail do suplente é obrigatório" });
+      if (!data.titular?.nome) ctx.addIssue({ code: "custom", path: ["titular", "nome"], message: "Nome do/a representante é obrigatório" });
+      if (!data.titular?.cpf) ctx.addIssue({ code: "custom", path: ["titular", "cpf"], message: "CPF do/a representante é obrigatório" });
+      if (!data.titular?.email) ctx.addIssue({ code: "custom", path: ["titular", "email"], message: "E-mail do/a representante é obrigatório" });
+      // Suplente somente para candidaturas (não para entidades eleitoras)
+      if (data.tipoCadastro === "CANDIDATO") {
+        if (!data.suplente?.nome) ctx.addIssue({ code: "custom", path: ["suplente", "nome"], message: "Nome do suplente é obrigatório" });
+        if (!data.suplente?.cpf) ctx.addIssue({ code: "custom", path: ["suplente", "cpf"], message: "CPF do suplente é obrigatório" });
+        if (!data.suplente?.email) ctx.addIssue({ code: "custom", path: ["suplente", "email"], message: "E-mail do suplente é obrigatório" });
+      }
     }
 
   });

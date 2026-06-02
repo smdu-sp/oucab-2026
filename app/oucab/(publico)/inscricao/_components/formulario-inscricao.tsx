@@ -177,6 +177,81 @@ const DOCS_ANEXOS_ORG_OUTROS = {
   ),
 };
 
+// Documentos para inscrição de ENTIDADE ELEITORA (Art. 11)
+const DOCS_ORG_ELEITOR = {
+  orgDocAnexoVI: criarEtapaDocumento(
+    "orgDocAnexoVI",
+    "Requerimento de Inscrição de Entidade Eleitora (Anexo VI)",
+    "Requerimento indicando o/a representante legal da entidade, conforme modelo do Anexo VI do Edital.",
+    ["O modelo do Anexo VI está disponível no site da SMUL", "Deve ser assinado pelo/a representante legal da entidade"],
+  ),
+  orgDocDeclaracaoAtuacao: criarEtapaDocumento(
+    "orgDocDeclaracaoAtuacao",
+    "Declaração de Atuação na Região (Anexo II ou III)",
+    "Declaração de atuação, por pelo menos os últimos 2 (dois) anos, na região abrangida pelo perímetro da OUCAB ou nas temáticas urbana e ambiental, conforme Anexos II e III do Edital.",
+    ["Deve comprovar 2 anos de atuação na região ou nas temáticas", "Os modelos estão disponíveis nos Anexos II e III do Edital"],
+  ),
+  orgDocEstatutoSocial: criarEtapaDocumento(
+    "orgDocEstatutoSocial",
+    "Estatuto Social da Entidade (Registrado)",
+    "Estatuto Social, devidamente registrado, comprovando ao menos 02 (dois) anos de existência, contados retroativamente da publicação do Edital.",
+    ["Deve estar registrado em cartório ou órgão competente", "Deve comprovar ao menos 2 anos de existência"],
+  ),
+  orgDocAtaEleicao: criarEtapaDocumento(
+    "orgDocAtaEleicao",
+    "Ata da Última Eleição dos/as Representantes Legais",
+    "Ata da última eleição dos/as representantes legais com mandato em vigor, devidamente registrada.",
+    ["O mandato dos/as representantes legais deve estar em vigor", "A ata deve estar devidamente registrada"],
+  ),
+  orgDocCertidaoCNPJ: criarEtapaDocumento(
+    "orgDocCertidaoCNPJ",
+    "Certidão de Regularidade do CNPJ (Últimos 30 dias)",
+    "Certidão de regularidade do CNPJ, emitida nos últimos 30 dias, comprovando sede no Município de São Paulo.",
+    ["Deve ser emitida nos últimos 30 dias", "Deve comprovar sede no Município de São Paulo", "Obtida em www.receita.fazenda.gov.br"],
+  ),
+  orgDocAnexoV: criarEtapaDocumento(
+    "orgDocAnexoV",
+    "Declaração de Idoneidade perante o Município de São Paulo (Anexo IV)",
+    "Declaração de idoneidade perante o Município de São Paulo, conforme Anexo IV do Edital.",
+    ["O modelo do Anexo IV está disponível no site da SMUL", "Deve ser assinada pelo/a representante legal"],
+  ),
+};
+
+const DOCS_REPRESENTANTE_ELEITOR = {
+  titularDocIdentidade: criarEtapaDocumento(
+    "titularDocIdentidade",
+    "Documento de Identificação Oficial com Foto",
+    "Documento de identificação oficial com foto do/a representante legal da entidade.",
+    ["RG, CNH, Passaporte ou equivalente"],
+  ),
+  titularDocCPF: criarEtapaDocumento(
+    "titularDocCPF",
+    "Certidão Atualizada do CPF (Opcional)",
+    "Certidão atualizada do CPF do/a representante, caso o número não conste no documento de identificação apresentado.",
+    ["Dispensável se o CPF constar no documento de identificação"],
+    false,
+  ),
+  titularDocTituloEleitor: criarEtapaDocumento(
+    "titularDocTituloEleitor",
+    "Título de Eleitor",
+    "Título de eleitor original do/a representante, com situação regular e domicílio eleitoral na cidade de São Paulo/SP.",
+    ["Obrigatório com domicílio eleitoral no Município de São Paulo", "Deve estar em situação regular junto à Justiça Eleitoral"],
+  ),
+  titularDocComprovante: criarEtapaDocumento(
+    "titularDocComprovante",
+    "Comprovante ou Declaração de Residência no Município de São Paulo",
+    "Comprovante ou declaração de residência do/a representante no Município de São Paulo.",
+    ["Conta de água, luz, gás, telefone, extrato bancário ou declaração de residência", "Deve comprovar residência no Município de São Paulo"],
+  ),
+  titularDocDeclaracao: criarEtapaDocumento(
+    "titularDocDeclaracao",
+    "Declaração de Uso de Nome Social (Opcional)",
+    "Declaração de uso de nome social do/a representante, conforme Anexo VI do Edital (opcional).",
+    ["Documento opcional"],
+    false,
+  ),
+};
+
 const DOCS_CHAPA2 = {
   chapa2DocDeclaracaoAtuacao: criarEtapaDocumento(
     "chapa2DocDeclaracaoAtuacao",
@@ -421,6 +496,13 @@ const ETAPA_TIPO_CADASTRO: StepDef = {
   component: EtapaTipoCadastro,
 };
 
+const ETAPA_REPRESENTANTE_DADOS: StepDef = {
+  type: "titularDados",
+  titulo: "Dados do/a Representante",
+  descricao: "Informe os dados pessoais do/a representante legal da entidade",
+  component: EtapaDadosTitular,
+};
+
 const ETAPA_TIPO_INSCRICAO: StepDef = {
   type: "tipoInscricao",
   titulo: "Tipo de Inscrição",
@@ -508,18 +590,24 @@ function etapaDoc(
 
 function buildEtapas(tipoCadastro: string, tipoInscricao: string, formaChapa = false): StepDef[] {
   const isCandidato = tipoCadastro === "CANDIDATO";
+  const isEleitor = tipoCadastro === "ELEITOR";
   const isRepMoradia = tipoInscricao === "REP_MORADIA";
   const isRepOrg = ["REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
+  const isRep = isRepMoradia || isRepOrg;
   const isIndividual = tipoInscricao === "MORADOR" || tipoInscricao === "TRABALHADOR";
   const isTrabalho = tipoInscricao === "TRABALHADOR";
 
+  // Todo fluxo começa com a escolha de tipo de participação
+  const base: StepDef[] = [ETAPA_TIPO_CADASTRO];
+
   if (!tipoInscricao) {
-    return [ETAPA_TIPO_INSCRICAO];
+    return [...base, ETAPA_TIPO_INSCRICAO];
   }
 
   if (isCandidato && isIndividual) {
     // Candidato Morador ou Trabalhador
     return [
+      ...base,
       ETAPA_TIPO_INSCRICAO,
       ETAPA_DADOS_PESSOAIS,
       ETAPA_ENDERECO_PERIMETRO,
@@ -544,6 +632,7 @@ function buildEtapas(tipoCadastro: string, tipoInscricao: string, formaChapa = f
     const titularDocs = DOCS_TITULAR_MORADIA;
     const suplenteDocs = DOCS_SUPLENTE_MORADIA;
     return [
+      ...base,
       ETAPA_TIPO_INSCRICAO,
       ETAPA_ORG_DADOS,
       etapaDoc(orgDocs.orgDocRequerimento, "Requerimento da Entidade", "orgDocRequerimento"),
@@ -575,19 +664,17 @@ function buildEtapas(tipoCadastro: string, tipoInscricao: string, formaChapa = f
 
   if (isCandidato && isRepOrg) {
     // Candidato REP_ONGS / REP_PROFISSIONAIS / REP_EMPRESARIAIS
-    // Texto primeiro, arquivos depois
     const orgDocs = DOCS_ORG_OUTROS;
     const titularDocs = DOCS_TITULAR_OUTROS;
     const suplenteDocs = DOCS_SUPLENTE_OUTROS;
     return [
-      // ── Formulários de texto ──────────────────────────────────────────────
+      ...base,
       ETAPA_TIPO_INSCRICAO,
       ETAPA_ORG_DADOS,
       ETAPA_ENDERECO_SP,
       ...(formaChapa ? [ETAPA_ENDERECO_CHAPA] : []),
       ETAPA_TITULAR_DADOS,
       ETAPA_SUPLENTE_DADOS,
-      // ── Documentos da entidade ────────────────────────────────────────────
       etapaDoc(orgDocs.orgDocRequerimento, "Requerimento da Entidade", "orgDocRequerimento"),
       etapaDoc(orgDocs.orgDocDeclaracaoAtuacao, "Declaração de Atuação", "orgDocDeclaracaoAtuacao"),
       etapaDoc(orgDocs.orgDocEstatutoSocial, "Estatuto Social", "orgDocEstatutoSocial"),
@@ -595,7 +682,6 @@ function buildEtapas(tipoCadastro: string, tipoInscricao: string, formaChapa = f
       etapaDoc(orgDocs.orgDocCertidaoCNPJ, "Certidão CNPJ", "orgDocCertidaoCNPJ"),
       etapaDoc(orgDocs.orgDocComprovanteCNPJ, "Comprovante CNPJ (opcional)", "orgDocComprovanteCNPJ", false),
       etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoV, "Anexo V — Declaração de Idoneidade (opcional)", "orgDocAnexoV", false),
-      // ── Documentos da segunda entidade (apenas quando inscrição de chapa) ─
       ...(formaChapa ? [
         etapaDoc(DOCS_CHAPA2.chapa2DocDeclaracaoAtuacao, "2ª Entidade — Declaração de Atuação", "chapa2DocDeclaracaoAtuacao"),
         etapaDoc(DOCS_CHAPA2.chapa2DocEstatutoSocial, "2ª Entidade — Estatuto Social", "chapa2DocEstatutoSocial"),
@@ -603,33 +689,55 @@ function buildEtapas(tipoCadastro: string, tipoInscricao: string, formaChapa = f
         etapaDoc(DOCS_CHAPA2.chapa2DocCertidaoCNPJ, "2ª Entidade — Certidão CNPJ", "chapa2DocCertidaoCNPJ"),
         etapaDoc(DOCS_CHAPA2.chapa2DocAnexoV, "2ª Entidade — Anexo V (Declaração de Idoneidade)", "chapa2DocAnexoV"),
       ] : []),
-      // ── Documentos do titular ─────────────────────────────────────────────
       etapaDoc(titularDocs.titularDocIdentidade, "Identidade — Titular", "titularDocIdentidade"),
       etapaDoc(titularDocs.titularDocCPF, "CPF — Titular (opcional)", "titularDocCPF", false),
       etapaDoc(titularDocs.titularDocTituloEleitor, "Título de Eleitor — Titular", "titularDocTituloEleitor"),
       etapaDoc(titularDocs.titularDocFoto3x4, "Foto 3×4 — Titular", "titularDocFoto3x4"),
       etapaDoc(titularDocs.titularDocDeclaracao, "Declaração — Titular", "titularDocDeclaracao"),
-      // ── Documentos do suplente ────────────────────────────────────────────
       etapaDoc(suplenteDocs.suplenteDocIdentidade, "Identidade — Suplente", "suplenteDocIdentidade"),
       etapaDoc(suplenteDocs.suplenteDocCPF, "CPF — Suplente (opcional)", "suplenteDocCPF", false),
       etapaDoc(suplenteDocs.suplenteDocTituloEleitor, "Título de Eleitor — Suplente", "suplenteDocTituloEleitor"),
       etapaDoc(suplenteDocs.suplenteDocFoto3x4, "Foto 3×4 — Suplente", "suplenteDocFoto3x4"),
       etapaDoc(suplenteDocs.suplenteDocDeclaracao, "Declaração — Suplente", "suplenteDocDeclaracao"),
-      // ── Anexos opcionais / chapa ──────────────────────────────────────────
       etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoVI, "Anexo VI — Requerimento Entidade Eleitora (opcional)", "orgDocAnexoVI", false),
       etapaDoc(DOCS_ANEXOS_ORG_OUTROS.orgDocAnexoVII,
-        formaChapa
-          ? "Anexo VII — Requerimento de Chapa"
-          : "Anexo VII — Requerimento de Chapa (opcional)",
+        formaChapa ? "Anexo VII — Requerimento de Chapa" : "Anexo VII — Requerimento de Chapa (opcional)",
         "orgDocAnexoVII",
-        formaChapa, // obrigatório se for chapa
+        formaChapa,
       ),
       ETAPA_REVISAO,
     ];
   }
 
-  // Fallback — aguardando seleção do tipo de inscrição
-  return [ETAPA_TIPO_INSCRICAO];
+  if (isEleitor && isRep) {
+    // Entidade Eleitora (Art. 11 do Edital)
+    const orgDocs = DOCS_ORG_ELEITOR;
+    const repDocs = DOCS_REPRESENTANTE_ELEITOR;
+    return [
+      ...base,
+      ETAPA_TIPO_INSCRICAO,
+      ETAPA_ORG_DADOS,
+      ETAPA_ENDERECO_SP,
+      ETAPA_REPRESENTANTE_DADOS,
+      // ── Documentos da entidade ────────────────────────────────────────────
+      etapaDoc(orgDocs.orgDocAnexoVI, "Requerimento da Entidade Eleitora (Anexo VI)", "orgDocAnexoVI"),
+      etapaDoc(orgDocs.orgDocDeclaracaoAtuacao, "Declaração de Atuação", "orgDocDeclaracaoAtuacao"),
+      etapaDoc(orgDocs.orgDocEstatutoSocial, "Estatuto Social", "orgDocEstatutoSocial"),
+      etapaDoc(orgDocs.orgDocAtaEleicao, "Ata da Última Eleição", "orgDocAtaEleicao"),
+      etapaDoc(orgDocs.orgDocCertidaoCNPJ, "Certidão de Regularidade do CNPJ", "orgDocCertidaoCNPJ"),
+      etapaDoc(orgDocs.orgDocAnexoV, "Declaração de Idoneidade (Anexo IV)", "orgDocAnexoV"),
+      // ── Documentos do/a representante ─────────────────────────────────────
+      etapaDoc(repDocs.titularDocIdentidade, "Documento de Identificação", "titularDocIdentidade"),
+      etapaDoc(repDocs.titularDocCPF, "CPF (opcional)", "titularDocCPF", false),
+      etapaDoc(repDocs.titularDocTituloEleitor, "Título de Eleitor", "titularDocTituloEleitor"),
+      etapaDoc(repDocs.titularDocComprovante, "Comprovante de Residência", "titularDocComprovante"),
+      etapaDoc(repDocs.titularDocDeclaracao, "Declaração de Nome Social (opcional)", "titularDocDeclaracao", false),
+      ETAPA_REVISAO,
+    ];
+  }
+
+  // Fallback — aguardando seleção
+  return [...base, ETAPA_TIPO_INSCRICAO];
 }
 
 // ---------------------------------------------------------------------------
@@ -704,7 +812,14 @@ export default function FormularioInscricao() {
 
   const stepAtual = etapas[etapaAtual - 1];
 
-  // Resetar para a etapa de tipo de inscrição ao mudar o tipo de inscrição
+  // Resetar para o tipo de inscrição ao mudar tipo de cadastro ou tipo de inscrição
+  useEffect(() => {
+    if (etapaAtual > 2) {
+      setEtapaAtual(2);
+      setEtapasCompletas([1]);
+    }
+  }, [tipoCadastroAtual]);
+
   useEffect(() => {
     if (etapaAtual > 2) {
       setEtapaAtual(2);

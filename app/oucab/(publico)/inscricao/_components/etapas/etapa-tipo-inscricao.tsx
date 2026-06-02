@@ -14,7 +14,7 @@ const opcoes: {
   descricao: string;
   icone: React.ElementType;
   cor: "blue" | "green" | "orange" | "purple" | "teal" | "rose";
-  soCandidato?: boolean;
+  soIndividual?: boolean; // somente para candidatos individuais (MORADOR/TRABALHADOR)
 }[] = [
   {
     valor: "MORADOR",
@@ -22,6 +22,7 @@ const opcoes: {
     descricao: "Resido no perímetro de adesão ou expandido da OUCAB.",
     icone: Home,
     cor: "blue",
+    soIndividual: true,
   },
   {
     valor: "TRABALHADOR",
@@ -29,6 +30,7 @@ const opcoes: {
     descricao: "Trabalho no perímetro de adesão ou expandido da OUCAB.",
     icone: Building2,
     cor: "green",
+    soIndividual: true,
   },
   {
     valor: "REP_MORADIA",
@@ -36,7 +38,6 @@ const opcoes: {
     descricao: "Represento um movimento de moradia com atuação na área da OUCAB.",
     icone: Users,
     cor: "orange",
-    soCandidato: true,
   },
   {
     valor: "REP_ONGS",
@@ -44,7 +45,6 @@ const opcoes: {
     descricao: "Represento uma ONG com atuação nas temáticas urbana e ambiental.",
     icone: Briefcase,
     cor: "purple",
-    soCandidato: true,
   },
   {
     valor: "REP_PROFISSIONAIS",
@@ -52,7 +52,6 @@ const opcoes: {
     descricao: "Represento uma entidade profissional com atuação na área da OUCAB.",
     icone: Building,
     cor: "teal",
-    soCandidato: true,
   },
   {
     valor: "REP_EMPRESARIAIS",
@@ -60,7 +59,6 @@ const opcoes: {
     descricao: "Represento uma entidade empresarial com atuação na área da OUCAB.",
     icone: Landmark,
     cor: "rose",
-    soCandidato: true,
   },
 ];
 
@@ -161,8 +159,9 @@ export default function EtapaTipoInscricao() {
 
   const isRep = tipoInscricao && ["REP_MORADIA", "REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
 
+  // ELEITOR (entidade) vê apenas REP_*; CANDIDATO vê todas as opções
   const opcoesFiltradas = opcoes.filter(
-    (o) => !o.soCandidato || tipoCadastro === "CANDIDATO"
+    (o) => tipoCadastro === "ELEITOR" ? !o.soIndividual : true
   );
 
   const handleTipoChange = (valor: TipoInscricao) => {

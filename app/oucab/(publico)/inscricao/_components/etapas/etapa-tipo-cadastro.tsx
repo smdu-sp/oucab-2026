@@ -57,9 +57,12 @@ export default function EtapaTipoCadastro() {
               type="button"
               onClick={() => {
                 setValue("tipoCadastro", valor, { shouldValidate: true });
-                // REP_MOVIMENTOS_MORADIA só é válido para CANDIDATO
-                if (valor === "ELEITOR" && getValues("tipoInscricao") === "REP_MOVIMENTOS_MORADIA") {
-                  setValue("tipoInscricao", undefined as any);
+                // MORADOR/TRABALHADOR não são válidos para entidade eleitora
+                if (valor === "ELEITOR") {
+                  const ti = getValues("tipoInscricao");
+                  if (ti === "MORADOR" || ti === "TRABALHADOR") {
+                    setValue("tipoInscricao", undefined as any);
+                  }
                 }
               }}
               className={cn(
