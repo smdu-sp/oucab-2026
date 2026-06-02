@@ -159,10 +159,12 @@ export default function EtapaTipoInscricao() {
 
   const isRep = tipoInscricao && ["REP_MORADIA", "REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao);
 
-  // ELEITOR (entidade) vê apenas REP_*; CANDIDATO vê todas as opções
-  const opcoesFiltradas = opcoes.filter(
-    (o) => tipoCadastro === "ELEITOR" ? !o.soIndividual : true
-  );
+  // CANDIDATO vê apenas REP_MORADIA (única com inscrição reaberta)
+  // ELEITOR vê REP_ONGS, REP_PROFISSIONAIS, REP_EMPRESARIAIS (sem moradia e sem individuais)
+  const opcoesFiltradas = opcoes.filter((o) => {
+    if (tipoCadastro === "ELEITOR") return ["REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(o.valor);
+    return o.valor === "REP_MORADIA";
+  });
 
   const handleTipoChange = (valor: TipoInscricao) => {
     setValue("tipoInscricao", valor, { shouldValidate: true });
