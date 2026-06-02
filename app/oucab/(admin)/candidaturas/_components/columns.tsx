@@ -40,7 +40,7 @@ function OcultarButton({ id, oculto }: { id: string; oculto: boolean }) {
   );
 }
 
-export function createColumns(isDev: boolean): ColumnDef<ICandidatura>[] {
+export function createColumns(isDev: boolean, detailPath = "/oucab/candidaturas"): ColumnDef<ICandidatura>[] {
   return [
     {
       accessorKey: "usuario.nome",
@@ -101,7 +101,7 @@ export function createColumns(isDev: boolean): ColumnDef<ICandidatura>[] {
           {isDev && <OcultarButton id={row.original.id} oculto={row.original.oculto} />}
           <BtnDownloadArquivos url={`${BASE_PATH}/api/candidaturas/${row.original.id}/arquivos-zip`} variant="icon" />
           <Button asChild size="icon" variant="ghost">
-            <Link href={`/oucab/candidaturas/${row.original.id}`}>
+            <Link href={`${detailPath}/${row.original.id}`}>
               <Eye className="h-4 w-4" />
             </Link>
           </Button>

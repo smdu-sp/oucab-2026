@@ -7,10 +7,11 @@ import type { ICandidatura } from "@/services/candidaturas";
 interface Props {
   dados: ICandidatura[];
   isDev: boolean;
+  detailPath?: string;
 }
 
-export function CandidaturasTable({ dados, isDev }: Props) {
-  const cols = createColumns(isDev);
+export function CandidaturasTable({ dados, isDev, detailPath }: Props) {
+  const cols = createColumns(isDev, detailPath);
   return (
     <DataTable
       columns={cols}

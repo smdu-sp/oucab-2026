@@ -3,9 +3,9 @@
 import { notFound, redirect } from 'next/navigation';
 import { buscarCandidaturaPorId } from '@/services/candidaturas';
 import { validaUsuario } from '@/services/usuario';
-import { CandidaturaDetalhe } from './_components/candidatura-detalhe';
+import { CandidaturaDetalhe } from '../../candidaturas/[id]/_components/candidatura-detalhe';
 
-export default async function CandidaturaDetalhePage({
+export default async function EleitoraDetalhePage({
 	params,
 }: {
 	params: Promise<{ id: string }>;
@@ -22,8 +22,8 @@ export default async function CandidaturaDetalhePage({
 		<CandidaturaDetalhe
 			candidatura={candidatura}
 			isDev={isDev}
-			backUrl='/oucab/candidaturas'
-			titulo='Detalhe da Candidatura'
+			backUrl='/oucab/eleitores'
+			titulo='Detalhe da Entidade Eleitora'
 		/>
 	);
 }

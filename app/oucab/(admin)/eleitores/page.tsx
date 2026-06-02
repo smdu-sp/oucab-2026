@@ -115,7 +115,7 @@ async function Eleitoras({
 					]}
 				/>
 				<div className='w-full'>
-					<CandidaturasTable dados={dados} isDev={isDev} />
+					<CandidaturasTable dados={dados} isDev={isDev} detailPath='/oucab/eleitores' />
 				</div>
 				{dados && dados.length > 0 && (
 					<Pagination total={+total} pagina={+pagina} limite={+limite} />
