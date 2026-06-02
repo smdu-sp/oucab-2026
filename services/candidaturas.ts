@@ -47,12 +47,14 @@ export async function buscarCandidaturas(
   tipoInscricao?: string,
   status?: string,
   areaPerimetro?: string,
+  tipoCadastro?: string,
 ) {
   [pagina, limite] = verificaPagina(pagina, limite);
   const isDev = await isDevSession();
 
   const where = {
     ...(!isDev && { oculto: false }),
+    ...(tipoCadastro && { tipoCadastro: tipoCadastro as "CANDIDATO" | "ELEITOR" }),
     ...(busca && {
       OR: [
         { usuario: { nome: { contains: busca } } },
@@ -96,9 +98,11 @@ export async function exportarCandidaturas(
   tipoInscricao?: string,
   status?: string,
   areaPerimetro?: string,
+  tipoCadastro?: string,
 ) {
   const where = {
     oculto: false,
+    ...(tipoCadastro && { tipoCadastro: tipoCadastro as "CANDIDATO" | "ELEITOR" }),
     ...(busca && {
       OR: [
         { usuario: { nome: { contains: busca } } },

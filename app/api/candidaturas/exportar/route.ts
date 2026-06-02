@@ -50,9 +50,10 @@ export async function GET(request: NextRequest) {
   const tipoInscricao = searchParams.get("tipoInscricao") ?? undefined;
   const status = searchParams.get("status") ?? undefined;
   const areaPerimetro = searchParams.get("areaPerimetro") ?? undefined;
+  const tipoCadastro = searchParams.get("tipoCadastro") ?? undefined;
   const grupos = (searchParams.get("grupos") ?? "inscricao,usuario,endereco,organizacao,candidato,suplente").split(",");
 
-  const candidaturas = await exportarCandidaturas(busca, tipoInscricao, status, areaPerimetro);
+  const candidaturas = await exportarCandidaturas(busca, tipoInscricao, status, areaPerimetro, tipoCadastro);
 
   const linhas = candidaturas.map((c) => {
     const row: Record<string, unknown> = {};

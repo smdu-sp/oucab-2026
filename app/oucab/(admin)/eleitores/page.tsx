@@ -5,31 +5,31 @@ import { Filtros } from '@/components/filtros';
 import Pagination from '@/components/pagination';
 import { auth } from '@/auth';
 import { Suspense } from 'react';
-import { CandidaturasTable } from './_components/candidaturas-table';
+import { CandidaturasTable } from '../candidaturas/_components/candidaturas-table';
 import { buscarCandidaturas, ICandidaturaPaginada, ICandidatura } from '@/services/candidaturas';
 import { validaUsuario } from '@/services/usuario';
 import { redirect } from 'next/navigation';
 import DialogExportar from '@/components/dialog-exportar';
 
-export default async function CandidaturasSuspense({
+export default async function EleitorasSuspense({
 	searchParams,
 }: {
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	return (
 		<Suspense fallback={<TableSkeleton />}>
-			<Candidaturas searchParams={searchParams} />
+			<Eleitoras searchParams={searchParams} />
 		</Suspense>
 	);
 }
 
-async function Candidaturas({
+async function Eleitoras({
 	searchParams,
 }: {
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	let { pagina = 1, limite = 10, total = 0 } = await searchParams;
-	const { busca = '', tipoInscricao = '', status = '', areaPerimetro = '' } = await searchParams;
+	const { busca = '', tipoInscricao = '', status = '' } = await searchParams;
 	let dados: ICandidatura[] = [];
 
 	const usuario = await validaUsuario();
@@ -45,8 +45,8 @@ async function Candidaturas({
 			busca as string,
 			tipoInscricao as string,
 			status as string,
-			areaPerimetro as string,
-			"CANDIDATO",
+			undefined,
+			'ELEITOR',
 		);
 		if (response) {
 			const paginado = response as ICandidaturaPaginada;
@@ -58,9 +58,6 @@ async function Candidaturas({
 	}
 
 	const tipoInscricaoSelect = [
-		{ label: 'Morador', value: 'MORADOR' },
-		{ label: 'Trabalhador', value: 'TRABALHADOR' },
-		{ label: 'Rep. Moradia', value: 'REP_MORADIA' },
 		{ label: 'Rep. ONGs', value: 'REP_ONGS' },
 		{ label: 'Rep. Profissionais', value: 'REP_PROFISSIONAIS' },
 		{ label: 'Rep. Empresariais', value: 'REP_EMPRESARIAIS' },
@@ -73,25 +70,24 @@ async function Candidaturas({
 		{ label: 'Aguardando Documentação', value: 'AGUARDANDO_DOCUMENTACAO' },
 	];
 
-	const areaPerimetroSelect = [
-		{ label: 'Adesão', value: 'ADESAO' },
-		{ label: 'Expandido', value: 'EXPANDIDO' },
-	];
-
 	return (
 		<div className='px-0 md:px-8 relative pb-20 md:pb-14 h-full container mx-auto'>
 			<div className='flex items-center justify-between gap-4 flex-wrap'>
-				<h1 className='text-xl md:text-4xl font-bold'>Candidaturas</h1>
+				<h1 className='text-xl md:text-4xl font-bold'>Entidades Eleitoras</h1>
 				<DialogExportar
 					url='/api/candidaturas/exportar'
-					filtros={{ busca: busca as string, tipoInscricao: tipoInscricao as string, status: status as string, areaPerimetro: areaPerimetro as string }}
+					filtros={{
+						busca: busca as string,
+						tipoInscricao: tipoInscricao as string,
+						status: status as string,
+						tipoCadastro: 'ELEITOR',
+					}}
 					grupos={[
-						{ id: 'inscricao', label: 'Dados da Inscrição', descricao: 'Status, tipo de inscrição, tipo de cadastro e data de criação' },
+						{ id: 'inscricao', label: 'Dados da Inscrição', descricao: 'Status, tipo de inscrição e data de criação' },
 						{ id: 'usuario', label: 'Dados do Usuário', descricao: 'Nome e e-mail do usuário' },
-						{ id: 'endereco', label: 'Endereço', descricao: 'Logradouro, número, bairro, cidade, CEP e perímetro' },
-						{ id: 'organizacao', label: 'Organização / Chapa', descricao: 'Razão social, CNPJ e dados de chapa' },
-						{ id: 'candidato', label: 'Candidato / Titular', descricao: 'Dados do candidato individual ou titular' },
-						{ id: 'suplente', label: 'Candidato Suplente', descricao: 'Dados do suplente' },
+						{ id: 'endereco', label: 'Endereço', descricao: 'Logradouro, número, bairro, cidade e CEP' },
+						{ id: 'organizacao', label: 'Organização', descricao: 'Razão social e CNPJ da entidade' },
+						{ id: 'candidato', label: 'Representante', descricao: 'Dados do representante da entidade' },
 					]}
 				/>
 			</div>
@@ -115,12 +111,6 @@ async function Candidaturas({
 							tag: 'status',
 							tipo: 2,
 							valores: statusSelect,
-						},
-						{
-							nome: 'Perímetro',
-							tag: 'areaPerimetro',
-							tipo: 2,
-							valores: areaPerimetroSelect,
 						},
 					]}
 				/>

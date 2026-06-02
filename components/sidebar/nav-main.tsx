@@ -1,6 +1,6 @@
 /** @format */
 
-import { ChevronRight, ClipboardList, House, LucideProps, Mail, Users } from 'lucide-react';
+import { ChevronRight, ClipboardList, House, LucideProps, Mail, Users, Vote } from 'lucide-react';
 
 import {
 	Collapsible,
@@ -61,6 +61,11 @@ export async function NavMain() {
 			icone: ClipboardList,
 			titulo: 'Candidaturas',
 			url: '/oucab/candidaturas',
+		},
+		{
+			icone: Vote,
+			titulo: 'Entidades Eleitoras',
+			url: '/oucab/eleitores',
 		},
 	];
 
