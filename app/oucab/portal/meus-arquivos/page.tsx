@@ -21,6 +21,7 @@ interface ArquivoInfo {
 
 interface ApiResponse {
   tipoInscricao: string;
+  tipoCadastro: string;
   status: string;
   arquivosAtuais: Record<string, ArquivoInfo>;
 }
@@ -96,12 +97,29 @@ const CAMPOS_SUPLENTE_OUTROS: CampoDoc[] = [
   { campo: "suplenteDocDeclaracao",    label: "Declaração de Não Impedimento — Suplente" },
 ];
 
+const CAMPOS_ORG_ELEITOR: CampoDoc[] = [
+  { campo: "orgDocAnexoVI",            label: "Requerimento da Entidade Eleitora (Anexo VI)" },
+  { campo: "orgDocDeclaracaoAtuacao",  label: "Declaração de Atuação na Região" },
+  { campo: "orgDocEstatutoSocial",     label: "Estatuto Social da Entidade" },
+  { campo: "orgDocAtaEleicao",         label: "Ata da Última Eleição dos Representantes Legais" },
+  { campo: "orgDocCertidaoCNPJ",       label: "Certidão de Regularidade do CNPJ" },
+  { campo: "orgDocAnexoV",             label: "Declaração de Idoneidade (Anexo V)" },
+];
+
+const CAMPOS_REPRESENTANTE_ELEITOR: CampoDoc[] = [
+  { campo: "titularDocIdentidade",    label: "Documento de Identificação do/a Representante" },
+  { campo: "titularDocCPF",           label: "CPF do/a Representante (opcional)", obrigatorio: false },
+  { campo: "titularDocTituloEleitor", label: "Título de Eleitor do/a Representante" },
+  { campo: "titularDocComprovante",   label: "Comprovante de Residência do/a Representante" },
+  { campo: "titularDocDeclaracao",    label: "Declaração de Nome Social (opcional)", obrigatorio: false },
+];
+
 interface GrupoCampos {
   titulo: string;
   campos: CampoDoc[];
 }
 
-function getGrupos(tipoInscricao: string): GrupoCampos[] {
+function getGrupos(tipoInscricao: string, tipoCadastro: string): GrupoCampos[] {
   if (tipoInscricao === "MORADOR") {
     return [{ titulo: "Documentos Pessoais", campos: CAMPOS_INDIVIDUAIS }];
   }
@@ -116,6 +134,12 @@ function getGrupos(tipoInscricao: string): GrupoCampos[] {
     ];
   }
   if (["REP_ONGS", "REP_PROFISSIONAIS", "REP_EMPRESARIAIS"].includes(tipoInscricao)) {
+    if (tipoCadastro === "ELEITOR") {
+      return [
+        { titulo: "Documentos da Entidade", campos: CAMPOS_ORG_ELEITOR },
+        { titulo: "Documentos do/a Representante", campos: CAMPOS_REPRESENTANTE_ELEITOR },
+      ];
+    }
     return [
       { titulo: "Documentos da Entidade", campos: CAMPOS_ORG },
       { titulo: "Documentos do Candidato Titular", campos: CAMPOS_TITULAR_OUTROS },
@@ -261,7 +285,7 @@ export default function MeusArquivosPage() {
     );
   }
 
-  const grupos = getGrupos(dados.tipoInscricao);
+  const grupos = getGrupos(dados.tipoInscricao, dados.tipoCadastro);
 
   return (
     <div className="space-y-6 max-w-3xl">

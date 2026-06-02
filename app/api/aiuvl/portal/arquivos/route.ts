@@ -5,6 +5,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import type { CategoriaArquivo } from "@/lib/generated/aiuvl";
+import { prazoCandidatosAiuvlEncerrado, prazoEleitoresAiuvlEncerrado, periodoDocComplementarAbertoAiuvl } from "@/lib/config";
 
 // campo → categoria (full map for PUT uploads)
 const CATEGORIA_MAP: Record<string, CategoriaArquivo> = {
@@ -169,8 +170,18 @@ export async function PUT(request: NextRequest) {
   const candidatura = usuario.candidatura;
   const eleitor = usuario.eleitor;
 
-  if (candidatura?.status === "DEFERIDO" || eleitor?.status === "DEFERIDO") {
+  const isCandidato = !!candidatura;
+  const statusAtual = candidatura?.status ?? eleitor?.status;
+
+  if (statusAtual === "DEFERIDO") {
     return NextResponse.json({ error: "Inscrição deferida. Não é possível alterar documentos." }, { status: 400 });
+  }
+
+  const prazoEncerrado = isCandidato ? prazoCandidatosAiuvlEncerrado() : prazoEleitoresAiuvlEncerrado();
+  if (prazoEncerrado) {
+    if (!periodoDocComplementarAbertoAiuvl() || statusAtual !== "INDEFERIDO") {
+      return NextResponse.json({ error: "Prazo de envio de documentos encerrado." }, { status: 400 });
+    }
   }
 
   const formData = await request.formData();

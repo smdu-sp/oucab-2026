@@ -7,7 +7,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, AlertTriangle, CheckCircle, FileIcon } from "lucide-react";
 import { toast } from "sonner";
 import DragDropInput from "@/components/drag-drop-input";
-import { BASE_PATH, prazoCandidatosAiuvlEncerrado, prazoEleitoresAiuvlEncerrado } from "@/lib/config";
+import { BASE_PATH, prazoCandidatosAiuvlEncerrado, prazoEleitoresAiuvlEncerrado, periodoDocComplementarAbertoAiuvl, DOC_COMPLEMENTAR_FIM_AIUVL } from "@/lib/config";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ArquivoInfo {
   id: string;
@@ -166,7 +168,9 @@ export default function MeusArquivosAiuvlPage() {
     ? prazoCandidatosAiuvlEncerrado()
     : prazoEleitoresAiuvlEncerrado();
   const deferido = dados?.status === "DEFERIDO";
-  const podeAtualizar = !prazoEncerrado && !deferido;
+  const indeferido = dados?.status === "INDEFERIDO";
+  const complementarAberto = periodoDocComplementarAbertoAiuvl();
+  const podeAtualizar = (!prazoEncerrado && !deferido) || (complementarAberto && indeferido);
 
   const handleFileChange = (campo: string, file: File | null) => {
     setNewFiles((prev) => {
@@ -234,7 +238,24 @@ export default function MeusArquivosAiuvlPage() {
         <p className="text-muted-foreground text-sm">Gerencie os documentos enviados na sua inscrição.</p>
       </div>
 
-      {prazoEncerrado && (
+      {prazoEncerrado && !complementarAberto && (
+        <Alert variant="destructive">
+          <AlertTriangle className="w-4 h-4" />
+          <AlertDescription>O prazo de inscrições encerrou. Não é mais possível atualizar documentos.</AlertDescription>
+        </Alert>
+      )}
+
+      {prazoEncerrado && complementarAberto && indeferido && (
+        <Alert className="border-amber-400 bg-amber-50 dark:bg-amber-950/20">
+          <AlertTriangle className="w-4 h-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 dark:text-amber-200">
+            Sua inscrição está <strong>indeferida</strong>. O período de envio de documentação complementar está aberto até{" "}
+            <strong>{format(DOC_COMPLEMENTAR_FIM_AIUVL, "dd/MM/yyyy", { locale: ptBR })}</strong>. Aproveite para substituir os documentos que precisam de correção.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {prazoEncerrado && complementarAberto && !indeferido && !deferido && (
         <Alert variant="destructive">
           <AlertTriangle className="w-4 h-4" />
           <AlertDescription>O prazo de inscrições encerrou. Não é mais possível atualizar documentos.</AlertDescription>

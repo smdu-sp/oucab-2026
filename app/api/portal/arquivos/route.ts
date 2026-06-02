@@ -22,6 +22,8 @@ const CAMPO_OWNER_MAP: Record<string, { owner: "individual" | "titular" | "suple
   orgDocAtaEleicao:         { owner: "org", categoria: "ATA_ELEICAO" },
   orgDocCertidaoCNPJ:       { owner: "org", categoria: "CERTIDAO_CNPJ" },
   orgDocComprovanteCNPJ:    { owner: "org", categoria: "OUTRO" },
+  orgDocAnexoVI:            { owner: "org", categoria: "REQUERIMENTO_ENTIDADE_ELEITORA" },
+  orgDocAnexoV:             { owner: "org", categoria: "DECLARACAO_IDONEIDADE" },
   titularDocRequerimento:   { owner: "titular", categoria: "REQUERIMENTO" },
   titularDocIdentidade:     { owner: "titular", categoria: "DOCUMENTO_IDENTIDADE" },
   titularDocCPF:            { owner: "titular", categoria: "CPF" },
@@ -52,6 +54,7 @@ async function getCandidaturaCompleta(usuarioId: string) {
       id: true,
       status: true,
       tipoInscricao: true,
+      tipoCadastro: true,
       candidatos: {
         select: {
           id: true,
@@ -104,6 +107,7 @@ export async function GET() {
 
   return NextResponse.json({
     tipoInscricao: candidatura.tipoInscricao,
+    tipoCadastro: candidatura.tipoCadastro,
     status: candidatura.status,
     arquivosAtuais,
   });

@@ -1193,7 +1193,7 @@ export default function FormularioInscricao() {
           {rascunhoBannerVisivel && (
             <Alert className="mb-4 border-amber-400 bg-amber-50 dark:bg-amber-950/20">
               <RotateCcw className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="flex items-center justify-between gap-4">
+              <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <span className="text-amber-800 dark:text-amber-200 text-sm">
                   Você tem um preenchimento em andamento. Deseja continuar de onde parou?
                 </span>
