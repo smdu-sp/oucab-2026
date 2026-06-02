@@ -3,14 +3,12 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Info } from "lucide-react";
+import { periodoInscricaoEleitoresAberto, prazoRepMoradiaEncerrado } from "@/lib/config";
 const MapaVisualizacao = dynamic(() => import("./_components/mapa-visualizacao"));
 // const MapaLocalVotacao = dynamic(() => import("./_components/mapa-local-votacao"));
 
 export default function Home() {
-  const limiteExibicao = new Date(
-    process.env.NEXT_PUBLIC_PRAZO_INSCRICAO_EXIBICAO ?? "2026-05-31T23:59:59.999Z"
-  );
-  const podeInscrever = new Date() <= limiteExibicao;
+  const podeInscrever = periodoInscricaoEleitoresAberto() || !prazoRepMoradiaEncerrado();
   return (
     <div className="space-y-8">
       {/* Sobre a OUC */}
