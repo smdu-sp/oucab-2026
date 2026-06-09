@@ -34,9 +34,11 @@ const MAX_TOTAL   = 200 * 1024 * 1024;
 interface Props {
   apiBase: string;
   linkOrientacao?: string;
+  statusAtivador?: string;
+  mensagem?: string;
 }
 
-export default function DocComplementarSection({ apiBase, linkOrientacao }: Props) {
+export default function DocComplementarSection({ apiBase, linkOrientacao, statusAtivador = "AGUARDANDO_DOCUMENTACAO", mensagem }: Props) {
   const [dados, setDados] = useState<ApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -66,7 +68,7 @@ export default function DocComplementarSection({ apiBase, linkOrientacao }: Prop
     );
   }
 
-  if (!dados || dados.status !== "AGUARDANDO_DOCUMENTACAO") return null;
+  if (!dados || dados.status !== statusAtivador) return null;
 
   const totalExistente = dados.arquivos.reduce((s, a) => s + a.tamanho, 0);
   const totalNovos = novosArquivos.reduce((s, f) => s + f.size, 0);
@@ -147,7 +149,7 @@ export default function DocComplementarSection({ apiBase, linkOrientacao }: Prop
             <AlertTriangle className="w-4 h-4 text-amber-600" />
             <AlertDescription className="text-amber-800 space-y-1">
               <p>
-                Sua inscrição está <strong>aguardando documentação complementar</strong>. Envie os arquivos solicitados dentro do prazo.
+                {mensagem ?? <>Sua inscrição está <strong>aguardando documentação complementar</strong>. Envie os arquivos solicitados dentro do prazo.</>}
               </p>
               <p className="text-xs">Limite: 50 MB por arquivo · 200 MB no total · PDF ou imagem (JPG, PNG etc.)</p>
               {linkOrientacao && (

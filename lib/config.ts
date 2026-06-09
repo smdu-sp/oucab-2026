@@ -110,3 +110,15 @@ export function periodoDocComplementarAbertoAiuvl(): boolean {
   const agora = new Date();
   return agora >= DOC_COMPLEMENTAR_INICIO_AIUVL && agora <= DOC_COMPLEMENTAR_FIM_AIUVL;
 }
+
+export const DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL ?? "2026-07-01T00:00:00.000Z"
+);
+export const DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL ?? "2026-07-15T23:59:59.999Z"
+);
+
+export function periodoDocComplementarEleitorAbertoAiuvl(): boolean {
+  const agora = new Date();
+  return agora >= DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL && agora <= DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL;
+}

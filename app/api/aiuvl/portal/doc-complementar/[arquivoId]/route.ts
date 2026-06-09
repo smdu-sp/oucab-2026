@@ -3,7 +3,7 @@ import { auth } from "@/auth/aiuvl";
 import { dbAiuvl as db } from "@/lib/prisma-aiuvl";
 import { unlink } from "fs/promises";
 import { existsSync } from "fs";
-import { periodoDocComplementarAbertoAiuvl } from "@/lib/config";
+import { periodoDocComplementarAbertoAiuvl, periodoDocComplementarEleitorAbertoAiuvl } from "@/lib/config";
 
 export async function DELETE(
   _request: NextRequest,
@@ -12,10 +12,6 @@ export async function DELETE(
   const session = await auth();
   if (!session || session.user?.tipo !== "externo") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
-  if (!periodoDocComplementarAbertoAiuvl()) {
-    return NextResponse.json({ error: "Fora do período de envio. Não é possível excluir arquivos." }, { status: 400 });
   }
 
   const { arquivoId } = await params;
@@ -31,6 +27,14 @@ export async function DELETE(
 
   if (!candidatura && !eleitor) {
     return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
+  }
+
+  const periodoAberto = candidatura
+    ? periodoDocComplementarAbertoAiuvl()
+    : periodoDocComplementarEleitorAbertoAiuvl();
+
+  if (!periodoAberto) {
+    return NextResponse.json({ error: "Fora do período de envio. Não é possível excluir arquivos." }, { status: 400 });
   }
 
   const arquivo = await db.arquivo.findUnique({ where: { id: arquivoId } });

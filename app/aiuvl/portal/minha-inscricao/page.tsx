@@ -10,6 +10,7 @@ import { EnumBadge } from "@/components/enum-badge";
 import { STATUS_INFO, SEGMENTO_AIUVL_INFO, TIPO_INSCRICAO_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
 import { FolderOpen } from "lucide-react";
 import Link from "next/link";
+import DocComplementarSection from "@/components/doc-complementar-section";
 
 function cnpjFormatado(cnpj: string) {
   return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
@@ -135,6 +136,13 @@ export default async function MinhaInscricaoAiuvlPage() {
             </Card>
           ))}
 
+          <DocComplementarSection
+            apiBase="/api/aiuvl/portal/doc-complementar"
+            statusAtivador="INDEFERIDO"
+            mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
+            linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUVL}
+          />
+
           <Card>
             <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
             <CardContent>
@@ -194,6 +202,13 @@ export default async function MinhaInscricaoAiuvlPage() {
               </CardContent>
             </Card>
           )}
+
+          <DocComplementarSection
+            apiBase="/api/aiuvl/portal/doc-complementar"
+            statusAtivador="INDEFERIDO"
+            mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
+            linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUVL}
+          />
 
           <Card>
             <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
