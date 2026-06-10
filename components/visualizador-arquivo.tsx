@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Download, ExternalLink, FileText } from "lucide-react";
 
 interface Props {
@@ -11,9 +12,10 @@ interface Props {
   tipo: string;
   label: string;
   url: string;
+  className?: string;
 }
 
-export default function VisualizadorArquivo({ nome, tipo, label, url }: Props) {
+export default function VisualizadorArquivo({ nome, tipo, label, url, className }: Props) {
   const [aberto, setAberto] = useState(false);
 
   const isImage = tipo.startsWith("image/");
@@ -25,19 +27,19 @@ export default function VisualizadorArquivo({ nome, tipo, label, url }: Props) {
       {podeVisualizar ? (
         <button
           onClick={() => setAberto(true)}
-          className="text-sm px-3 py-2 rounded border hover:bg-muted transition-colors text-left flex items-center gap-1.5"
+          className={cn("text-sm px-3 py-2 rounded border hover:bg-muted transition-colors text-left flex items-center gap-1.5", className)}
         >
           <FileText className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate max-w-[200px]">{label}</span>
+          <span className="truncate min-w-0 flex-1">{label}</span>
         </button>
       ) : (
         <a
           href={url}
           download={nome}
-          className="text-sm px-3 py-2 rounded border hover:bg-muted transition-colors text-left flex items-center gap-1.5"
+          className={cn("text-sm px-3 py-2 rounded border hover:bg-muted transition-colors text-left flex items-center gap-1.5", className)}
         >
           <FileText className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate max-w-[200px]">{label}</span>
+          <span className="truncate min-w-0 flex-1">{label}</span>
           <Download className="w-3 h-3 shrink-0 ml-auto" />
         </a>
       )}

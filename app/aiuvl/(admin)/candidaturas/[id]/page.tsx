@@ -1,20 +1,23 @@
 import { notFound, redirect } from "next/navigation";
 import { buscarCandidaturaAiuvlPorId } from "@/services/candidaturas-aiuvl";
 import { validaUsuarioAiuvl } from "@/services/usuario-aiuvl";
-import { EyeOff } from "lucide-react";
+import { ArrowLeft, EyeOff, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusActions } from "./_components/status-actions";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
-import { BASE_PATH } from "@/lib/config";
+import { BASE_PATH, DOC_COMPLEMENTAR_INICIO_AIUVL, DOC_COMPLEMENTAR_FIM_AIUVL } from "@/lib/config";
 import VisualizadorArquivo from "@/components/visualizador-arquivo";
 import { EnumBadge } from "@/components/enum-badge";
 import { STATUS_INFO, SEGMENTO_AIUVL_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
 import BtnDownloadArquivos from "@/components/btn-download-arquivos";
+
+function isComplementar(atualizadoEm: Date): boolean {
+  return atualizadoEm >= DOC_COMPLEMENTAR_INICIO_AIUVL && atualizadoEm <= DOC_COMPLEMENTAR_FIM_AIUVL;
+}
 
 const generoLabel: Record<string, string> = {
   MASCULINO: "Masculino",
@@ -145,40 +148,81 @@ export default async function CandidaturaAiuvlDetalhe({
             {org.arquivos.length > 0 && (
               <div className="md:col-span-3">
                 <p className="text-muted-foreground mb-2">Documentos da Entidade</p>
-                <div className="flex flex-wrap gap-2">
+                <ul className="space-y-1.5">
                   {org.arquivos.map((arq) => (
-                    <VisualizadorArquivo
-                      key={arq.id}
-                      id={arq.id}
-                      nome={arq.nome}
-                      tipo={arq.tipo}
-                      label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
-                      url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
-                    />
+                    <li key={arq.id} className="flex items-center gap-2 min-w-0">
+                      <VisualizadorArquivo
+                        id={arq.id}
+                        nome={arq.nome}
+                        tipo={arq.tipo}
+                        label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                        url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
+                        className="flex-1 min-w-0"
+                      />
+                      <span className="text-xs text-muted-foreground shrink-0">{format(new Date(arq.atualizadoEm), "dd/MM/yyyy", { locale: ptBR })}</span>
+                      {isComplementar(new Date(arq.atualizadoEm)) && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5 shrink-0">
+                          <RefreshCw className="w-3 h-3" />
+                          Período complementar
+                        </span>
+                      )}
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             )}
           </CardContent>
         </Card>
       )}
 
-      {candidatura.arquivos.length > 0 && (
+      {candidatura.arquivos.filter(a => a.categoria !== "COMPLEMENTAR").length > 0 && (
         <Card>
           <CardHeader><CardTitle>Documentos do Representante Legal</CardTitle></CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {candidatura.arquivos.map((arq) => (
-                <VisualizadorArquivo
-                  key={arq.id}
-                  id={arq.id}
-                  nome={arq.nome}
-                  tipo={arq.tipo}
-                  label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
-                  url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
-                />
+            <ul className="space-y-1.5">
+              {candidatura.arquivos.filter(a => a.categoria !== "COMPLEMENTAR").map((arq) => (
+                <li key={arq.id} className="flex items-center gap-2 min-w-0">
+                  <VisualizadorArquivo
+                    id={arq.id}
+                    nome={arq.nome}
+                    tipo={arq.tipo}
+                    label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                    url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
+                    className="flex-1 min-w-0"
+                  />
+                  <span className="text-xs text-muted-foreground shrink-0">{format(new Date(arq.atualizadoEm), "dd/MM/yyyy", { locale: ptBR })}</span>
+                  {isComplementar(new Date(arq.atualizadoEm)) && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5 shrink-0">
+                      <RefreshCw className="w-3 h-3" />
+                      Período complementar
+                    </span>
+                  )}
+                </li>
               ))}
-            </div>
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {candidatura.arquivos.filter(a => a.categoria === "COMPLEMENTAR").length > 0 && (
+        <Card className="border-amber-300">
+          <CardHeader><CardTitle className="text-amber-800">Documentação Complementar</CardTitle></CardHeader>
+          <CardContent>
+            <ul className="space-y-1.5">
+              {candidatura.arquivos.filter(a => a.categoria === "COMPLEMENTAR").map((arq) => (
+                <li key={arq.id} className="flex items-center gap-2 min-w-0">
+                  <VisualizadorArquivo
+                    id={arq.id}
+                    nome={arq.nome}
+                    tipo={arq.tipo}
+                    label={arq.nome}
+                    url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
+                    className="flex-1 min-w-0"
+                  />
+                  <span className="text-xs text-muted-foreground shrink-0">{format(new Date(arq.criadoEm), "dd/MM/yyyy", { locale: ptBR })}</span>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       )}
@@ -233,18 +277,27 @@ export default async function CandidaturaAiuvlDetalhe({
                 {c.arquivos.length > 0 && (
                   <div>
                     <p className="text-muted-foreground text-sm mb-2">Documentos</p>
-                    <div className="flex flex-wrap gap-2">
+                    <ul className="space-y-1.5">
                       {c.arquivos.map((arq) => (
-                        <VisualizadorArquivo
-                          key={arq.id}
-                          id={arq.id}
-                          nome={arq.nome}
-                          tipo={arq.tipo}
-                          label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
-                          url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
-                        />
+                        <li key={arq.id} className="flex items-center gap-2 min-w-0">
+                          <VisualizadorArquivo
+                            id={arq.id}
+                            nome={arq.nome}
+                            tipo={arq.tipo}
+                            label={`${categoriaLabel[arq.categoria] ?? arq.categoria} — ${arq.nome}`}
+                            url={`${BASE_PATH}/api/aiuvl/arquivos/${arq.id}`}
+                            className="flex-1 min-w-0"
+                          />
+                          <span className="text-xs text-muted-foreground shrink-0">{format(new Date(arq.atualizadoEm), "dd/MM/yyyy", { locale: ptBR })}</span>
+                          {isComplementar(new Date(arq.atualizadoEm)) && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5 shrink-0">
+                              <RefreshCw className="w-3 h-3" />
+                              Período complementar
+                            </span>
+                          )}
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
                 )}
               </div>
