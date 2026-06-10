@@ -8,9 +8,50 @@ import { ptBR } from "date-fns/locale";
 import { formatDateBR } from "@/lib/utils";
 import { EnumBadge } from "@/components/enum-badge";
 import { STATUS_INFO, SEGMENTO_AIUVL_INFO, TIPO_INSCRICAO_INFO, TIPO_CANDIDATO_INFO, getInfo } from "@/lib/labels";
-import { FolderOpen } from "lucide-react";
+import { FileIcon, FolderOpen, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import DocComplementarSection from "@/components/doc-complementar-section";
+import {
+  DOC_COMPLEMENTAR_INICIO_AIUVL,
+  DOC_COMPLEMENTAR_FIM_AIUVL,
+  DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL,
+  DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL,
+} from "@/lib/config";
+
+const CATEGORIA_LABEL: Record<string, string> = {
+  CAND_ENT_REQUERIMENTO:          "Requerimento de Inscrição (Anexo I)",
+  CAND_ENT_DECLARACAO_ATUACAO:    "Declaração de Atuação na Região (Anexo II)",
+  CAND_ENT_ESTATUTO:              "Estatuto Social da Entidade",
+  CAND_ENT_ATA_ELEICAO:           "Ata de Eleição da Diretoria",
+  CAND_ENT_CNPJ:                  "Comprovante de CNPJ",
+  CAND_ENT_DECLARACAO_IDONEIDADE: "Declaração de Idoneidade (Anexo V)",
+  CAND_REP_IDENTIDADE:            "Documento de Identificação — Representante Legal",
+  CAND_REP_CPF:                   "CPF — Representante Legal",
+  CAND_REP_TITULO_ELEITOR:        "Título de Eleitor — Representante Legal",
+  CAND_REP_COMPROVANTE_RESIDENCIA:"Comprovante de Residência — Representante Legal",
+  CAND_CAN_IDENTIDADE:            "Documento de Identificação — Candidato",
+  CAND_CAN_CPF:                   "CPF — Candidato",
+  CAND_CAN_FOTO:                  "Foto 3×4 — Candidato",
+  CAND_CAN_TITULO_ELEITOR:        "Título de Eleitor — Candidato",
+  CAND_CAN_COMPROVANTE_RESIDENCIA:"Comprovante de Residência — Candidato",
+  CAND_CAN_DECLARACAO:            "Declaração do(a) Candidato(a) (Anexo III)",
+  ELEIT_ENT_REQUERIMENTO:          "Requerimento de Inscrição como Eleitor (Anexo VI)",
+  ELEIT_ENT_DECLARACAO_ATUACAO:    "Declaração de Atuação na Região (Anexo II)",
+  ELEIT_ENT_ESTATUTO:              "Estatuto Social da Entidade",
+  ELEIT_ENT_ATA_ELEICAO:           "Ata de Eleição da Diretoria",
+  ELEIT_ENT_CNPJ:                  "Comprovante de CNPJ",
+  ELEIT_ENT_DECLARACAO_IDONEIDADE: "Declaração de Idoneidade (Anexo V)",
+  ELEIT_REP_IDENTIDADE:            "Documento de Identificação — Representante Legal",
+  ELEIT_REP_CPF:                   "CPF — Representante Legal",
+  ELEIT_REP_TITULO_ELEITOR:        "Título de Eleitor — Representante Legal",
+  ELEIT_REP_COMPROVANTE_RESIDENCIA:"Comprovante de Residência — Representante Legal",
+};
+
+function isAtualizadoNoComplementar(criadoEm: Date, isCandidato: boolean): boolean {
+  const inicio = isCandidato ? DOC_COMPLEMENTAR_INICIO_AIUVL : DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL;
+  const fim    = isCandidato ? DOC_COMPLEMENTAR_FIM_AIUVL    : DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL;
+  return criadoEm >= inicio && criadoEm <= fim;
+}
 
 function cnpjFormatado(cnpj: string) {
   return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
@@ -146,30 +187,47 @@ export default async function MinhaInscricaoAiuvlPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
             <CardContent>
-              {(candidatura.arquivos.length + (candidatura.organizacao?.arquivos.length ?? 0) + candidatura.candidatos.flatMap(c => c.arquivos).length) === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum arquivo enviado.</p>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {candidatura.organizacao?.arquivos.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between">
-                      <span>{a.nome}</span>
-                      <span className="text-muted-foreground">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>
-                    </li>
-                  ))}
-                  {candidatura.arquivos.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between">
-                      <span>{a.nome}</span>
-                      <span className="text-muted-foreground">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>
-                    </li>
-                  ))}
-                  {candidatura.candidatos.flatMap(c => c.arquivos).map((a) => (
-                    <li key={a.id} className="flex items-center justify-between">
-                      <span>{a.nome}</span>
-                      <span className="text-muted-foreground">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {(() => {
+                const titular  = candidatura.candidatos.find(c => c.tipoCandidato === "TITULAR");
+                const suplente = candidatura.candidatos.find(c => c.tipoCandidato === "SUPLENTE");
+                const grupos: { titulo: string; arquivos: typeof candidatura.arquivos }[] = [
+                  { titulo: "Entidade Candidata",      arquivos: (candidatura.organizacao?.arquivos ?? []).filter(a => a.categoria !== "COMPLEMENTAR") },
+                  { titulo: "Representante Legal",     arquivos: candidatura.arquivos.filter(a => a.categoria !== "COMPLEMENTAR") },
+                  { titulo: "Candidato Titular",       arquivos: (titular?.arquivos  ?? []).filter(a => a.categoria !== "COMPLEMENTAR") },
+                  { titulo: "Candidato Suplente",      arquivos: (suplente?.arquivos ?? []).filter(a => a.categoria !== "COMPLEMENTAR") },
+                ].filter(g => g.arquivos.length > 0);
+
+                if (grupos.length === 0) return <p className="text-sm text-muted-foreground">Nenhum arquivo enviado.</p>;
+
+                return (
+                  <div className="space-y-4">
+                    {grupos.map(grupo => (
+                      <div key={grupo.titulo}>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{grupo.titulo}</p>
+                        <ul className="space-y-1.5">
+                          {grupo.arquivos.map(a => {
+                            const label = CATEGORIA_LABEL[a.categoria] ?? a.nome;
+                            const complementar = isAtualizadoNoComplementar(a.criadoEm, true);
+                            return (
+                              <li key={a.id} className="flex items-center gap-2 text-sm rounded p-1.5 hover:bg-muted/40">
+                                <FileIcon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
+                                <span className="flex-1 truncate" title={a.nome}>{label}</span>
+                                {complementar && (
+                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5 flex-shrink-0">
+                                    <RefreshCw className="w-3 h-3" />
+                                    Atualizado no período complementar
+                                  </span>
+                                )}
+                                <span className="flex-shrink-0 text-muted-foreground text-xs">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </>
@@ -213,24 +271,43 @@ export default async function MinhaInscricaoAiuvlPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
             <CardContent>
-              {(eleitor.arquivos.length + (eleitor.organizacao?.arquivos.length ?? 0)) === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum arquivo enviado.</p>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {eleitor.organizacao?.arquivos.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between">
-                      <span>{a.nome}</span>
-                      <span className="text-muted-foreground">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>
-                    </li>
-                  ))}
-                  {eleitor.arquivos.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between">
-                      <span>{a.nome}</span>
-                      <span className="text-muted-foreground">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {(() => {
+                const grupos: { titulo: string; arquivos: typeof eleitor.arquivos }[] = [
+                  { titulo: "Entidade Eleitora",   arquivos: (eleitor.organizacao?.arquivos ?? []).filter(a => a.categoria !== "COMPLEMENTAR") },
+                  { titulo: "Representante Legal", arquivos: eleitor.arquivos.filter(a => a.categoria !== "COMPLEMENTAR") },
+                ].filter(g => g.arquivos.length > 0);
+
+                if (grupos.length === 0) return <p className="text-sm text-muted-foreground">Nenhum arquivo enviado.</p>;
+
+                return (
+                  <div className="space-y-4">
+                    {grupos.map(grupo => (
+                      <div key={grupo.titulo}>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{grupo.titulo}</p>
+                        <ul className="space-y-1.5">
+                          {grupo.arquivos.map(a => {
+                            const label = CATEGORIA_LABEL[a.categoria] ?? a.nome;
+                            const complementar = isAtualizadoNoComplementar(a.criadoEm, false);
+                            return (
+                              <li key={a.id} className="flex items-center gap-2 text-sm rounded p-1.5 hover:bg-muted/40">
+                                <FileIcon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
+                                <span className="flex-1 truncate" title={a.nome}>{label}</span>
+                                {complementar && (
+                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5 flex-shrink-0">
+                                    <RefreshCw className="w-3 h-3" />
+                                    Atualizado no período complementar
+                                  </span>
+                                )}
+                                <span className="flex-shrink-0 text-muted-foreground text-xs">{(a.tamanho / 1024 / 1024).toFixed(2)} MB</span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </>
