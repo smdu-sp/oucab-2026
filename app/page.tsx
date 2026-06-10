@@ -13,7 +13,7 @@ const eleicoes = [
   {
     sigla: "AIUSCE",
     nome: "Área de Intervenção Urbana do Setor Central",
-    descricao: "Eleição para o Conselho Gestor da AIUSCE",
+    descricao: "Eleição para o Conselho Gestor da AIU Setor Central",
     href: "/aiusce",
     ativa: true,
   },
