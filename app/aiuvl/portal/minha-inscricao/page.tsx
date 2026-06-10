@@ -47,10 +47,10 @@ const CATEGORIA_LABEL: Record<string, string> = {
   ELEIT_REP_COMPROVANTE_RESIDENCIA:"Comprovante de Residência — Representante Legal",
 };
 
-function isAtualizadoNoComplementar(criadoEm: Date, isCandidato: boolean): boolean {
+function isAtualizadoNoComplementar(atualizadoEm: Date, isCandidato: boolean): boolean {
   const inicio = isCandidato ? DOC_COMPLEMENTAR_INICIO_AIUVL : DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL;
   const fim    = isCandidato ? DOC_COMPLEMENTAR_FIM_AIUVL    : DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL;
-  return criadoEm >= inicio && criadoEm <= fim;
+  return atualizadoEm >= inicio && atualizadoEm <= fim;
 }
 
 function cnpjFormatado(cnpj: string) {
@@ -207,11 +207,12 @@ export default async function MinhaInscricaoAiuvlPage() {
                         <ul className="space-y-1.5">
                           {grupo.arquivos.map(a => {
                             const label = CATEGORIA_LABEL[a.categoria] ?? a.nome;
-                            const complementar = isAtualizadoNoComplementar(a.criadoEm, true);
+                            const complementar = isAtualizadoNoComplementar(a.atualizadoEm, true);
                             return (
                               <li key={a.id} className="flex items-center gap-2 text-sm rounded p-1.5 hover:bg-muted/40">
                                 <FileIcon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
                                 <span className="flex-1 truncate" title={a.nome}>{label}</span>
+                                <span className="flex-shrink-0 text-muted-foreground text-xs">{format(a.atualizadoEm, "dd/MM/yyyy", { locale: ptBR })}</span>
                                 {complementar && (
                                   <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5 flex-shrink-0">
                                     <RefreshCw className="w-3 h-3" />
@@ -287,11 +288,12 @@ export default async function MinhaInscricaoAiuvlPage() {
                         <ul className="space-y-1.5">
                           {grupo.arquivos.map(a => {
                             const label = CATEGORIA_LABEL[a.categoria] ?? a.nome;
-                            const complementar = isAtualizadoNoComplementar(a.criadoEm, false);
+                            const complementar = isAtualizadoNoComplementar(a.atualizadoEm, false);
                             return (
                               <li key={a.id} className="flex items-center gap-2 text-sm rounded p-1.5 hover:bg-muted/40">
                                 <FileIcon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
                                 <span className="flex-1 truncate" title={a.nome}>{label}</span>
+                                <span className="flex-shrink-0 text-muted-foreground text-xs">{format(a.atualizadoEm, "dd/MM/yyyy", { locale: ptBR })}</span>
                                 {complementar && (
                                   <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 rounded px-1.5 py-0.5 flex-shrink-0">
                                     <RefreshCw className="w-3 h-3" />
