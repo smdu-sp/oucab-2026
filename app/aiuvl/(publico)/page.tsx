@@ -64,9 +64,6 @@ export default function AiuvlHome() {
               Inscrições reabertas para: <strong>{segmentosReinscricaoLabels.join(", ")}</strong>.
               {/* {" "}Prazo: até <strong>{prazoReinscricao}</strong>. */}
             </p>
-            <p className="text-sm text-emerald-700 dark:text-emerald-400">
-              Entidades com inscrição <strong>indeferida</strong> podem realizar uma nova inscrição.
-            </p>
           </div>
         </div>
       )}
