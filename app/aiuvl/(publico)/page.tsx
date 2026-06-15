@@ -1,5 +1,7 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Info, Download, AlertTriangle, RefreshCw } from "lucide-react";
@@ -13,7 +15,7 @@ import {
   INICIO_INSCRICAO_AIUVL_ELEITORES,
 } from "@/lib/config";
 
-const MapaVisualizacao = dynamic(() => import("./_components/mapa-visualizacao"));
+const MapaVisualizacao = nextDynamic(() => import("./_components/mapa-visualizacao"));
 
 const ANEXOS = [
   { nome: "Anexo I — Requerimento de Inscrição", arquivo: "ANEXO I - REQUERIMENTO DE INSCRIÇÃO.pdf" },
