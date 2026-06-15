@@ -98,8 +98,8 @@ model Usuario {
     criadoEm      DateTime    @default(now())
     atualizadoEm  DateTime    @default(now()) @updatedAt
 
-    candidatura Candidatura?
-    eleitor     Eleitor?
+    candidaturas Candidatura[]
+    eleitor      Eleitor?
 
     @@map("usuarios")
 }
@@ -110,7 +110,8 @@ model Candidatura {
     status              Status        @default(EM_ANALISE)
     oculto              Boolean       @default(false)
     motivoIndeferimento String?       @db.Text
-    usuarioId           String        @unique
+    rodada              Int           @default(1)
+    usuarioId           String
     criadoEm           DateTime      @default(now())
     atualizadoEm       DateTime      @default(now()) @updatedAt
 
@@ -119,13 +120,14 @@ model Candidatura {
     candidatos  Candidato[]
     arquivos    Arquivo[]
 
+    @@unique([usuarioId, rodada])
     @@map("candidaturas")
 }
 
 model OrganizacaoCandidata {
     id            String   @id @default(uuid())
     razaoSocial   String
-    cnpj          String   @unique
+    cnpj          String
     segmento      Segmento
     dataAbertura  DateTime @db.Date
     sede          String
@@ -152,7 +154,7 @@ model Candidato {
     nomeSocial         String?
     genero             Genero
     dataNascimento     DateTime      @db.Date
-    cpf                String        @unique
+    cpf                String
     tituloEleitor      String?
     domicilioEleitoral String?
     email              String
@@ -164,6 +166,7 @@ model Candidato {
     candidatura Candidatura @relation(fields: [candidaturaId], references: [id])
     arquivos    Arquivo[]
 
+    @@unique([cpf, candidaturaId])
     @@map("candidatos")
 }
 
@@ -212,7 +215,7 @@ model Arquivo {
     nome           String
     tipo           String
     tamanho        Int
-    caminho        String
+    caminho        String           @db.Text
     categoria      CategoriaArquivo
     candidaturaId  String?
     candidatoId    String?

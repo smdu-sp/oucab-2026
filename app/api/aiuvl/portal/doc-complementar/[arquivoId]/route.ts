@@ -17,8 +17,9 @@ export async function DELETE(
   const { arquivoId } = await params;
   const usuarioId = session.user.id as string;
 
-  const candidatura = await db.candidatura.findUnique({
+  const candidatura = await db.candidatura.findFirst({
     where: { usuarioId },
+    orderBy: { rodada: "desc" },
     select: { id: true },
   });
   const eleitor = candidatura

@@ -2,8 +2,16 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Info, Download, AlertTriangle } from "lucide-react";
-import { periodoInscricaoCandidatosAiuvlAberto, periodoInscricaoEleitoresAiuvlAberto, prazoCandidatosAiuvlEncerrado, INICIO_INSCRICAO_AIUVL_ELEITORES } from "@/lib/config";
+import { ArrowRight, Info, Download, AlertTriangle, RefreshCw } from "lucide-react";
+import {
+  periodoInscricaoCandidatosAiuvlAberto,
+  periodoInscricaoEleitoresAiuvlAberto,
+  prazoCandidatosAiuvlEncerrado,
+  periodoReinscricaoCandidatosAiuvlAberto,
+  AIUVL_REABERTURA_SEGMENTOS,
+  PRAZO_REABERTURA_AIUVL_CANDIDATOS,
+  INICIO_INSCRICAO_AIUVL_ELEITORES,
+} from "@/lib/config";
 
 const MapaVisualizacao = dynamic(() => import("./_components/mapa-visualizacao"));
 
@@ -17,30 +25,57 @@ const ANEXOS = [
   { nome: "Anexo VII — Cronograma", arquivo: "ANEXO VII - CRONOGRAMA.pdf" },
 ];
 
+const SEGMENTO_LABELS: Record<string, string> = {
+  ONG: "Organização Não Governamental",
+  ASSOCIACAO_BAIRRO: "Associação de Bairro",
+  ENTIDADE_ACADEMICA: "Entidade Acadêmica / Pesquisa",
+  REP_EMPRESARIAL: "Setor Empresarial",
+};
+
 export default function AiuvlHome() {
   const candidatosAberto = periodoInscricaoCandidatosAiuvlAberto();
   const eleitoresAberto = periodoInscricaoEleitoresAiuvlAberto();
   const candidatosEncerrado = prazoCandidatosAiuvlEncerrado();
+  const reinscricaoAberta = periodoReinscricaoCandidatosAiuvlAberto();
 
-  const inicioEleitores = INICIO_INSCRICAO_AIUVL_ELEITORES.toLocaleDateString("pt-BR", {
+  const prazoReinscricao = PRAZO_REABERTURA_AIUVL_CANDIDATOS.toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "long",
     year: "numeric",
     timeZone: "America/Sao_Paulo",
   });
 
+  const segmentosReinscricaoLabels = AIUVL_REABERTURA_SEGMENTOS.map(
+    (s) => SEGMENTO_LABELS[s] ?? s,
+  );
+
   return (
     <div className="space-y-4">
-      {candidatosEncerrado && !eleitoresAberto && (
+      {reinscricaoAberta && (
+        <div className="rounded-none md:rounded-md border border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-600 px-6 py-5 flex gap-4 items-start">
+          <RefreshCw className="h-6 w-6 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-lg font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
+              Reabertura de Inscrições de Candidatos
+            </p>
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">
+              Inscrições reabertas para: <strong>{segmentosReinscricaoLabels.join(", ")}</strong>.
+              {/* {" "}Prazo: até <strong>{prazoReinscricao}</strong>. */}
+            </p>
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">
+              Entidades com inscrição <strong>indeferida</strong> podem realizar uma nova inscrição.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {candidatosEncerrado && !eleitoresAberto && !reinscricaoAberta && (
         <div className="rounded-none md:rounded-md border border-amber-400 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-600 px-6 py-5 flex gap-4 items-start">
           <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
           <div className="space-y-1">
             <p className="text-lg font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wide">
               Inscrições para candidatos encerradas
             </p>
-            {/* <p className="text-sm text-amber-700 dark:text-amber-400">
-              O próximo período de inscrição — <strong>Inscrição de Eleitores</strong> — terá início em <strong>{inicioEleitores}</strong>.
-            </p> */}
           </div>
         </div>
       )}
@@ -83,6 +118,15 @@ export default function AiuvlHome() {
               <Link href="/aiuvl/inscricao">
                 Inscrição de Candidatos
                 <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          )}
+
+          {reinscricaoAberta && !candidatosAberto && (
+            <Button asChild size="lg" className="text-lg px-8 bg-emerald-600 hover:bg-emerald-700">
+              <Link href="/aiuvl/inscricao?tipo=CANDIDATO">
+                Reabertura — Inscrição de Candidatos
+                <RefreshCw className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           )}

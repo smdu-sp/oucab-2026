@@ -27,8 +27,13 @@ export interface IAiuvlCandidatura extends Candidatura {
   _count: { arquivos: number };
 }
 
+export interface IAiuvlCandidaturaHistorico extends Candidatura {
+  organizacao: OrganizacaoCandidata | null;
+  candidatos: Candidato[];
+}
+
 export interface IAiuvlCandidaturaDetalhe extends Candidatura {
-  usuario: Usuario;
+  usuario: Usuario & { candidaturas: IAiuvlCandidaturaHistorico[] };
   organizacao: (OrganizacaoCandidata & { arquivos: Arquivo[] }) | null;
   candidatos: (Candidato & { arquivos: Arquivo[] })[];
   arquivos: Arquivo[];
@@ -119,7 +124,19 @@ export async function buscarCandidaturaAiuvlPorId(id: string): Promise<IAiuvlCan
   const candidatura = await db.candidatura.findUnique({
     where: { id },
     include: {
-      usuario: true,
+      usuario: {
+        include: {
+          // Histórico: todas as outras candidaturas do mesmo usuário (apenas admin vê)
+          candidaturas: {
+            where: { id: { not: id } },
+            orderBy: { rodada: "asc" },
+            include: {
+              organizacao: true,
+              candidatos: true,
+            },
+          },
+        },
+      },
       organizacao: { include: { arquivos: true } },
       candidatos: { include: { arquivos: true } },
       arquivos: true,

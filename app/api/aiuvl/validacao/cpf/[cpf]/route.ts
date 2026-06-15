@@ -13,7 +13,11 @@ export async function GET(
 
     const cpfLimpo = cpf.replace(/[^\d]/g, "");
 
-    const candidatoExistente = await db.candidato.findUnique({ where: { cpf: cpfLimpo } });
+    // Verifica apenas na rodada atual (permite re-inscrição de candidatos de rodadas anteriores)
+    const { AIUVL_RODADA_CANDIDATOS } = await import("@/lib/config");
+    const candidatoExistente = await db.candidato.findFirst({
+      where: { cpf: cpfLimpo, candidatura: { rodada: AIUVL_RODADA_CANDIDATOS } },
+    });
     const existente = !!candidatoExistente;
 
     return NextResponse.json({

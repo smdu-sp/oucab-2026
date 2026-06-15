@@ -13,8 +13,9 @@ export async function GET(
       return NextResponse.json({ message: "CPF inválido", found: false }, { status: 400 });
     }
 
-    const candidato = await db.candidato.findUnique({
+    const candidato = await db.candidato.findFirst({
       where: { cpf: cpfLimpo },
+      orderBy: { candidatura: { rodada: "desc" } },
       select: {
         cpf: true,
         nome: true,

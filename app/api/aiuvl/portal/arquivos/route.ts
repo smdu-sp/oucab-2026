@@ -96,7 +96,9 @@ export async function GET() {
   const usuario = await db.usuario.findUnique({
     where: { id: session.user.id as string },
     include: {
-      candidatura: {
+      candidaturas: {
+        orderBy: { rodada: "desc" },
+        take: 1,
         include: {
           organizacao: { include: { arquivos: { select: { id: true, nome: true, tamanho: true, categoria: true } } } },
           candidatos: { include: { arquivos: { select: { id: true, nome: true, tamanho: true, categoria: true } } } },
@@ -114,6 +116,8 @@ export async function GET() {
 
   if (!usuario) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
 
+  const candidatura = usuario.candidaturas[0] ?? null;
+
   const arquivosAtuais: Record<string, { id: string; nome: string; tamanho: number }> = {};
 
   const reg = (
@@ -128,8 +132,8 @@ export async function GET() {
     }
   };
 
-  if (usuario.candidatura) {
-    const cand = usuario.candidatura;
+  if (candidatura) {
+    const cand = candidatura;
     reg(CAND_REP_TO_CAMPO, cand.arquivos);
     reg(ORG_CAND_TO_CAMPO, cand.organizacao?.arquivos ?? []);
     const titular = cand.candidatos.find((c) => c.tipoCandidato === "TITULAR");
@@ -143,8 +147,8 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    tipoInscricao: usuario.candidatura ? "CANDIDATO" : "ELEITOR",
-    status: usuario.candidatura?.status ?? usuario.eleitor?.status,
+    tipoInscricao: candidatura ? "CANDIDATO" : "ELEITOR",
+    status: candidatura?.status ?? usuario.eleitor?.status,
     arquivosAtuais,
   });
 }
@@ -156,7 +160,9 @@ export async function PUT(request: NextRequest) {
   const usuario = await db.usuario.findUnique({
     where: { id: session.user.id as string },
     include: {
-      candidatura: {
+      candidaturas: {
+        orderBy: { rodada: "desc" },
+        take: 1,
         include: { organizacao: true, candidatos: true },
       },
       eleitor: {
@@ -167,7 +173,7 @@ export async function PUT(request: NextRequest) {
 
   if (!usuario) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
 
-  const candidatura = usuario.candidatura;
+  const candidatura = usuario.candidaturas[0] ?? null;
   const eleitor = usuario.eleitor;
 
   const isCandidato = !!candidatura;

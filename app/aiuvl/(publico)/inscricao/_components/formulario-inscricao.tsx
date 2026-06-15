@@ -20,7 +20,7 @@ import {
 } from "@/lib/schemas/formulario-aiuvl";
 
 import EtapaTipoInscricaoAiuvl from "./etapas/etapa-tipo-inscricao";
-import EtapaSegmentoAiuvl from "./etapas/etapa-segmento";
+import EtapaSegmentoAiuvl, { criarEtapaSegmento } from "./etapas/etapa-segmento";
 import { EtapaDadosEntidadeCandidata, EtapaDadosEntidadeEleitora } from "./etapas/etapa-dados-entidade";
 import { EtapaEnderecoCandidata, EtapaEnderecoEleitora } from "./etapas/etapa-endereco-entidade";
 import { EtapaDadosTitular, EtapaDadosSuplente } from "./etapas/etapa-dados-candidato";
@@ -432,9 +432,10 @@ const ALL_STEPS: StepDef[] = [
 
 interface FormularioInscricaoAiuvlProps {
   tipoInicial?: "CANDIDATO" | "ELEITOR";
+  segmentosHabilitados?: string[];
 }
 
-export default function FormularioInscricaoAiuvl({ tipoInicial }: FormularioInscricaoAiuvlProps) {
+export default function FormularioInscricaoAiuvl({ tipoInicial, segmentosHabilitados }: FormularioInscricaoAiuvlProps) {
   const router = useRouter();
 
   const methods = useForm<FormularioAiuvlData>({
@@ -500,14 +501,20 @@ export default function FormularioInscricaoAiuvl({ tipoInicial }: FormularioInsc
     setMostrarBannerRascunho(false);
   };
 
+  const stepsBase = useMemo(() => {
+    if (!segmentosHabilitados?.length) return ALL_STEPS;
+    const SegmentoFiltrado = criarEtapaSegmento(segmentosHabilitados);
+    return ALL_STEPS.map((s) => s.type === "segmento" ? { ...s, component: SegmentoFiltrado } : s);
+  }, [segmentosHabilitados]);
+
   const activeSteps = useMemo(() => {
-    return ALL_STEPS.filter((s) => {
+    return stepsBase.filter((s) => {
       if (tipoInicial && s.type === "tipoInscricao") return false;
       if (s.soParaCandidata && tipoInscricao !== "CANDIDATO") return false;
       if (s.soParaEleitora && tipoInscricao !== "ELEITOR") return false;
       return true;
     });
-  }, [tipoInscricao, tipoInicial]);
+  }, [stepsBase, tipoInscricao, tipoInicial]);
 
   const stepAtual = activeSteps[step] ?? activeSteps[0];
   const progresso = ((step + 1) / activeSteps.length) * 100;

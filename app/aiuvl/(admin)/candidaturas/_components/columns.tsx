@@ -67,6 +67,19 @@ export function createColumns(isDev: boolean): ColumnDef<IAiuvlCandidatura>[] {
         : "—",
     },
     {
+      accessorKey: "rodada",
+      header: () => <p className="text-center">Rodada</p>,
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          {row.original.rodada > 1 ? (
+            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs">R{row.original.rodada}</Badge>
+          ) : (
+            <span className="text-xs text-muted-foreground">R{row.original.rodada}</span>
+          )}
+        </div>
+      ),
+    },
+    {
       accessorKey: "status",
       header: () => <p className="text-center">Status</p>,
       cell: ({ row }) => (

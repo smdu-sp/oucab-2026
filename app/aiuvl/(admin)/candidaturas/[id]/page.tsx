@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { buscarCandidaturaAiuvlPorId } from "@/services/candidaturas-aiuvl";
 import { validaUsuarioAiuvl } from "@/services/usuario-aiuvl";
-import { ArrowLeft, EyeOff, RefreshCw } from "lucide-react";
+import { ArrowLeft, EyeOff, RefreshCw, History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusActions } from "./_components/status-actions";
 import Link from "next/link";
@@ -223,6 +223,48 @@ export default async function CandidaturaAiuvlDetalhe({
                 </li>
               ))}
             </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {candidatura.usuario.candidaturas.length > 0 && (
+        <Card className="border-slate-300 dark:border-slate-600">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+              <History className="h-5 w-5" />
+              Histórico de Inscrições Anteriores
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Inscrições anteriores desta entidade — visível apenas para a comissão.
+            </p>
+            {candidatura.usuario.candidaturas.map((hist) => (
+              <div key={hist.id} className="flex items-center justify-between gap-4 rounded-md border px-4 py-3 text-sm">
+                <div className="space-y-0.5">
+                  <p className="font-medium">
+                    Rodada {hist.rodada} — {hist.organizacao?.razaoSocial ?? "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {hist.organizacao?.cnpj} · {hist.organizacao?.segmento}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Inscrito em {format(new Date(hist.criadoEm), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                  {hist.candidatos.map((c) => (
+                    <p key={c.id} className="text-xs text-muted-foreground">
+                      {c.tipoCandidato === "TITULAR" ? "Titular" : "Suplente"}: {c.nome} — CPF: {c.cpf}
+                    </p>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <EnumBadge info={getInfo(STATUS_INFO, hist.status)} className="text-xs" />
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/aiuvl/candidaturas/${hist.id}`}>Ver</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

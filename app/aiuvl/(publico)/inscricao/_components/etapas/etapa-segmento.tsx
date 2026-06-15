@@ -34,13 +34,16 @@ const opcoes: { valor: SegmentoAiuvl; label: string; descricao: string; icone: R
   },
 ];
 
-export default function EtapaSegmentoAiuvl() {
+function EtapaSegmentoAiuvlBase({ opcoesCandidato }: { opcoesCandidato: typeof opcoes }) {
   const { setValue, watch, formState: { errors } } = useFormContext<FormularioAiuvlData>();
 
   const tipoInscricao = watch("tipoInscricao");
   const isCandidata = tipoInscricao === "CANDIDATO";
   const fieldPath = isCandidata ? "entidadeCandidata.segmento" : "entidadeEleitora.segmento";
   const segmento = watch(fieldPath as any) as SegmentoAiuvl | undefined;
+
+  // Eleitores sempre veem todos os segmentos; candidatos usam a lista permitida na rodada atual
+  const opcoesVisiveis = isCandidata ? opcoesCandidato : opcoes;
 
   const erroCandidata = errors.entidadeCandidata?.segmento;
   const erroEleitora  = errors.entidadeEleitora?.segmento;
@@ -53,7 +56,7 @@ export default function EtapaSegmentoAiuvl() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {opcoes.map(({ valor, label, descricao, icone: Icone }) => {
+        {opcoesVisiveis.map(({ valor, label, descricao, icone: Icone }) => {
           const selecionado = segmento === valor;
           return (
             <button
@@ -82,4 +85,15 @@ export default function EtapaSegmentoAiuvl() {
       </div>
     </div>
   );
+}
+
+export function criarEtapaSegmento(segmentosHabilitados: string[]) {
+  const opcoesFiltradas = opcoes.filter((o) => segmentosHabilitados.includes(o.valor));
+  return function EtapaSegmentoFiltrado() {
+    return <EtapaSegmentoAiuvlBase opcoesCandidato={opcoesFiltradas} />;
+  };
+}
+
+export default function EtapaSegmentoAiuvl() {
+  return <EtapaSegmentoAiuvlBase opcoesCandidato={opcoes} />;
 }

@@ -75,10 +75,10 @@ export const PRAZO_INSCRICAO_AIUVL_CANDIDATOS = new Date(
 );
 
 export const INICIO_INSCRICAO_AIUVL_ELEITORES = new Date(
-  process.env.INICIO_INSCRICAO_AIUVL_ELEITORES ?? "2026-06-15T00:00:00.000Z"
+  process.env.INICIO_INSCRICAO_AIUVL_ELEITORES ?? "2026-06-15T03:00:00.000Z"
 );
 export const PRAZO_INSCRICAO_AIUVL_ELEITORES = new Date(
-  process.env.PRAZO_INSCRICAO_AIUVL_ELEITORES ?? "2026-06-24T23:59:59.999Z"
+  process.env.PRAZO_INSCRICAO_AIUVL_ELEITORES ?? "2026-06-25T02:59:59.999Z"
 );
 
 export function prazoCandidatosAiuvlEncerrado(): boolean {
@@ -121,4 +121,46 @@ export const DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL = new Date(
 export function periodoDocComplementarEleitorAbertoAiuvl(): boolean {
   const agora = new Date();
   return agora >= DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL && agora <= DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL;
+}
+
+// --- AIUVL Reabertura de Inscrições de Candidatos ---
+// Chave mestra: AIUVL_REABERTURA_CANDIDATOS_ABERTA=true
+// Rodada atual: AIUVL_RODADA_CANDIDATOS=2
+// Segmentos habilitados: AIUVL_REABERTURA_SEGMENTOS=ASSOCIACAO_BAIRRO,ENTIDADE_ACADEMICA,REP_EMPRESARIAL
+// Datas: INICIO_REABERTURA_AIUVL_CANDIDATOS e PRAZO_REABERTURA_AIUVL_CANDIDATOS (ISO 8601 UTC)
+
+export const AIUVL_REABERTURA_CANDIDATOS_ABERTA =
+  process.env.AIUVL_REABERTURA_CANDIDATOS_ABERTA === "true";
+
+export const AIUVL_RODADA_CANDIDATOS = parseInt(
+  process.env.AIUVL_RODADA_CANDIDATOS ?? "1",
+  10,
+);
+
+export const AIUVL_REABERTURA_SEGMENTOS: string[] = (
+  process.env.AIUVL_REABERTURA_SEGMENTOS ?? ""
+)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+export const INICIO_REABERTURA_AIUVL_CANDIDATOS = new Date(
+  process.env.INICIO_REABERTURA_AIUVL_CANDIDATOS ?? "2026-06-15T03:00:00.000Z",
+);
+export const PRAZO_REABERTURA_AIUVL_CANDIDATOS = new Date(
+  process.env.PRAZO_REABERTURA_AIUVL_CANDIDATOS ?? "2026-06-30T02:59:59.999Z",
+);
+
+export function periodoReinscricaoCandidatosAiuvlAberto(): boolean {
+  if (!AIUVL_REABERTURA_CANDIDATOS_ABERTA) return false;
+  const agora = new Date();
+  return (
+    agora >= INICIO_REABERTURA_AIUVL_CANDIDATOS &&
+    agora <= PRAZO_REABERTURA_AIUVL_CANDIDATOS
+  );
+}
+
+export function segmentoHabilitadoReinscricaoAiuvl(segmento: string): boolean {
+  if (AIUVL_REABERTURA_SEGMENTOS.length === 0) return false;
+  return AIUVL_REABERTURA_SEGMENTOS.includes(segmento);
 }

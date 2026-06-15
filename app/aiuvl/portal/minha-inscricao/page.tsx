@@ -67,7 +67,9 @@ export default async function MinhaInscricaoAiuvlPage() {
   const usuario = await db.usuario.findUnique({
     where: { id: session.user.id as string },
     include: {
-      candidatura: {
+      candidaturas: {
+        orderBy: { rodada: "desc" },
+        take: 1,
         include: {
           organizacao: { include: { arquivos: true } },
           candidatos: { include: { arquivos: true } },
@@ -85,7 +87,7 @@ export default async function MinhaInscricaoAiuvlPage() {
 
   if (!usuario) redirect("/aiuvl/login");
 
-  const candidatura = usuario.candidatura;
+  const candidatura = usuario.candidaturas[0] ?? null;
   const eleitor = usuario.eleitor;
 
   if (!candidatura && !eleitor) redirect("/aiuvl/login");

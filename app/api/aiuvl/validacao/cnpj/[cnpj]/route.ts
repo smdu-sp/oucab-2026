@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbAiuvl as db } from "@/lib/prisma-aiuvl";
+import { AIUVL_RODADA_CANDIDATOS } from "@/lib/config";
 
 export async function GET(
   request: NextRequest,
@@ -13,8 +14,9 @@ export async function GET(
 
     const cnpjLimpo = cnpj.replace(/[^\d]/g, "");
 
-    const orgCandidataExistente = await db.organizacaoCandidata.findUnique({
-      where: { cnpj: cnpjLimpo },
+    // Verifica apenas na rodada atual (permite re-inscrição de rodadas anteriores)
+    const orgCandidataExistente = await db.organizacaoCandidata.findFirst({
+      where: { cnpj: cnpjLimpo, candidatura: { rodada: AIUVL_RODADA_CANDIDATOS } },
     });
     const orgEleitoraExistente = await db.organizacaoEleitora.findUnique({
       where: { cnpj: cnpjLimpo },

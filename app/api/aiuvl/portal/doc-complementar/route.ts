@@ -10,8 +10,9 @@ const MAX_ARQUIVO = 50 * 1024 * 1024;
 const MAX_TOTAL   = 200 * 1024 * 1024;
 
 async function getInscricao(usuarioId: string) {
-  const candidatura = await db.candidatura.findUnique({
+  const candidatura = await db.candidatura.findFirst({
     where: { usuarioId },
+    orderBy: { rodada: "desc" },
     select: {
       id: true,
       status: true,

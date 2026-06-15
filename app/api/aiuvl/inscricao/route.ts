@@ -5,7 +5,13 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { gerarSenha, hashSenha } from "@/lib/password";
 import { sendEmail, emailBoasVindasEntidade } from "@/lib/email";
-import { periodoInscricaoCandidatosAiuvlAberto, periodoInscricaoEleitoresAiuvlAberto } from "@/lib/config";
+import {
+  periodoInscricaoCandidatosAiuvlAberto,
+  periodoInscricaoEleitoresAiuvlAberto,
+  periodoReinscricaoCandidatosAiuvlAberto,
+  segmentoHabilitadoReinscricaoAiuvl,
+  AIUVL_RODADA_CANDIDATOS,
+} from "@/lib/config";
 import type { CategoriaArquivo, Segmento, Genero } from "@/lib/generated/aiuvl";
 
 function parseDateBR(dateStr: string): Date {
@@ -75,10 +81,13 @@ export async function POST(request: NextRequest) {
     await garantirDiretorio(uploadsBase);
 
     // -------------------------------------------------------------------------
-    // CANDIDATO (período: 07/05 a 21/05/2026)
+    // CANDIDATO — período original (07/05 a 21/05) ou reabertura
     // -------------------------------------------------------------------------
     if (tipoInscricao === "CANDIDATO") {
-      if (!periodoInscricaoCandidatosAiuvlAberto()) {
+      const inscricaoOriginalAberta = periodoInscricaoCandidatosAiuvlAberto();
+      const reinscricaoAberta = periodoReinscricaoCandidatosAiuvlAberto();
+
+      if (!inscricaoOriginalAberta && !reinscricaoAberta) {
         return NextResponse.json({ error: "Inscrições de candidatos fora do período permitido." }, { status: 400 });
       }
 
@@ -94,13 +103,33 @@ export async function POST(request: NextRequest) {
       const emailEntidade = (formData.get("entidadeCandidata.emailEntidade") as string).toLowerCase();
       const telefone = (formData.get("entidadeCandidata.telefone") as string) || null;
 
-      const orgExistente = await db.organizacaoCandidata.findUnique({ where: { cnpj } });
-      if (orgExistente) {
+      // Valida segmento no período de reabertura
+      if (reinscricaoAberta && !inscricaoOriginalAberta) {
+        if (!segmentoHabilitadoReinscricaoAiuvl(segmento)) {
+          return NextResponse.json(
+            { error: "Segmento não habilitado na reabertura de inscrições." },
+            { status: 400 },
+          );
+        }
+      }
+
+      // Verifica se CNPJ já existe na rodada atual
+      const orgNaRodadaAtual = await db.organizacaoCandidata.findFirst({
+        where: { cnpj, candidatura: { rodada: AIUVL_RODADA_CANDIDATOS } },
+      });
+      if (orgNaRodadaAtual) {
         return NextResponse.json(
-          { error: "CNPJ já cadastrado. Para atualizar a inscrição, acesse o portal." },
+          { error: "CNPJ já cadastrado nesta rodada de inscrições. Para atualizar, acesse o portal." },
           { status: 400 },
         );
       }
+
+      // Verifica se existe inscrição anterior com este CNPJ (outra rodada)
+      const orgAnterior = await db.organizacaoCandidata.findFirst({
+        where: { cnpj },
+        include: { candidatura: { include: { usuario: true } } },
+        orderBy: { candidatura: { rodada: "desc" } },
+      });
 
       const parseCandidato = (prefix: string) => ({
         nome: formData.get(`${prefix}.nome`) as string,
@@ -114,6 +143,130 @@ export async function POST(request: NextRequest) {
         telefone: (formData.get(`${prefix}.telefone`) as string) || null,
       });
 
+      // -----------------------------------------------------------------------
+      // RE-INSCRIÇÃO: CNPJ encontrado com candidatura INDEFERIDA na rodada anterior
+      // -----------------------------------------------------------------------
+      if (orgAnterior && orgAnterior.candidatura.status === "INDEFERIDO" && reinscricaoAberta) {
+        const usuarioExistente = orgAnterior.candidatura.usuario;
+
+        const titularData = parseCandidato("titular");
+        const suplenteData = parseCandidato("suplente");
+
+        const senhaPlana = gerarSenha();
+        const senhaHash = await hashSenha(senhaPlana);
+
+        const resultado = await db.$transaction(async (tx) => {
+          // Reativa o usuário e gera nova senha
+          await tx.usuario.update({
+            where: { id: usuarioExistente.id },
+            data: { status: true, senha: senhaHash, primeiroAcesso: true },
+          });
+
+          const candidatura = await tx.candidatura.create({
+            data: {
+              tipoInscricao: "CANDIDATO",
+              rodada: AIUVL_RODADA_CANDIDATOS,
+              usuarioId: usuarioExistente.id,
+            },
+          });
+
+          const org = await tx.organizacaoCandidata.create({
+            data: {
+              razaoSocial, cnpj, segmento, dataAbertura, sede,
+              repNome, repCpf, repTituloEleitor, repDomicilio,
+              emailEntidade, telefone, candidaturaId: candidatura.id,
+            },
+          });
+
+          const dir = join(uploadsBase, `candidatura-${candidatura.id}`);
+          await garantirDiretorio(dir);
+
+          for (const campo of ["candEntRequerimento","candEntDeclaracaoAtuacao","candEntEstatuto","candEntAtaEleicao","candEntCnpj","candEntDeclaracaoIdoneidade"]) {
+            const arquivo = formData.get(campo) as File | null;
+            if (arquivo && arquivo.size > 0) {
+              const salvo = await salvarArquivo(arquivo, dir);
+              await tx.arquivo.create({ data: { ...salvo, orgCandidataId: org.id, categoria: CATEGORIA_MAP[campo] } });
+            }
+          }
+
+          for (const campo of ["repIdentidade","repCpfDoc","repTituloEleitor","repComprovanteResidencia"]) {
+            const arquivo = formData.get(campo) as File | null;
+            if (arquivo && arquivo.size > 0) {
+              const salvo = await salvarArquivo(arquivo, dir);
+              await tx.arquivo.create({ data: { ...salvo, candidaturaId: candidatura.id, categoria: CATEGORIA_MAP[campo] } });
+            }
+          }
+
+          const titular = await tx.candidato.create({
+            data: { ...titularData, tipoCandidato: "TITULAR", candidaturaId: candidatura.id },
+          });
+          for (const campo of ["titularIdentidade","titularCpfDoc","titularFoto","titularTituloEleitor","titularResidencia","titularDeclaracao"]) {
+            const arquivo = formData.get(campo) as File | null;
+            if (arquivo && arquivo.size > 0) {
+              const salvo = await salvarArquivo(arquivo, dir);
+              await tx.arquivo.create({ data: { ...salvo, candidatoId: titular.id, categoria: CATEGORIA_MAP[campo] } });
+            }
+          }
+
+          const suplente = await tx.candidato.create({
+            data: { ...suplenteData, tipoCandidato: "SUPLENTE", candidaturaId: candidatura.id },
+          });
+          for (const campo of ["suplenteIdentidade","suplenteCpfDoc","suplenteFoto","suplenteTituloEleitor","suplenteResidencia","suplenteDeclaracao"]) {
+            const arquivo = formData.get(campo) as File | null;
+            if (arquivo && arquivo.size > 0) {
+              const salvo = await salvarArquivo(arquivo, dir);
+              await tx.arquivo.create({ data: { ...salvo, candidatoId: suplente.id, categoria: CATEGORIA_MAP[campo] } });
+            }
+          }
+
+          return { candidatura, org };
+        });
+
+        // Envia credenciais para o e-mail informado na nova inscrição
+        await sendEmail({
+          to: emailEntidade,
+          subject: "AIU-VL 2026 — Reabertura: nova inscrição de candidatura recebida",
+          ...emailBoasVindasEntidade({
+            razaoSocial,
+            cnpj,
+            emailEntidade: usuarioExistente.email,
+            senha: senhaPlana,
+            tipoInscricao: "CANDIDATO",
+            sistemaLabel: "AIU-VL 2026 (Reabertura)",
+          }),
+        }).catch(console.error);
+
+        return NextResponse.json({
+          success: true,
+          message: "Nova inscrição de candidatura na reabertura realizada com sucesso! Verifique o e-mail cadastrado para as novas credenciais de acesso ao portal.",
+          candidaturaId: resultado.candidatura.id,
+        });
+      }
+
+      // CNPJ existe mas não está com status INDEFERIDO — bloqueia
+      if (orgAnterior) {
+        const statusAtual = orgAnterior.candidatura.status;
+        if (statusAtual === "DEFERIDO") {
+          return NextResponse.json(
+            { error: "CNPJ já possui inscrição deferida. Acesse o portal para acompanhar." },
+            { status: 400 },
+          );
+        }
+        if (statusAtual === "EM_ANALISE") {
+          return NextResponse.json(
+            { error: "CNPJ já possui inscrição em análise. Acesse o portal para acompanhar." },
+            { status: 400 },
+          );
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // NOVA INSCRIÇÃO (período original)
+      // -----------------------------------------------------------------------
+      if (!inscricaoOriginalAberta) {
+        return NextResponse.json({ error: "Inscrições de candidatos fora do período permitido." }, { status: 400 });
+      }
+
       const titularData = parseCandidato("titular");
       const suplenteData = parseCandidato("suplente");
 
@@ -126,7 +279,7 @@ export async function POST(request: NextRequest) {
         });
 
         const candidatura = await tx.candidatura.create({
-          data: { tipoInscricao: "CANDIDATO", usuarioId: usuario.id },
+          data: { tipoInscricao: "CANDIDATO", rodada: AIUVL_RODADA_CANDIDATOS, usuarioId: usuario.id },
         });
 
         const org = await tx.organizacaoCandidata.create({
@@ -140,7 +293,6 @@ export async function POST(request: NextRequest) {
         const dir = join(uploadsBase, `candidatura-${candidatura.id}`);
         await garantirDiretorio(dir);
 
-        // Documentos da entidade
         for (const campo of ["candEntRequerimento","candEntDeclaracaoAtuacao","candEntEstatuto","candEntAtaEleicao","candEntCnpj","candEntDeclaracaoIdoneidade"]) {
           const arquivo = formData.get(campo) as File | null;
           if (arquivo && arquivo.size > 0) {
@@ -149,7 +301,6 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Documentos do representante legal (vinculados à candidatura)
         for (const campo of ["repIdentidade","repCpfDoc","repTituloEleitor","repComprovanteResidencia"]) {
           const arquivo = formData.get(campo) as File | null;
           if (arquivo && arquivo.size > 0) {
@@ -158,7 +309,6 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Titular
         const titular = await tx.candidato.create({
           data: { ...titularData, tipoCandidato: "TITULAR", candidaturaId: candidatura.id },
         });
@@ -170,7 +320,6 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Suplente
         const suplente = await tx.candidato.create({
           data: { ...suplenteData, tipoCandidato: "SUPLENTE", candidaturaId: candidatura.id },
         });

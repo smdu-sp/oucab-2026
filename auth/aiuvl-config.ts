@@ -22,6 +22,9 @@ export const authAiuvlConfig = {
         });
 
         if (buscarUsuario) {
+          // Bloqueia usuários externos desativados (ex: indeferidos que não reinscreveram)
+          if (buscarUsuario.tipo === "EXTERNO" && !buscarUsuario.status) return null;
+
           if (process.env.ENVIRONMENT !== "local") {
             if (buscarUsuario.tipo === "INTERNO") {
               const response = await fetch(`${process.env.AUTH_SERVER}ldap/autenticar`, {
