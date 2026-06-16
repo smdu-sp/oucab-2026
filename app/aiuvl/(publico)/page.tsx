@@ -79,31 +79,17 @@ export default function AiuvlHome() {
         </div>
       )}
 
-      <section className="space-y-6">
-        <div className="text-center space-y-2 flex flex-col items-center gap-2">
-          <h2 className="text-3xl font-bold">Eleição do Conselho Gestor AIU-VL</h2>
-          <p className="text-muted-foreground text-sm">
-            Área de Intervenção Urbana Vila Leopoldina-Villa Lobos — biênio 2026-2028
-          </p>
-          <Link href="/aiuvl/edital/001" className="text-muted-foreground underline hover:text-foreground transition-colors">
-            Edital de Eleição AIU-VL
-          </Link>
-        </div>
+      <div className="text-center space-y-2 flex flex-col items-center gap-2 px-4 md:px-0">
+        <h2 className="text-3xl font-bold">Eleição do Conselho Gestor AIU-VL</h2>
+        <p className="text-muted-foreground text-sm">
+          Área de Intervenção Urbana Vila Leopoldina-Villa Lobos — biênio 2026-2028
+        </p>
+        <Link href="/aiuvl/edital/001" className="text-muted-foreground underline hover:text-foreground transition-colors">
+          Edital de Eleição AIU-VL
+        </Link>
+      </div>
 
-        <Card className="rounded-none md:rounded-md">
-          <CardHeader>
-            <CardTitle>Área de Abrangência</CardTitle>
-            <CardDescription>
-              Visualize a região contemplada para habilitação de eleitor
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <MapaVisualizacao height="400px" />
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="text-center space-y-3">
+      <section className="rounded-none md:rounded-md border-2 border-primary/20 bg-primary/5 p-6 md:p-8 text-center space-y-4">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Pronto para participar?</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -111,7 +97,7 @@ export default function AiuvlHome() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 md:px-0">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center">
           {candidatosAberto && (
             <Button asChild size="lg" className="text-lg px-8">
               <Link href="/aiuvl/inscricao">
@@ -147,6 +133,18 @@ export default function AiuvlHome() {
           </Button>
         </div>
       </section>
+
+      <Card className="rounded-none md:rounded-md">
+        <CardHeader>
+          <CardTitle>Área de Abrangência</CardTitle>
+          <CardDescription>
+            Visualize a região contemplada para habilitação de eleitor
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <MapaVisualizacao height="400px" />
+        </CardContent>
+      </Card>
     </div>
   );
 }

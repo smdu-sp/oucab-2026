@@ -28,7 +28,7 @@ export default function AiusceHome() {
   return (
     <div className="space-y-4">
       <section className="space-y-3">
-        <div className="text-center flex flex-col items-center gap-1">
+        <div className="text-center flex flex-col items-center gap-1 px-4 md:px-0">
           <h2 className="text-2xl font-bold">Sobre as Inscrições</h2>
           <p className="text-muted-foreground max-w-2xl text-center text-sm">
             Eleição para o Conselho Gestor da Área de Intervenção Urbana do Setor Central — biênio 2026-2028.
@@ -39,6 +39,36 @@ export default function AiusceHome() {
             </Link>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">Inscrições: 15 de abril a 08 de maio de 2026</span>
+          </div>
+        </div>
+
+        <div className="rounded-none md:rounded-md border-2 border-primary/20 bg-primary/5 p-6 md:p-8 text-center space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold">Pronto para se inscrever?</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm">
+              Faça sua inscrição e participe.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center">
+            {podeInscrever ? (
+              <Button asChild size="lg" className="text-lg px-8">
+                <Link href="/aiusce/inscricao">
+                  Iniciar Inscrição
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            ) : (
+              <Button className="text-lg px-8" disabled>
+                Inscrição Encerrada
+              </Button>
+            )}
+            <Button variant="outline" size="lg" className="text-lg px-8" asChild>
+              <Link href="https://gestaourbana.prefeitura.sp.gov.br/eleicao-do-conselho-gestor-da-aiu-do-setor-central-bienio-2026-2028/" target="_blank">
+                Saiba Mais
+                <Info className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
           </div>
         </div>
 
@@ -112,35 +142,6 @@ export default function AiusceHome() {
         </div>
       </section>
 
-      <section className="text-center space-y-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold">Pronto para se inscrever?</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-sm">
-            Faça sua inscrição e participe.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 md:px-0">
-          {podeInscrever ? (
-            <Button asChild size="lg" className="text-lg px-8">
-              <Link href="/aiusce/inscricao">
-                Iniciar Inscrição
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          ) : (
-            <Button className="text-lg px-8" disabled>
-              Inscrição Encerrada
-            </Button>
-          )}
-          <Button variant="outline" size="lg" className="text-lg px-8" asChild>
-            <Link href="https://gestaourbana.prefeitura.sp.gov.br/eleicao-do-conselho-gestor-da-aiu-do-setor-central-bienio-2026-2028/" target="_blank">
-              Saiba Mais
-              <Info className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-        </div>
-      </section>
     </div>
   );
 }

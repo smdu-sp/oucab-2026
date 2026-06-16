@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { LogIn } from "lucide-react";
 
 export default function HeaderAiuvl() {
   return (
@@ -25,9 +26,18 @@ export default function HeaderAiuvl() {
             height={290}
           />
         </Link>
-        <span className="text-white text-lg md:text-2xl font-bold text-center md:text-right md:max-w-[50%]">
-          Área de Intervenção Urbana Vila Leopoldina-Villa Lobos
-        </span>
+        <div className="flex flex-col items-end gap-3">
+          <span className="text-white text-lg md:text-2xl font-bold text-right md:max-w-[50%]">
+            Área de Intervenção Urbana Vila Leopoldina-Villa Lobos
+          </span>
+          <Link
+            href="/aiuvl/login"
+            className="inline-flex items-center gap-2 bg-white text-gray-900 rounded-md px-5 py-2 text-sm font-semibold shadow-lg hover:bg-gray-100 transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            Área Restrita
+          </Link>
+        </div>
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { LogIn } from "lucide-react";
 
 export default function Header() {
     return (
@@ -27,13 +28,22 @@ export default function Header() {
                         height={290}
                     />
                 </Link>
-                <Link
-                    href="https://prefeitura.sp.gov.br/web/sp_urbanismo/w/operacoes_urbanas/agua_branca/ouc_agua_branca/325192"
-                    className="text-white text-lg md:text-2xl font-bold text-center md:text-right md:max-w-[50%]"
-                    target="_blank"
-                >
-                    Operação Urbana Consorciada Água Branca
-                </Link>
+                <div className="flex flex-col items-end gap-3">
+                    <Link
+                        href="https://prefeitura.sp.gov.br/web/sp_urbanismo/w/operacoes_urbanas/agua_branca/ouc_agua_branca/325192"
+                        className="text-white text-lg md:text-2xl font-bold text-right md:max-w-[50%]"
+                        target="_blank"
+                    >
+                        Operação Urbana Consorciada Água Branca
+                    </Link>
+                    <Link
+                        href="/oucab/login"
+                        className="inline-flex items-center gap-2 bg-white text-gray-900 rounded-md px-5 py-2 text-sm font-semibold shadow-lg hover:bg-gray-100 transition-colors"
+                    >
+                        <LogIn className="w-4 h-4" />
+                        Área Restrita
+                    </Link>
+                </div>
             </div>
         </header>
     )
