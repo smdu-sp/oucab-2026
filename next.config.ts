@@ -50,14 +50,6 @@ const nextConfig: NextConfig = {
 	},
 	output: 'standalone',
 	outputFileTracingRoot: process.cwd(),
-	outputFileTracingExcludes: {
-		'*': [
-			'C:\\Users\\aalev\\Ambiente de Rede/**',
-			'C:/Users/aalev/Ambiente de Rede/**',
-			'C:\\Users\\aalev\\Configurações Locais/**',
-			'C:/Users/aalev/Configurações Locais/**',
-		],
-	},
 	experimental: {
 		serverActions: {
 			bodySizeLimit: '10mb',

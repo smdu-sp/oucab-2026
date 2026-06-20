@@ -4,10 +4,11 @@ import { db } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
-import { periodoDocComplementarAberto } from "@/lib/config";
+import { periodoDocComplementarAberto, periodoDocComplementarEleitorAberto } from "@/lib/config";
 
-const MAX_ARQUIVO = 50 * 1024 * 1024;   // 50 MB por arquivo
-const MAX_TOTAL   = 200 * 1024 * 1024;  // 200 MB total
+const MAX_ARQUIVO         = 50 * 1024 * 1024;   // 50 MB por arquivo
+const MAX_TOTAL_CANDIDATO = 200 * 1024 * 1024;  // 200 MB total — candidatos
+const MAX_TOTAL_ELEITOR   = 100 * 1024 * 1024;  // 100 MB total — eleitores
 
 async function getCandidatura(usuarioId: string) {
   return db.candidatura.findUnique({
@@ -15,6 +16,7 @@ async function getCandidatura(usuarioId: string) {
     select: {
       id: true,
       status: true,
+      tipoCadastro: true,
       arquivos: {
         where: { categoria: "COMPLEMENTAR" },
         select: { id: true, nome: true, tamanho: true, criadoEm: true },
@@ -33,9 +35,12 @@ export async function GET() {
   const candidatura = await getCandidatura(session.user.id as string);
   if (!candidatura) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
 
+  const isEleitor = candidatura.tipoCadastro === "ELEITOR";
+  const periodoAberto = isEleitor ? periodoDocComplementarEleitorAberto() : periodoDocComplementarAberto();
+
   return NextResponse.json({
     status: candidatura.status,
-    periodoAberto: periodoDocComplementarAberto(),
+    periodoAberto,
     arquivos: candidatura.arquivos,
   });
 }
@@ -46,13 +51,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  if (!periodoDocComplementarAberto()) {
+  const candidatura = await getCandidatura(session.user.id as string);
+  if (!candidatura) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
+
+  const isEleitor = candidatura.tipoCadastro === "ELEITOR";
+  const periodoAberto = isEleitor ? periodoDocComplementarEleitorAberto() : periodoDocComplementarAberto();
+
+  if (!periodoAberto) {
     return NextResponse.json({ error: "Fora do período de envio de documentação complementar." }, { status: 400 });
   }
 
-  const candidatura = await getCandidatura(session.user.id as string);
-  if (!candidatura) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
-  if (candidatura.status !== "AGUARDANDO_DOCUMENTACAO") {
+  if (!isEleitor && candidatura.status !== "AGUARDANDO_DOCUMENTACAO") {
     return NextResponse.json({ error: "Sua inscrição não está aguardando documentação complementar." }, { status: 400 });
   }
 
@@ -68,15 +77,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `O arquivo "${file.name}" excede o limite de 50 MB.` }, { status: 400 });
     }
     const tipo = file.type;
-    if (!tipo.startsWith("image/") && tipo !== "application/pdf") {
-      return NextResponse.json({ error: `O arquivo "${file.name}" não é uma imagem ou PDF.` }, { status: 400 });
+    const isImagem = tipo.startsWith("image/");
+    const isPdf = tipo === "application/pdf";
+    const isZip = isEleitor && (
+      tipo === "application/zip" ||
+      tipo === "application/x-zip-compressed" ||
+      tipo === "application/x-zip" ||
+      file.name.toLowerCase().endsWith(".zip")
+    );
+    if (!isImagem && !isPdf && !isZip) {
+      const msg = isEleitor
+        ? `O arquivo "${file.name}" não é uma imagem, PDF ou ZIP.`
+        : `O arquivo "${file.name}" não é uma imagem ou PDF.`;
+      return NextResponse.json({ error: msg }, { status: 400 });
     }
   }
 
+  const MAX_TOTAL = isEleitor ? MAX_TOTAL_ELEITOR : MAX_TOTAL_CANDIDATO;
+  const limiteLabel = isEleitor ? "100 MB" : "200 MB";
   const tamanhoExistente = candidatura.arquivos.reduce((sum, a) => sum + a.tamanho, 0);
   const tamanhoNovos = files.reduce((sum, f) => sum + f.size, 0);
   if (tamanhoExistente + tamanhoNovos > MAX_TOTAL) {
-    return NextResponse.json({ error: "O tamanho total dos arquivos ultrapassa 200 MB." }, { status: 400 });
+    return NextResponse.json({ error: `O tamanho total dos arquivos ultrapassa ${limiteLabel}.` }, { status: 400 });
   }
 
   const uploadDir = join(process.cwd(), "uploads", candidatura.id, "complementar");

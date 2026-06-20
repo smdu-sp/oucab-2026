@@ -29,16 +29,19 @@ function formatBytes(bytes: number) {
 }
 
 const MAX_ARQUIVO = 50 * 1024 * 1024;
-const MAX_TOTAL   = 200 * 1024 * 1024;
+const MAX_TOTAL_PADRAO = 200 * 1024 * 1024;
 
 interface Props {
   apiBase: string;
   linkOrientacao?: string;
+  /** Status da inscrição que ativa a seção. Quando omitido, a seção aparece para qualquer status durante o período. */
   statusAtivador?: string;
   mensagem?: string;
+  maxTotal?: number;
+  aceitaZip?: boolean;
 }
 
-export default function DocComplementarSection({ apiBase, linkOrientacao, statusAtivador = "AGUARDANDO_DOCUMENTACAO", mensagem }: Props) {
+export default function DocComplementarSection({ apiBase, linkOrientacao, statusAtivador, mensagem, maxTotal = MAX_TOTAL_PADRAO, aceitaZip = false }: Props) {
   const [dados, setDados] = useState<ApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -68,12 +71,13 @@ export default function DocComplementarSection({ apiBase, linkOrientacao, status
     );
   }
 
-  if (!dados || dados.status !== statusAtivador) return null;
+  if (!dados) return null;
+  if (statusAtivador !== undefined && dados.status !== statusAtivador) return null;
 
   const totalExistente = dados.arquivos.reduce((s, a) => s + a.tamanho, 0);
   const totalNovos = novosArquivos.reduce((s, f) => s + f.size, 0);
   const totalGeral = totalExistente + totalNovos;
-  const espacoDisponivel = MAX_TOTAL - totalGeral;
+  const espacoDisponivel = maxTotal - totalGeral;
 
   function handleDragDrop(files: File[]) {
     if (!files.length) {
@@ -86,16 +90,25 @@ export default function DocComplementarSection({ apiBase, linkOrientacao, status
         erros.push(`"${f.name}" excede 50 MB`);
         return false;
       }
-      if (!f.type.startsWith("image/") && f.type !== "application/pdf") {
-        erros.push(`"${f.name}" não é imagem ou PDF`);
+      const isImagem = f.type.startsWith("image/");
+      const isPdf = f.type === "application/pdf";
+      const isZip = aceitaZip && (
+        f.type === "application/zip" ||
+        f.type === "application/x-zip-compressed" ||
+        f.type === "application/x-zip" ||
+        f.name.toLowerCase().endsWith(".zip")
+      );
+      if (!isImagem && !isPdf && !isZip) {
+        const tipos = aceitaZip ? "imagem, PDF ou ZIP" : "imagem ou PDF";
+        erros.push(`"${f.name}" não é ${tipos}`);
         return false;
       }
       return true;
     });
     if (erros.length) toast.error(erros.join("; "));
     const novoTotal = totalExistente + validos.reduce((s, f) => s + f.size, 0);
-    if (novoTotal > MAX_TOTAL) {
-      toast.error("O total de arquivos ultrapassaria 200 MB.");
+    if (novoTotal > maxTotal) {
+      toast.error(`O total de arquivos ultrapassaria ${formatBytes(maxTotal)}.`);
       return;
     }
     setNovosArquivos(validos);
@@ -151,7 +164,7 @@ export default function DocComplementarSection({ apiBase, linkOrientacao, status
               <p>
                 {mensagem ?? <>Sua inscrição está <strong>aguardando documentação complementar</strong>. Envie os arquivos solicitados dentro do prazo.</>}
               </p>
-              <p className="text-xs">Limite: 50 MB por arquivo · 200 MB no total · PDF ou imagem (JPG, PNG etc.)</p>
+              <p className="text-xs">Limite: 50 MB por arquivo · {formatBytes(maxTotal)} no total · {aceitaZip ? "PDF, imagem (JPG, PNG etc.) ou ZIP" : "PDF ou imagem (JPG, PNG etc.)"}</p>
               {linkOrientacao && (
                 <a
                   href={linkOrientacao}
@@ -211,10 +224,10 @@ export default function DocComplementarSection({ apiBase, linkOrientacao, status
               multiple
               maxFiles={50}
               maxSize={espacoDisponivel > 0 ? espacoDisponivel : 1}
-              accept="image/*,.pdf"
+              accept={aceitaZip ? "image/*,.pdf,.zip" : "image/*,.pdf"}
               buttonText="Selecionar arquivos"
               dropzoneText="Arraste e solte os arquivos aqui"
-              helperText={`PDF ou imagem · máx. 50 MB por arquivo · espaço disponível: ${formatBytes(Math.max(0, espacoDisponivel))}`}
+              helperText={`${aceitaZip ? "PDF, imagem ou ZIP" : "PDF ou imagem"} · máx. 50 MB por arquivo · espaço disponível: ${formatBytes(Math.max(0, espacoDisponivel))}`}
               disabled={espacoDisponivel <= 0}
               onChange={handleDragDrop}
               value={novosArquivos}

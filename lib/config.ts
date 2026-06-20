@@ -54,6 +54,18 @@ export function periodoDocComplementarAberto(): boolean {
   return agora >= DOC_COMPLEMENTAR_INICIO && agora <= DOC_COMPLEMENTAR_FIM;
 }
 
+export const DOC_COMPLEMENTAR_ELEITOR_INICIO = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_ELEITOR_INICIO ?? "2026-06-20T03:00:00.000Z"
+);
+export const DOC_COMPLEMENTAR_ELEITOR_FIM = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_ELEITOR_FIM ?? "2026-06-25T02:59:59.999Z"
+);
+
+export function periodoDocComplementarEleitorAberto(): boolean {
+  const agora = new Date();
+  return agora >= DOC_COMPLEMENTAR_ELEITOR_INICIO && agora <= DOC_COMPLEMENTAR_ELEITOR_FIM;
+}
+
 export const DOC_COMPLEMENTAR_INICIO_AIUSCE = new Date(
   process.env.PRAZO_DOC_COMPLEMENTAR_INICIO_AIUSCE ?? "2026-06-01T00:00:00.000Z"
 );

@@ -238,10 +238,21 @@ export default async function MinhaInscricaoPage() {
         </Card>
       )}
 
-      <DocComplementarSection
-        apiBase="/api/portal/doc-complementar"
-        linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB}
-      />
+      {isEleitor ? (
+        <DocComplementarSection
+          apiBase="/api/portal/doc-complementar"
+          mensagem="Há um período aberto para envio de documentação complementar. Envie os arquivos solicitados dentro do prazo."
+          maxTotal={100 * 1024 * 1024}
+          aceitaZip
+          linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB}
+        />
+      ) : (
+        <DocComplementarSection
+          apiBase="/api/portal/doc-complementar"
+          statusAtivador="AGUARDANDO_DOCUMENTACAO"
+          linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB}
+        />
+      )}
 
       <Card>
         <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>

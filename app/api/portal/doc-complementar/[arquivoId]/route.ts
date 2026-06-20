@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/prisma";
 import { unlink } from "fs/promises";
 import { existsSync } from "fs";
-import { periodoDocComplementarAberto } from "@/lib/config";
+import { periodoDocComplementarAberto, periodoDocComplementarEleitorAberto } from "@/lib/config";
 
 export async function DELETE(
   _request: NextRequest,
@@ -14,17 +14,20 @@ export async function DELETE(
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  if (!periodoDocComplementarAberto()) {
+  const candidatura = await db.candidatura.findUnique({
+    where: { usuarioId: session.user.id as string },
+    select: { id: true, tipoCadastro: true },
+  });
+  if (!candidatura) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
+
+  const isEleitor = candidatura.tipoCadastro === "ELEITOR";
+  const periodoAberto = isEleitor ? periodoDocComplementarEleitorAberto() : periodoDocComplementarAberto();
+
+  if (!periodoAberto) {
     return NextResponse.json({ error: "Fora do período de envio. Não é possível excluir arquivos." }, { status: 400 });
   }
 
   const { arquivoId } = await params;
-
-  const candidatura = await db.candidatura.findUnique({
-    where: { usuarioId: session.user.id as string },
-    select: { id: true },
-  });
-  if (!candidatura) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
 
   const arquivo = await db.arquivo.findUnique({ where: { id: arquivoId } });
   if (!arquivo || arquivo.candidaturaId !== candidatura.id || arquivo.categoria !== "COMPLEMENTAR") {
