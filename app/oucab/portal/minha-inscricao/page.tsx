@@ -10,6 +10,7 @@ import DocComplementarSection from "@/components/doc-complementar-section";
 import { EnumBadge } from "@/components/enum-badge";
 import { STATUS_INFO, TIPO_INSCRICAO_INFO, TIPO_CADASTRO_INFO, getInfo } from "@/lib/labels";
 import { FolderOpen } from "lucide-react";
+import { periodoInscricaoEleitoresAberto } from "@/lib/config";
 import Link from "next/link";
 
 export default async function MinhaInscricaoPage() {
@@ -47,6 +48,7 @@ export default async function MinhaInscricaoPage() {
     candidatura.tipoInscricao
   );
   const isEleitor = candidatura.tipoCadastro === "ELEITOR";
+  const mostrarMeusArquivos = !isEleitor || periodoInscricaoEleitoresAberto();
 
   const generoLabel: Record<string, string> = {
     MASCULINO: "Masculino",
@@ -67,12 +69,14 @@ export default async function MinhaInscricaoPage() {
           <EnumBadge info={getInfo(TIPO_CADASTRO_INFO, candidatura.tipoCadastro)} />
           <EnumBadge info={getInfo(TIPO_INSCRICAO_INFO, candidatura.tipoInscricao)} />
           <EnumBadge info={getInfo(STATUS_INFO, candidatura.status)} />
-          <Button asChild size="sm" variant="outline">
-            <Link href="/oucab/portal/meus-arquivos">
-              <FolderOpen className="w-4 h-4 mr-1.5" />
-              Meus Arquivos
-            </Link>
-          </Button>
+          {mostrarMeusArquivos && (
+            <Button asChild size="sm" variant="outline">
+              <Link href="/oucab/portal/meus-arquivos">
+                <FolderOpen className="w-4 h-4 mr-1.5" />
+                Meus Arquivos
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -82,6 +86,23 @@ export default async function MinhaInscricaoPage() {
           <p className="font-semibold">Motivo do indeferimento</p>
           <p className="whitespace-pre-wrap">{candidatura.motivoIndeferimento}</p>
         </div>
+      )}
+
+      {isEleitor ? (
+        <DocComplementarSection
+          apiBase="/api/portal/doc-complementar"
+          statusAtivador="INDEFERIDO"
+          mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
+          maxTotal={100 * 1024 * 1024}
+          aceitaZip
+          linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB}
+        />
+      ) : (
+        <DocComplementarSection
+          apiBase="/api/portal/doc-complementar"
+          statusAtivador="AGUARDANDO_DOCUMENTACAO"
+          linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB}
+        />
       )}
 
       {/* Candidato individual (MORADOR / TRABALHADOR) */}
@@ -236,22 +257,6 @@ export default async function MinhaInscricaoPage() {
             )}
           </CardContent>
         </Card>
-      )}
-
-      {isEleitor ? (
-        <DocComplementarSection
-          apiBase="/api/portal/doc-complementar"
-          mensagem="Há um período aberto para envio de documentação complementar. Envie os arquivos solicitados dentro do prazo."
-          maxTotal={100 * 1024 * 1024}
-          aceitaZip
-          linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB}
-        />
-      ) : (
-        <DocComplementarSection
-          apiBase="/api/portal/doc-complementar"
-          statusAtivador="AGUARDANDO_DOCUMENTACAO"
-          linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_OUCAB}
-        />
       )}
 
       <Card>

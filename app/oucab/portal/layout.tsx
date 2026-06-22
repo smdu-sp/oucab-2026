@@ -4,6 +4,7 @@ import { SignOutBtn } from "./_components/sign-out-btn";
 import Link from "next/link";
 import { FileText, Upload, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { periodoInscricaoEleitoresAberto } from "@/lib/config";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -14,6 +15,7 @@ export default async function PortalLayout({ children }: { children: React.React
 
   const nome = session.user?.nome ?? "";
   const tipoCadastro = session.user?.tipoCadastro as string;
+  const mostrarMeusArquivos = tipoCadastro !== "ELEITOR" || periodoInscricaoEleitoresAberto();
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -43,11 +45,13 @@ export default async function PortalLayout({ children }: { children: React.React
               <FileText className="w-4 h-4" /> Minha Inscrição
             </Button>
           </Link>
-          <Link href="/oucab/portal/meus-arquivos">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <Upload className="w-4 h-4" /> Meus Arquivos
-            </Button>
-          </Link>
+          {mostrarMeusArquivos && (
+            <Link href="/oucab/portal/meus-arquivos">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <Upload className="w-4 h-4" /> Meus Arquivos
+              </Button>
+            </Link>
+          )}
           <Link href="/oucab/portal/alterar-senha">
             <Button variant="ghost" size="sm" className="gap-1.5">
               <KeyRound className="w-4 h-4" /> Alterar Senha

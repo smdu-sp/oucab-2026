@@ -65,6 +65,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sua inscrição não está aguardando documentação complementar." }, { status: 400 });
   }
 
+  if (isEleitor && candidatura.status !== "INDEFERIDO") {
+    return NextResponse.json({ error: "Sua inscrição não está indeferida. Não é possível enviar documentação complementar." }, { status: 400 });
+  }
+
   const formData = await request.formData();
   const files = formData.getAll("arquivos") as File[];
 

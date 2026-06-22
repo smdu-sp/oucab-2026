@@ -225,7 +225,10 @@ export default function MeusArquivosPage() {
 
   const prazoEncerrado = new Date() > new Date("2026-11-30T23:59:59.999Z");
   const deferido = dados?.status === "DEFERIDO";
-  const podeAtualizar = !prazoEncerrado && !deferido;
+  const eleitorForaDoPrazo =
+    dados?.tipoCadastro === "ELEITOR" &&
+    new Date() > new Date("2026-06-07T23:59:59.000Z");
+  const podeAtualizar = !prazoEncerrado && !deferido && !eleitorForaDoPrazo;
 
   const handleFileChange = (campo: string, file: File | null) => {
     setNewFiles((prev) => {
@@ -294,7 +297,14 @@ export default function MeusArquivosPage() {
         <p className="text-muted-foreground text-sm">Gerencie os documentos enviados na sua inscrição.</p>
       </div>
 
-      {prazoEncerrado && (
+      {eleitorForaDoPrazo && (
+        <Alert variant="destructive">
+          <AlertTriangle className="w-4 h-4" />
+          <AlertDescription>O prazo de inscrições de eleitores encerrou. Não é mais possível atualizar documentos por aqui. Caso sua inscrição tenha sido indeferida, utilize a seção de documentação complementar em <strong>Minha Inscrição</strong>.</AlertDescription>
+        </Alert>
+      )}
+
+      {!eleitorForaDoPrazo && prazoEncerrado && (
         <Alert variant="destructive">
           <AlertTriangle className="w-4 h-4" />
           <AlertDescription>O prazo de inscrições encerrou. Não é mais possível atualizar documentos.</AlertDescription>
