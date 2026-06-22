@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FileText, Upload, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { periodoInscricaoEleitoresAberto } from "@/lib/config";
+import { db } from "@/lib/prisma";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -14,8 +15,13 @@ export default async function PortalLayout({ children }: { children: React.React
   }
 
   const nome = session.user?.nome ?? "";
-  const tipoCadastro = session.user?.tipoCadastro as string;
-  const mostrarMeusArquivos = tipoCadastro !== "ELEITOR" || periodoInscricaoEleitoresAberto();
+
+  const candidatura = await db.candidatura.findUnique({
+    where: { usuarioId: session.user.id as string },
+    select: { tipoCadastro: true },
+  });
+  const isEleitor = candidatura?.tipoCadastro === "ELEITOR";
+  const mostrarMeusArquivos = !isEleitor || periodoInscricaoEleitoresAberto();
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -30,7 +36,7 @@ export default async function PortalLayout({ children }: { children: React.React
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:block">
-              {nome} · <span className="capitalize">{tipoCadastro?.toLowerCase()}</span>
+              {nome} · <span className="capitalize">{isEleitor ? "eleitor" : "candidato"}</span>
             </span>
             <SignOutBtn />
           </div>
