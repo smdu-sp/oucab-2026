@@ -261,9 +261,9 @@ export async function POST(request: NextRequest) {
       }
 
       // -----------------------------------------------------------------------
-      // NOVA INSCRIÇÃO (período original)
+      // NOVA INSCRIÇÃO (período original ou reabertura)
       // -----------------------------------------------------------------------
-      if (!inscricaoOriginalAberta) {
+      if (!inscricaoOriginalAberta && !reinscricaoAberta) {
         return NextResponse.json({ error: "Inscrições de candidatos fora do período permitido." }, { status: 400 });
       }
 
