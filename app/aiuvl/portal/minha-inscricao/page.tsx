@@ -128,6 +128,15 @@ export default async function MinhaInscricaoAiuvlPage() {
       {/* CANDIDATURA */}
       {isCandidato && candidatura && (
         <>
+          {candidatura.rodada === 2 && (
+            <DocComplementarSection
+              apiBase="/api/aiuvl/portal/doc-complementar"
+              statusAtivador="INDEFERIDO"
+              mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
+              linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUVL}
+            />
+          )}
+
           {candidatura.organizacao && (
             <Card>
               <CardHeader><CardTitle className="text-base">Entidade Candidata</CardTitle></CardHeader>
@@ -184,15 +193,6 @@ export default async function MinhaInscricaoAiuvlPage() {
             </Card>
           ))}
 
-          {candidatura.rodada === 2 && (
-            <DocComplementarSection
-              apiBase="/api/aiuvl/portal/doc-complementar"
-              statusAtivador="INDEFERIDO"
-              mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
-              linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUVL}
-            />
-          )}
-
           <Card>
             <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
             <CardContent>
@@ -246,6 +246,13 @@ export default async function MinhaInscricaoAiuvlPage() {
       {/* ELEITOR */}
       {!isCandidato && eleitor && (
         <>
+          <DocComplementarSection
+            apiBase="/api/aiuvl/portal/doc-complementar"
+            statusAtivador="INDEFERIDO"
+            mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
+            linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUVL}
+          />
+
           {eleitor.organizacao && (
             <Card>
               <CardHeader><CardTitle className="text-base">Entidade Eleitora</CardTitle></CardHeader>
@@ -270,13 +277,6 @@ export default async function MinhaInscricaoAiuvlPage() {
               </CardContent>
             </Card>
           )}
-
-          <DocComplementarSection
-            apiBase="/api/aiuvl/portal/doc-complementar"
-            statusAtivador="INDEFERIDO"
-            mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
-            linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUVL}
-          />
 
           <Card>
             <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
