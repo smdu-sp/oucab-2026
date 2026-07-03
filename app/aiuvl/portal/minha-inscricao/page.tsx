@@ -16,6 +16,8 @@ import {
   DOC_COMPLEMENTAR_FIM_AIUVL,
   DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL,
   DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL,
+  DOC_COMPLEMENTAR_RODADA2_INICIO_AIUVL,
+  DOC_COMPLEMENTAR_RODADA2_FIM_AIUVL,
 } from "@/lib/config";
 
 const CATEGORIA_LABEL: Record<string, string> = {
@@ -47,7 +49,10 @@ const CATEGORIA_LABEL: Record<string, string> = {
   ELEIT_REP_COMPROVANTE_RESIDENCIA:"Comprovante de Residência — Representante Legal",
 };
 
-function isAtualizadoNoComplementar(atualizadoEm: Date, isCandidato: boolean): boolean {
+function isAtualizadoNoComplementar(atualizadoEm: Date, isCandidato: boolean, rodada?: number): boolean {
+  if (isCandidato && rodada === 2) {
+    return atualizadoEm >= DOC_COMPLEMENTAR_RODADA2_INICIO_AIUVL && atualizadoEm <= DOC_COMPLEMENTAR_RODADA2_FIM_AIUVL;
+  }
   const inicio = isCandidato ? DOC_COMPLEMENTAR_INICIO_AIUVL : DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL;
   const fim    = isCandidato ? DOC_COMPLEMENTAR_FIM_AIUVL    : DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL;
   return atualizadoEm >= inicio && atualizadoEm <= fim;
@@ -179,12 +184,14 @@ export default async function MinhaInscricaoAiuvlPage() {
             </Card>
           ))}
 
-          <DocComplementarSection
-            apiBase="/api/aiuvl/portal/doc-complementar"
-            statusAtivador="INDEFERIDO"
-            mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
-            linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUVL}
-          />
+          {candidatura.rodada === 2 && (
+            <DocComplementarSection
+              apiBase="/api/aiuvl/portal/doc-complementar"
+              statusAtivador="INDEFERIDO"
+              mensagem="Sua inscrição foi indeferida. Você pode enviar documentação complementar para reanálise dentro do prazo."
+              linkOrientacao={process.env.NEXT_PUBLIC_LINK_DOC_COMPLEMENTAR_AIUVL}
+            />
+          )}
 
           <Card>
             <CardHeader><CardTitle className="text-base">Documentos Enviados</CardTitle></CardHeader>
@@ -209,7 +216,7 @@ export default async function MinhaInscricaoAiuvlPage() {
                         <ul className="space-y-1.5">
                           {grupo.arquivos.map(a => {
                             const label = CATEGORIA_LABEL[a.categoria] ?? a.nome;
-                            const complementar = isAtualizadoNoComplementar(a.atualizadoEm, true);
+                            const complementar = isAtualizadoNoComplementar(a.atualizadoEm, true, candidatura.rodada);
                             return (
                               <li key={a.id} className="flex items-center gap-2 text-sm rounded p-1.5 hover:bg-muted/40">
                                 <FileIcon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />

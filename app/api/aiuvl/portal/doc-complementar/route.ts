@@ -4,7 +4,11 @@ import { dbAiuvl as db } from "@/lib/prisma-aiuvl";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
-import { periodoDocComplementarAbertoAiuvl, periodoDocComplementarEleitorAbertoAiuvl } from "@/lib/config";
+import {
+  periodoDocComplementarAbertoAiuvl,
+  periodoDocComplementarEleitorAbertoAiuvl,
+  periodoDocComplementarRodada2AbertoAiuvl,
+} from "@/lib/config";
 
 const MAX_ARQUIVO = 50 * 1024 * 1024;
 const MAX_TOTAL   = 200 * 1024 * 1024;
@@ -16,6 +20,7 @@ async function getInscricao(usuarioId: string) {
     select: {
       id: true,
       status: true,
+      rodada: true,
       arquivos: {
         where: { categoria: "COMPLEMENTAR" },
         select: { id: true, nome: true, tamanho: true, criadoEm: true },
@@ -42,10 +47,13 @@ async function getInscricao(usuarioId: string) {
   return null;
 }
 
-function getPeriodoAberto(tipo: "candidatura" | "eleitor"): boolean {
-  return tipo === "candidatura"
-    ? periodoDocComplementarAbertoAiuvl()
-    : periodoDocComplementarEleitorAbertoAiuvl();
+function getPeriodoAberto(tipo: "candidatura" | "eleitor", rodada?: number): boolean {
+  if (tipo === "eleitor") return periodoDocComplementarEleitorAbertoAiuvl();
+  // Candidaturas da rodada 2 usam a janela de reabertura dedicada;
+  // as demais rodadas seguem a janela original de documentação complementar.
+  return rodada === 2
+    ? periodoDocComplementarRodada2AbertoAiuvl()
+    : periodoDocComplementarAbertoAiuvl();
 }
 
 export async function GET() {
@@ -57,9 +65,11 @@ export async function GET() {
   const resultado = await getInscricao(session.user.id as string);
   if (!resultado) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
 
+  const rodada = resultado.tipo === "candidatura" ? resultado.inscricao.rodada : undefined;
+
   return NextResponse.json({
     status: resultado.inscricao.status,
-    periodoAberto: getPeriodoAberto(resultado.tipo),
+    periodoAberto: getPeriodoAberto(resultado.tipo, rodada),
     arquivos: resultado.inscricao.arquivos,
   });
 }
@@ -73,7 +83,9 @@ export async function POST(request: NextRequest) {
   const resultado = await getInscricao(session.user.id as string);
   if (!resultado) return NextResponse.json({ error: "Inscrição não encontrada" }, { status: 404 });
 
-  if (!getPeriodoAberto(resultado.tipo)) {
+  const rodada = resultado.tipo === "candidatura" ? resultado.inscricao.rodada : undefined;
+
+  if (!getPeriodoAberto(resultado.tipo, rodada)) {
     return NextResponse.json({ error: "Fora do período de envio de documentação complementar." }, { status: 400 });
   }
 

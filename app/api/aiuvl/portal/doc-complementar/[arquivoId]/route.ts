@@ -3,7 +3,11 @@ import { auth } from "@/auth/aiuvl";
 import { dbAiuvl as db } from "@/lib/prisma-aiuvl";
 import { unlink } from "fs/promises";
 import { existsSync } from "fs";
-import { periodoDocComplementarAbertoAiuvl, periodoDocComplementarEleitorAbertoAiuvl } from "@/lib/config";
+import {
+  periodoDocComplementarAbertoAiuvl,
+  periodoDocComplementarEleitorAbertoAiuvl,
+  periodoDocComplementarRodada2AbertoAiuvl,
+} from "@/lib/config";
 
 export async function DELETE(
   _request: NextRequest,
@@ -20,7 +24,7 @@ export async function DELETE(
   const candidatura = await db.candidatura.findFirst({
     where: { usuarioId },
     orderBy: { rodada: "desc" },
-    select: { id: true },
+    select: { id: true, rodada: true },
   });
   const eleitor = candidatura
     ? null
@@ -31,7 +35,7 @@ export async function DELETE(
   }
 
   const periodoAberto = candidatura
-    ? periodoDocComplementarAbertoAiuvl()
+    ? (candidatura.rodada === 2 ? periodoDocComplementarRodada2AbertoAiuvl() : periodoDocComplementarAbertoAiuvl())
     : periodoDocComplementarEleitorAbertoAiuvl();
 
   if (!periodoAberto) {

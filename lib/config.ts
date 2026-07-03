@@ -135,6 +135,20 @@ export function periodoDocComplementarEleitorAbertoAiuvl(): boolean {
   return agora >= DOC_COMPLEMENTAR_ELEITOR_INICIO_AIUVL && agora <= DOC_COMPLEMENTAR_ELEITOR_FIM_AIUVL;
 }
 
+// --- AIUVL Reabertura de Documentação Complementar (Rodada 2) ---
+// Restrita a candidaturas com rodada === 2 e status INDEFERIDO.
+export const DOC_COMPLEMENTAR_RODADA2_INICIO_AIUVL = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_RODADA2_INICIO_AIUVL ?? "2026-07-03T03:00:00.000Z"
+);
+export const DOC_COMPLEMENTAR_RODADA2_FIM_AIUVL = new Date(
+  process.env.PRAZO_DOC_COMPLEMENTAR_RODADA2_FIM_AIUVL ?? "2026-07-08T02:59:59.999Z"
+);
+
+export function periodoDocComplementarRodada2AbertoAiuvl(): boolean {
+  const agora = new Date();
+  return agora >= DOC_COMPLEMENTAR_RODADA2_INICIO_AIUVL && agora <= DOC_COMPLEMENTAR_RODADA2_FIM_AIUVL;
+}
+
 // --- AIUVL Reabertura de Inscrições de Candidatos ---
 // Chave mestra: AIUVL_REABERTURA_CANDIDATOS_ABERTA=true
 // Rodada atual: AIUVL_RODADA_CANDIDATOS=2
