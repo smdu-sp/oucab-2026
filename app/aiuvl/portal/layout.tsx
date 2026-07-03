@@ -2,9 +2,14 @@ import { auth } from "@/auth/aiuvl";
 import { redirect } from "next/navigation";
 import { AuthProviderAiuvl } from "@/providers/AuthProviderAiuvl";
 import { SignOutBtn } from "./_components/sign-out-btn";
-import Link from "next/link";
 import { FileText, Upload, KeyRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PortalNav } from "@/components/portal-nav";
+
+const NAV_ITEMS = [
+  { href: "/aiuvl/portal/minha-inscricao", label: "Minha Inscrição", icon: <FileText className="w-4 h-4" /> },
+  { href: "/aiuvl/portal/meus-arquivos", label: "Meus Arquivos", icon: <Upload className="w-4 h-4" /> },
+  { href: "/aiuvl/portal/alterar-senha", label: "Alterar Senha", icon: <KeyRound className="w-4 h-4" /> },
+];
 
 export default async function AiuvlPortalLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -32,25 +37,7 @@ export default async function AiuvlPortalLayout({ children }: { children: React.
         </div>
       </header>
 
-      <nav className="bg-white border-b">
-        <div className="max-w-5xl mx-auto px-4 flex gap-1 py-1">
-          <Link href="/aiuvl/portal/minha-inscricao">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <FileText className="w-4 h-4" /> Minha Inscrição
-            </Button>
-          </Link>
-          <Link href="/aiuvl/portal/meus-arquivos">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <Upload className="w-4 h-4" /> Meus Arquivos
-            </Button>
-          </Link>
-          <Link href="/aiuvl/portal/alterar-senha">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <KeyRound className="w-4 h-4" /> Alterar Senha
-            </Button>
-          </Link>
-        </div>
-      </nav>
+      <PortalNav items={NAV_ITEMS} signOutSlot={<SignOutBtn />} />
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         <AuthProviderAiuvl>{children}</AuthProviderAiuvl>

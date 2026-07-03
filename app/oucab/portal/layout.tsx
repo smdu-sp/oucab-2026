@@ -1,11 +1,10 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { SignOutBtn } from "./_components/sign-out-btn";
-import Link from "next/link";
 import { FileText, Upload, KeyRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { periodoInscricaoEleitoresAberto } from "@/lib/config";
 import { db } from "@/lib/prisma";
+import { PortalNav } from "@/components/portal-nav";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -22,6 +21,14 @@ export default async function PortalLayout({ children }: { children: React.React
   });
   const isEleitor = candidatura?.tipoCadastro === "ELEITOR";
   const mostrarMeusArquivos = !isEleitor || periodoInscricaoEleitoresAberto();
+
+  const navItems = [
+    { href: "/oucab/portal/minha-inscricao", label: "Minha Inscrição", icon: <FileText className="w-4 h-4" /> },
+    ...(mostrarMeusArquivos
+      ? [{ href: "/oucab/portal/meus-arquivos", label: "Meus Arquivos", icon: <Upload className="w-4 h-4" /> }]
+      : []),
+    { href: "/oucab/portal/alterar-senha", label: "Alterar Senha", icon: <KeyRound className="w-4 h-4" /> },
+  ];
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -43,28 +50,7 @@ export default async function PortalLayout({ children }: { children: React.React
         </div>
       </header>
 
-      {/* Nav */}
-      <nav className="bg-white border-b">
-        <div className="max-w-5xl mx-auto px-4 flex gap-1 py-1">
-          <Link href="/oucab/portal/minha-inscricao">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <FileText className="w-4 h-4" /> Minha Inscrição
-            </Button>
-          </Link>
-          {mostrarMeusArquivos && (
-            <Link href="/oucab/portal/meus-arquivos">
-              <Button variant="ghost" size="sm" className="gap-1.5">
-                <Upload className="w-4 h-4" /> Meus Arquivos
-              </Button>
-            </Link>
-          )}
-          <Link href="/oucab/portal/alterar-senha">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <KeyRound className="w-4 h-4" /> Alterar Senha
-            </Button>
-          </Link>
-        </div>
-      </nav>
+      <PortalNav items={navItems} signOutSlot={<SignOutBtn />} />
 
       {/* Content */}
       <main className="max-w-5xl mx-auto px-4 py-8">{children}</main>
